@@ -25,6 +25,11 @@ SmoothOLED::SmoothOLED(U8G2* u8g2, Stream* serial) {
     _target_cursor_y = (float)(ITEM_START_Y - 8);
     _target_cursor_w = 56.0f;
 
+    _marquee_offset = 0;
+    _marquee_last_time = 0;
+    _marquee_delay = 30;
+    _last_popup_idx = -1;
+
     // --- Biến Side Popup ---
     _side_items = nullptr;
     _side_count = 0;
@@ -115,12 +120,45 @@ void SmoothOLED::draw_carousel_menu() {
 
 void SmoothOLED::update_list_physics() {
     _target_cursor_y = (float)(ITEM_START_Y + (_current_list_selection * LINE_HEIGHT) - 8);
+    int text_pixel_width = 0;
+    
     if (_popup_items && _popup_count > 0) {
-        int text_pixel_width = _u8g2->getStrWidth(_popup_items[_current_list_selection]);
+        text_pixel_width = _u8g2->getStrWidth(_popup_items[_current_list_selection]);
+        
+        if (_current_list_selection != _last_popup_idx) {
+            _last_popup_idx = _current_list_selection;
+            _marquee_offset = 0;
+            _marquee_delay = 30; 
+        }
+        
+        int box_max_w = MENU_BOX_W - 4;
         _target_cursor_w = (float)(text_pixel_width + 4);
+        if (_target_cursor_w > box_max_w) {
+            _target_cursor_w = (float)box_max_w;
+        }
     }
+    
     _cursor_y += (_target_cursor_y - _cursor_y) * LIST_LERP_FACTOR;
     _cursor_w += (_target_cursor_w - _cursor_w) * LIST_LERP_FACTOR;
+    
+    uint32_t now = millis();
+    if (now - _marquee_last_time >= 30) { 
+        _marquee_last_time = now;
+        int max_visible_w = MENU_BOX_W - 8;
+        if (text_pixel_width > max_visible_w) {
+            if (_marquee_delay > 0) {
+                _marquee_delay--;
+            } else {
+                _marquee_offset += 1.0f;
+                if (_marquee_offset > (text_pixel_width - max_visible_w + 6)) { 
+                    _marquee_offset = 0;
+                    _marquee_delay = 45; 
+                }
+            }
+        } else {
+            _marquee_offset = 0;
+        }
+    }
 }
 
 void SmoothOLED::draw_popup_menu() {
@@ -141,9 +179,29 @@ void SmoothOLED::draw_popup_menu() {
     _u8g2->drawFrame(MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H);
 
     _u8g2->setFont(u8g2_font_6x10_tf);
+    
+    _u8g2->setClipWindow(MENU_BOX_X + 2, MENU_BOX_Y + 1, MENU_BOX_X + MENU_BOX_W - 2, MENU_BOX_Y + MENU_BOX_H - 1);
+    
     for (int i = 0; i < _popup_count; i++) {
-        _u8g2->drawStr(MENU_BOX_X + 4, ITEM_START_Y + (i * LINE_HEIGHT), _popup_items[i]);
+        int text_w = _u8g2->getStrWidth(_popup_items[i]);
+        int y_pos = ITEM_START_Y + (i * LINE_HEIGHT);
+        int max_w = MENU_BOX_W - 8;
+        
+        if (i == _current_list_selection && text_w > max_w) {
+            _u8g2->drawStr(MENU_BOX_X + 4 - (int)_marquee_offset, y_pos, _popup_items[i]);
+        } else {
+            _u8g2->drawStr(MENU_BOX_X + 4, y_pos, _popup_items[i]);
+            
+            if (text_w > max_w && i != _current_list_selection) {
+                _u8g2->setDrawColor(0);
+                _u8g2->drawBox(MENU_BOX_X + MENU_BOX_W - 12, y_pos - 8, 10, 10);
+                _u8g2->setDrawColor(1);
+                _u8g2->drawStr(MENU_BOX_X + MENU_BOX_W - 12, y_pos, "..");
+            }
+        }
     }
+    
+    _u8g2->setMaxClipWindow();
 
     _u8g2->setDrawColor(2);
     _u8g2->drawBox(MENU_BOX_X + 2, (int)_cursor_y, (int)_cursor_w, 11);

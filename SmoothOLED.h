@@ -65,6 +65,12 @@ private:
     const int ITEM_START_Y = 26;
     const int LINE_HEIGHT = 10;
 
+    // --- Biến Marquee ---
+    float _marquee_offset;
+    uint32_t _marquee_last_time;
+    int _marquee_delay;
+    int _last_popup_idx;
+
     // --- Biến Side Popup ---
     const char** _side_items;
     int _side_count;
