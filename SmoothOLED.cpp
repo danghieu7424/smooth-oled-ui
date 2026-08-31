@@ -101,20 +101,20 @@ void SmoothOLED::draw_carousel_menu() {
         }
     }
 
-    // --- Vẽ viền khung Sci-fi (Chamfered Bracket - Bo góc nhẹ 2px) ---
+    // --- Vẽ viền khung Sci-fi (Chamfered Bracket - Bo góc nhẹ 2px, Cạnh đứng ngắn) ---
     // Khung trên
     _u8g2->drawLine(50, 14, 78, 14); // Ngang trên dài hơn
-    _u8g2->drawLine(50, 14, 48, 16); // Góc chéo trái (nhẹ 2px)
-    _u8g2->drawLine(78, 14, 80, 16); // Góc chéo phải (nhẹ 2px)
-    _u8g2->drawLine(48, 16, 48, 22); // Dọc trái xuống
-    _u8g2->drawLine(80, 16, 80, 22); // Dọc phải xuống
+    _u8g2->drawLine(50, 14, 48, 16); // Góc chéo trái
+    _u8g2->drawLine(78, 14, 80, 16); // Góc chéo phải
+    _u8g2->drawLine(48, 16, 48, 18); // Dọc trái xuống (ngắn 2px)
+    _u8g2->drawLine(80, 16, 80, 18); // Dọc phải xuống (ngắn 2px)
 
     // Khung dưới
     _u8g2->drawLine(50, 45, 78, 45); // Ngang dưới dài hơn
-    _u8g2->drawLine(50, 45, 48, 43); // Góc chéo trái (nhẹ 2px)
-    _u8g2->drawLine(78, 45, 80, 43); // Góc chéo phải (nhẹ 2px)
-    _u8g2->drawLine(48, 43, 48, 37); // Dọc trái lên
-    _u8g2->drawLine(80, 43, 80, 37); // Dọc phải lên
+    _u8g2->drawLine(50, 45, 48, 43); // Góc chéo trái
+    _u8g2->drawLine(78, 45, 80, 43); // Góc chéo phải
+    _u8g2->drawLine(48, 43, 48, 41); // Dọc trái lên (ngắn 2px)
+    _u8g2->drawLine(80, 43, 80, 41); // Dọc phải lên (ngắn 2px)
 
     if (_carousel_items && _carousel_count > 0) {
         const char* label = _carousel_items[_current_index].title;
