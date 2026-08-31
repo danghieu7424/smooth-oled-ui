@@ -11,12 +11,12 @@ struct MenuItem {
 };
 
 enum AppState {
-    STATE_CAROUSEL
+    STATE_CAROUSEL,
+    STATE_POPUP
 };
 
 enum OverlayState {
     OVERLAY_NONE,
-    OVERLAY_POPUP,
     OVERLAY_SIDE_POPUP
 };
 

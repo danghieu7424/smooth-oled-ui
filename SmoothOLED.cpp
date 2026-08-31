@@ -278,31 +278,35 @@ void SmoothOLED::draw_side_list_menu() {
 void SmoothOLED::update() {
     uint32_t now = millis();
 
-    // --- AUTO DEMO LOGIC (OVERLAYS) ---
+    // --- AUTO DEMO LOGIC ---
     if (_auto_demo) {
         if (_overlay_state == OVERLAY_NONE) {
-            if (now - _last_switch > 2000) {
-                _last_switch = now;
-                _current_index++;
-                if (_current_index >= _carousel_count) {
-                    _current_index = 0;
-                    _overlay_state = OVERLAY_POPUP;
-                    _overlay_anim = PHASE_OPENING;
-                    _target_cursor_w = 0;
-                    _cursor_w = 0;
+            if (_app_state == STATE_CAROUSEL) {
+                if (now - _last_switch > 2000) {
+                    _last_switch = now;
+                    _current_index++;
+                    if (_current_index >= _carousel_count) {
+                        _current_index = 0;
+                        _app_state = STATE_POPUP;
+                        _target_cursor_w = 0;
+                        _cursor_w = 0;
+                    }
                 }
-            }
-        } else if (_overlay_state == OVERLAY_POPUP) {
-            if (now - _last_switch > 1500) {
-                _last_switch = now;
-                _current_list_selection++;
-                if (_current_list_selection >= _popup_count) {
-                    _current_list_selection = 0;
-                    _overlay_state = OVERLAY_SIDE_POPUP;
-                    _overlay_anim = PHASE_OPENING;
-                    _side_arc_radius = 0.0f;
-                    _side_list_cam_y = 0.0f;
-                    _side_selected_idx = 0;
+            } else if (_app_state == STATE_POPUP) {
+                if (now - _last_switch > 1500) {
+                    _last_switch = now;
+                    _current_list_selection++;
+                    if (_current_list_selection >= _popup_count) {
+                        _current_list_selection = 0;
+                        
+                        // Đóng Popup, mở Side List
+                        _app_state = STATE_CAROUSEL; 
+                        _overlay_state = OVERLAY_SIDE_POPUP;
+                        _overlay_anim = PHASE_OPENING;
+                        _side_arc_radius = 0.0f;
+                        _side_list_cam_y = 0.0f;
+                        _side_selected_idx = 0;
+                    }
                 }
             }
         } else if (_overlay_state == OVERLAY_SIDE_POPUP) {
@@ -325,9 +329,7 @@ void SmoothOLED::update() {
         int background_offset_x = 0;
 
         // 1. Overlay Physics
-        if (_overlay_state == OVERLAY_POPUP) {
-            update_list_physics();
-        } else if (_overlay_state == OVERLAY_SIDE_POPUP) {
+        if (_overlay_state == OVERLAY_SIDE_POPUP) {
             update_side_physics();
             // Đẩy màn hình nền sang trái dựa trên hoạt ảnh của Side Popup
             background_offset_x = -(int)((_side_arc_radius / TARGET_ARC_RADIUS) * 46.0f);
@@ -337,12 +339,17 @@ void SmoothOLED::update() {
         if (_app_state == STATE_CAROUSEL) {
             update_physics();
             draw_carousel_menu(background_offset_x);
+        } else if (_app_state == STATE_POPUP) {
+            update_list_physics();
+            draw_carousel_menu(background_offset_x); // Vẽ nền Main Menu phía sau
+            // Nếu có Side List đè lên thì không vẽ box Popup nữa để tránh lỗi UI
+            if (_overlay_state == OVERLAY_NONE) {
+                draw_popup_menu();
+            }
         }
 
         // 3. Draw Overlay
-        if (_overlay_state == OVERLAY_POPUP) {
-            draw_popup_menu();
-        } else if (_overlay_state == OVERLAY_SIDE_POPUP) {
+        if (_overlay_state == OVERLAY_SIDE_POPUP) {
             draw_side_list_menu();
         }
 
