@@ -180,6 +180,11 @@ void SmoothOLED::draw_carousel_menu() {
         }
     }
 
+    // SCSS Glassmorphism Box Fake (Vẽ viền khung chọn tĩnh to hơn để bọc icon 24x24)
+    u8g2->drawFrame(48, 14, 32, 32);
+    u8g2->drawBox(46, 16, 2, 28); 
+    u8g2->drawBox(80, 16, 2, 28);
+
     const char* label = carousel_items[current_index].title;
     int str_width = u8g2->getStrWidth(label);
     u8g2->drawStr((128 - str_width) / 2, 58, label);
@@ -217,7 +222,6 @@ void SmoothOLED::draw_popup_menu() {
     // Vẽ viền
     u8g2->setDrawColor(1);
     u8g2->drawFrame(MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H);
-    u8g2->drawFrame(MENU_BOX_X + 2, MENU_BOX_Y + 2, MENU_BOX_W - 4, MENU_BOX_H - 4);
 
     // Chữ danh sách
     u8g2->setFont(u8g2_font_6x10_tf);
@@ -263,11 +267,10 @@ void SmoothOLED::draw_side_menu() {
 
     // Mặt nạ tròn
     u8g2->setDrawColor(0);
-    u8g2->drawDisc(128, 32, (int)side_arc_radius);
+    u8g2->drawDisc(78, 32, (int)side_arc_radius);
     
     u8g2->setDrawColor(1);
-    u8g2->drawCircle(128, 32, (int)side_arc_radius);
-    u8g2->drawCircle(128, 32, (int)side_arc_radius - 2);
+    u8g2->drawCircle(78, 32, (int)side_arc_radius, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_LOWER_LEFT);
 
     u8g2->setFont(u8g2_font_6x10_tf);
     int base_y = 37;
