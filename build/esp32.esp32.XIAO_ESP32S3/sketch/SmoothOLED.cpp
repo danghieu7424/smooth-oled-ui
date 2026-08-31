@@ -344,17 +344,17 @@ void SmoothOLED::draw_side_list_menu() {
                 x_offset = _side_arc_radius; 
             }
 
-            int final_x = 78 + (int)_side_arc_radius + 4 - (int)x_offset + slide_offset;
+            int text_x = 37 + (int)x_offset + slide_offset;
 
             if (i == _side_selected_idx) {
                 _u8g2->setDrawColor(1);
-                _u8g2->drawRBox(final_x - 2, item_y - 8, (int)_side_cursor_w, 10, 2);
+                _u8g2->drawRBox(text_x - 2, item_y - 8, (int)_side_cursor_w, 10, 2);
                 
                 _u8g2->setDrawColor(0);
-                _u8g2->drawStr(final_x, item_y, _side_items[i]);
+                _u8g2->drawStr(text_x, item_y, _side_items[i]);
             } else {
                 _u8g2->setDrawColor(1);
-                _u8g2->drawStr(final_x, item_y, _side_items[i]);
+                _u8g2->drawStr(text_x, item_y, _side_items[i]);
             }
         }
     }
