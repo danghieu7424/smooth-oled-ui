@@ -14,7 +14,7 @@ except Exception as e:
 out = cv2.VideoWriter('oled_capture.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 60, (512, 256))
 
 print(f"Đang kết nối {PORT}...")
-print("Bấm phím 'q' trên cửa sổ video để dừng và lưu file MP4.")
+print("Bạn có thể tắt cửa sổ video bằng nút X trên thanh tiêu đề để lưu file MP4.")
 
 def read_exact(ser, size):
     buf = b''
@@ -60,10 +60,11 @@ try:
                 frame_scaled = cv2.resize(frame, (512, 256), interpolation=cv2.INTER_NEAREST)
                 frame_bgr = cv2.cvtColor(frame_scaled, cv2.COLOR_GRAY2BGR)
                 
-                cv2.imshow("OLED Render (Press Q to exit)", frame_bgr)
+                cv2.imshow("OLED Render", frame_bgr)
                 out.write(frame_bgr)
                 
-                if cv2.waitKey(1) & 0xFF == ord('q'):
+                # Cho phép thoát bằng cách nhấn nút X của cửa sổ
+                if cv2.waitKey(1) & 0xFF == ord('q') or cv2.getWindowProperty("OLED Render", cv2.WND_PROP_VISIBLE) < 1:
                     break
             else:
                 # Bắt nhầm Header ảo nằm bên trong dữ liệu ảnh -> Mất đồng bộ

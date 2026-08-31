@@ -13,7 +13,7 @@ except Exception as e:
     exit(1)
 
 print(f"Đang kết nối {PORT}...")
-print("Bấm phím 'q' trên cửa sổ video để thoát.")
+print("Bạn có thể tắt cửa sổ video bằng nút X trên thanh tiêu đề.")
 
 def read_exact(ser, size):
     buf = b''
@@ -59,9 +59,10 @@ try:
                 frame_scaled = cv2.resize(frame, (512, 256), interpolation=cv2.INTER_NEAREST)
                 frame_bgr = cv2.cvtColor(frame_scaled, cv2.COLOR_GRAY2BGR)
                 
-                cv2.imshow("OLED Viewer (Press Q to exit)", frame_bgr)
+                cv2.imshow("OLED Viewer", frame_bgr)
                 
-                if cv2.waitKey(1) & 0xFF == ord('q'):
+                # Cho phép thoát bằng cách nhấn nút X của cửa sổ
+                if cv2.waitKey(1) & 0xFF == ord('q') or cv2.getWindowProperty("OLED Viewer", cv2.WND_PROP_VISIBLE) < 1:
                     break
             else:
                 buffer = next_header
