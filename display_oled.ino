@@ -251,7 +251,7 @@ void draw_side_list_menu() {
     // --- LỚP 4: Thanh bôi đen đảo màu (XOR Mode) ---
     u8g2.setDrawColor(2);
     // Dịch tọa độ X gốc của box về 35 (cách chữ 2px)
-    u8g2.drawBox(39, base_y - 8, (int)side_cursor_w, 11);
+    u8g2.drawBox(35, base_y - 8, (int)side_cursor_w, 11);
     u8g2.setDrawColor(1);
 
     flush_display();

@@ -83,6 +83,44 @@ enum AppState {
 };
 AppState app_state = STATE_CAROUSEL;
 
+// Cấu hình mốc thời gian
+uint32_t last_frame_time = 0;
+uint32_t last_input_time = 0;
+
+/****
+ * [LOGIC] Gửi Framebuffer qua UART để Render thành Video trên PC
+ ****/
+#line 92 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void flush_display();
+#line 126 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void update_list_physics();
+#line 134 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void draw_popup_menu();
+#line 193 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void update_side_physics();
+#line 207 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void draw_side_list_menu();
+#line 265 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void update_physics();
+#line 275 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void draw_carousel_menu();
+#line 305 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void setup();
+#line 320 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void loop();
+#line 92 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void flush_display() {
+    // 1. Cập nhật màn hình OLED vật lý
+    u8g2.sendBuffer();
+
+    // 2. Stream dữ liệu 1024 bytes (128x64 bit) về PC
+    // Gửi 4 byte Header đồng bộ để script Python biết đâu là khởi đầu của một Frame mới
+    uint8_t sync[] = {0xFE, 0xFE, 0xFE, 0xFE};
+    Serial.write(sync, 4);
+    // Gửi toàn bộ 1024 bytes buffer của OLED
+    Serial.write(u8g2.getBufferPtr(), 1024);
+};
+
 // --- [POPUP LIST MENU ATOM] ---
 const char* list_items[] = {
     "ScreenOff",
@@ -105,23 +143,6 @@ float target_cursor_y = (float)(ITEM_START_Y - 8);
 float target_cursor_w = 56.0f;
 const float LIST_LERP_FACTOR = 0.22f;
 
-#line 107 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void update_list_physics();
-#line 115 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void draw_popup_menu();
-#line 174 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void update_side_physics();
-#line 188 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void draw_side_list_menu();
-#line 246 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void update_physics();
-#line 256 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void draw_carousel_menu();
-#line 286 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void setup();
-#line 298 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void loop();
-#line 107 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void update_list_physics() {
     target_cursor_y = (float)(ITEM_START_Y + (current_list_selection * LINE_HEIGHT) - 8);
     int text_pixel_width = u8g2.getStrWidth(list_items[current_list_selection]);
@@ -163,7 +184,7 @@ void draw_popup_menu() {
     u8g2.drawBox(MENU_BOX_X + 2, (int)cursor_y, (int)cursor_w, 11);
     u8g2.setDrawColor(1); // Reset lại chế độ màu
 
-    u8g2.sendBuffer();
+    flush_display();
 }
 
 // --- [SIDE POPUP MENU ATOM] ---
@@ -253,7 +274,7 @@ void draw_side_list_menu() {
     u8g2.drawBox(35, base_y - 8, (int)side_cursor_w, 11);
     u8g2.setDrawColor(1);
 
-    u8g2.sendBuffer();
+    flush_display();
 }
 
 /****
@@ -298,10 +319,13 @@ void draw_carousel_menu() {
     int str_width = u8g2.getStrWidth(label);
     u8g2.drawStr((128 - str_width) / 2, 58, label);
 
-    u8g2.sendBuffer();
+    flush_display();
 }
 
 void setup() {
+  // Khởi tạo UART tốc độ cực cao để Stream Video 60FPS
+  Serial.begin(921600);
+  
   Wire.begin(47, 48);
   // Tại sao (Why): Đặt I2C lên 400kHz (Fast Mode) bắt buộc để băng thông SPI/I2C đủ xả 1024 Bytes trong 16ms (đạt 60 FPS).
   Wire.setClock(400000); 
