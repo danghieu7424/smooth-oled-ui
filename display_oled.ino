@@ -204,14 +204,15 @@ void draw_side_list_menu() {
 
     // --- LỚP 3: Danh sách chữ cuộn dọc (Scroll List) ---
     u8g2.setFont(u8g2_font_6x10_tf);
-    int base_y = 28; // Vị trí dòng được chọn trên màn hình
+    int base_y = 37; // Chuyển base_y về 37 để Center thị giác (Baseline 37 -> Tâm chữ ~32)
     for (int i = 0; i < TOTAL_SIDE_ITEMS; i++) {
         int item_y = base_y + (i * SIDE_LINE_SPACING) - (int)side_list_cam_y;
 
         // Chỉ vẽ text nếu nằm trong giới hạn hiển thị dọc của màn hình
-        if (item_y > 10 && item_y < 64) {
+        if (item_y > 10 && item_y < 70) {
             // Hiệu ứng cong chữ: Tính toán tọa độ X của chữ trượt bám theo bán kính đường tròn
-            float dy = (float)(item_y - 32); // Khoảng cách từ tâm Y của đường tròn (32)
+            // Trừ đi 5 vì item_y là baseline dưới, trừ đi 5 mới ra đúng tâm của chữ để căn đường cong Pytago
+            float dy = (float)(item_y - 5 - 32); 
             if (dy < 0) dy = -dy;
             
             float x_offset = 0;
@@ -222,16 +223,16 @@ void draw_side_list_menu() {
                 x_offset = side_arc_radius; // Nằm ngoài hình tròn thì đẩy thẳng ra ngoài cùng
             }
             
-            // Dịch tọa độ X gốc từ 42 về 30 để áp sát mặt nạ (khoảng cách 4px)
-            int text_x = 30 + (int)x_offset;
+            // Dịch tọa độ X gốc về 29 để tạo khoảng cách gap 3px so với mặt nạ
+            int text_x = 29 + (int)x_offset;
             u8g2.drawStr(text_x, item_y, side_list_items[i]);
         }
     }
 
     // --- LỚP 4: Thanh bôi đen đảo màu (XOR Mode) ---
     u8g2.setDrawColor(2);
-    // Dịch tọa độ X gốc của box từ 40 về 28 để ăn khớp với chữ mới
-    u8g2.drawBox(28, base_y - 8, (int)side_cursor_w, 11);
+    // Dịch tọa độ X gốc của box về 27 (cách chữ 2px)
+    u8g2.drawBox(27, base_y - 8, (int)side_cursor_w, 11);
     u8g2.setDrawColor(1);
 
     u8g2.sendBuffer();
