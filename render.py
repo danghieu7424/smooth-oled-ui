@@ -1,6 +1,8 @@
 import serial
 import cv2
 import numpy as np
+import time
+import keyboard
 
 PORT = 'COM14'
 BAUD = 921600
@@ -14,7 +16,39 @@ except Exception as e:
 out = cv2.VideoWriter('oled_capture.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 60, (512, 256))
 
 print(f"Đang kết nối {PORT}...")
-print("Bạn có thể tắt cửa sổ video bằng nút X trên thanh tiêu đề để lưu file MP4.")
+print("=============================================")
+print(" ĐÃ TÍCH HỢP ĐIỀU KHIỂN BÀN PHÍM BLUETOOTH   ")
+print("=============================================")
+print(" - Mũi tên TRÁI / LÊN    : Lên (Up / Prev)")
+print(" - Mũi tên PHẢI / XUỐNG  : Xuống (Down / Next)")
+print(" - Phím HOME             : Mở Side List")
+print(" - Phím END              : Mở Popup List")
+print(" - Phím ESC              : Đóng các Menu")
+print(" - Phím ENTER            : Chọn (Dự phòng)")
+print("=============================================")
+print("Bạn có thể nhấn phím 'x' trong cửa sổ video hoặc tắt cửa sổ bằng nút X để LƯU VIDEO.")
+
+# --- Thiết lập bắt phím ngầm (Global Hook) ---
+last_press = 0
+def send_char(c):
+    global last_press
+    now = time.time()
+    if now - last_press > 0.15:
+        try:
+            ser.write(c.encode())
+            last_press = now
+        except:
+            pass
+
+keyboard.on_press_key('left', lambda _: send_char('U'))
+keyboard.on_press_key('up', lambda _: send_char('U'))
+keyboard.on_press_key('right', lambda _: send_char('D'))
+keyboard.on_press_key('down', lambda _: send_char('D'))
+keyboard.on_press_key('home', lambda _: send_char('S'))
+keyboard.on_press_key('end', lambda _: send_char('P'))
+keyboard.on_press_key('esc', lambda _: send_char('C'))
+keyboard.on_press_key('enter', lambda _: send_char('E'))
+# ---------------------------------------------
 
 def read_exact(ser, size):
     buf = b''
@@ -63,8 +97,9 @@ try:
                 cv2.imshow("OLED Render", frame_bgr)
                 out.write(frame_bgr)
                 
-                # Cho phép thoát bằng cách nhấn nút X của cửa sổ
-                if cv2.waitKey(1) & 0xFF == ord('q') or cv2.getWindowProperty("OLED Render", cv2.WND_PROP_VISIBLE) < 1:
+                # Cho phép thoát bằng cách nhấn phím x hoặc nút X của cửa sổ
+                key = cv2.waitKey(1) & 0xFF
+                if key == ord('q') or key == ord('x') or cv2.getWindowProperty("OLED Render", cv2.WND_PROP_VISIBLE) < 1:
                     break
             else:
                 # Bắt nhầm Header ảo nằm bên trong dữ liệu ảnh -> Mất đồng bộ
