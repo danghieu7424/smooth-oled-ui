@@ -223,16 +223,16 @@ void draw_side_list_menu() {
                 x_offset = side_arc_radius; // Nằm ngoài hình tròn thì đẩy thẳng ra ngoài cùng
             }
             
-            // Dịch tọa độ X gốc về 41 để tạo khoảng cách gap 15px so với mặt nạ (mặt nạ ở X=26)
-            int text_x = 41 + (int)x_offset;
+            // Dịch tọa độ X gốc về 37 để tạo khoảng cách gap 11px so với mặt nạ (mặt nạ ở X=26)
+            int text_x = 37 + (int)x_offset;
             u8g2.drawStr(text_x, item_y, side_list_items[i]);
         }
     }
 
     // --- LỚP 4: Thanh bôi đen đảo màu (XOR Mode) ---
     u8g2.setDrawColor(2);
-    // Dịch tọa độ X gốc của box về 39 (cách chữ 2px)
-    u8g2.drawBox(39, base_y - 8, (int)side_cursor_w, 11);
+    // Dịch tọa độ X gốc của box về 35 (cách chữ 2px)
+    u8g2.drawBox(35, base_y - 8, (int)side_cursor_w, 11);
     u8g2.setDrawColor(1);
 
     u8g2.sendBuffer();
