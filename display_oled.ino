@@ -103,7 +103,7 @@ void setup() {
   ui.setSidePopupItems(side_items, TOTAL_SIDE_ITEMS);
 
   // 2. Bật chế độ Demo vòng lặp vô hạn (Tạm tắt để dùng Serial Control)
-  ui.enableAutoDemo(false);
+  ui.enableAutoDemo(true);
 
   // 2.5. Bật chế độ xuất khung hình ra Serial cho PC Viewer (Tắt khi Release)
   ui.enablePCViewer(true);

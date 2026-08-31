@@ -1,6 +1,6 @@
 # Smooth OLED UI (ESP32 + U8g2)
 
-![Smooth OLED UI Demo](data/oled_capture.gif)
+![Smooth OLED UI Demo](data/oled_capture.gif?v=2)
 
 Một dự án thiết kế giao diện động (Dynamic UI) chất lượng cao cho màn hình OLED 128x64 sử dụng vi điều khiển ESP32-S3. Giao diện được thiết kế theo kiến trúc **Hybrid FSD + Atomic**, tập trung tối ưu hóa các hiệu ứng chuyển động vật lý bằng thuật toán Nội suy tuyến tính (LERP) đảm bảo tần số quét mượt mà 60FPS.
 
