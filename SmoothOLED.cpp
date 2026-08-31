@@ -216,7 +216,7 @@ void SmoothOLED::update_list_physics() {
     float target_cam_y = (float)(_list_cam_target_idx * LINE_HEIGHT);
     _list_cam_y += (target_cam_y - _list_cam_y) * LIST_LERP_FACTOR;
 
-    _target_cursor_y = (float)(ITEM_START_Y + (_current_list_selection * LINE_HEIGHT) - _list_cam_y - 9);
+    _target_cursor_y = (float)(ITEM_START_Y + (_current_list_selection * LINE_HEIGHT) - 9);
     int text_pixel_width = 0;
     
     if (_popup_items && _popup_count > 0) {
@@ -270,9 +270,11 @@ void SmoothOLED::draw_popup_menu() {
     
     _u8g2->setClipWindow(MENU_BOX_X + 2, MENU_BOX_Y + 1, MENU_BOX_X + MENU_BOX_W - 2, MENU_BOX_Y + MENU_BOX_H - 1);
     
+    int cam_y_int = (int)(_list_cam_y + 0.5f);
+
     for (int i = 0; i < _popup_count; i++) {
         int text_w = _u8g2->getStrWidth(_popup_items[i]);
-        int y_pos = ITEM_START_Y + (i * LINE_HEIGHT) - (int)_list_cam_y;
+        int y_pos = ITEM_START_Y + (i * LINE_HEIGHT) - cam_y_int;
         int max_w = MENU_BOX_W - 8;
         
         if (i == _current_list_selection && text_w > max_w) {
@@ -289,8 +291,11 @@ void SmoothOLED::draw_popup_menu() {
         }
     }
     
+    int draw_cursor_y = (int)(_cursor_y + 0.5f) - cam_y_int;
+    int draw_cursor_w = (int)(_cursor_w + 0.5f);
+
     _u8g2->setDrawColor(2);
-    _u8g2->drawBox(MENU_BOX_X + 2, (int)_cursor_y, (int)_cursor_w, 13);
+    _u8g2->drawBox(MENU_BOX_X + 2, draw_cursor_y, draw_cursor_w, 13);
     _u8g2->setDrawColor(1);
 
     // Trả lại Clip Window SAU KHI vẽ Box XOR để Box không bị tràn viền
