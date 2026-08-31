@@ -278,27 +278,62 @@ void SmoothOLED::draw_side_list_menu() {
 // =================================================================================
 
 void SmoothOLED::update() {
-    if (_auto_demo) {
-        demo_logic();
+    uint32_t now = millis();
+
+    // --- AUTO DEMO LOGIC ---
+    if (_app_state == STATE_CAROUSEL) {
+        if (_auto_demo && now - _last_switch > 2000) {
+            _last_switch = now;
+            _current_index++;
+            if (_current_index >= _carousel_count) {
+                _current_index = 0;
+                _app_state = STATE_POPUP;
+            }
+        }
+    } else if (_app_state == STATE_POPUP) {
+        if (_auto_demo && now - _last_switch > 1500) {
+            _last_switch = now;
+            _current_list_selection++;
+            if (_current_list_selection >= _popup_count) {
+                _current_list_selection = 0;
+                _app_state = STATE_SIDE_POPUP;
+                
+                _side_parent_x = 32.0f;
+                _side_arc_radius = 0.0f;
+                _side_list_cam_y = 0.0f;
+                _side_selected_idx = 0;
+            }
+        }
+    } else if (_app_state == STATE_SIDE_POPUP) {
+        if (_auto_demo && now - _last_switch > 1800) {
+            _last_switch = now;
+            _side_selected_idx++;
+            if (_side_selected_idx >= _side_count) {
+                _side_selected_idx = 0;
+                _current_index = 0; 
+                _app_state = STATE_CAROUSEL;
+            }
+        }
     }
 
-    _u8g2->clearBuffer();
+    // --- PHYSICS & RENDER TICK (60FPS) ---
+    if (now - _last_tick >= 16) {
+        _last_tick = now;
+        
+        _u8g2->clearBuffer();
 
-    switch (_app_state) {
-        case STATE_CAROUSEL:
+        if (_app_state == STATE_CAROUSEL) {
             update_physics();
             draw_carousel_menu();
-            break;
-        case STATE_POPUP:
+        } else if (_app_state == STATE_POPUP) {
             update_list_physics();
             draw_carousel_menu(); // Vẽ nền Main Menu phía sau
             draw_popup_menu();
-            break;
-        case STATE_SIDE_POPUP:
+        } else if (_app_state == STATE_SIDE_POPUP) {
             update_side_physics();
             draw_side_list_menu();
-            break;
-    }
+        }
 
-    flush_display();
+        flush_display();
+    }
 }
