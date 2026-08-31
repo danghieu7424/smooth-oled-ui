@@ -82,6 +82,25 @@ enum AppState {
 };
 AppState app_state = STATE_CAROUSEL;
 
+// Cấu hình mốc thời gian
+uint32_t last_frame_time = 0;
+uint32_t last_input_time = 0;
+
+/****
+ * [LOGIC] Gửi Framebuffer qua UART để Render thành Video trên PC
+ ****/
+void flush_display() {
+    // 1. Cập nhật màn hình OLED vật lý
+    u8g2.sendBuffer();
+
+    // 2. Stream dữ liệu 1024 bytes (128x64 bit) về PC
+    // Gửi 4 byte Header đồng bộ để script Python biết đâu là khởi đầu của một Frame mới
+    uint8_t sync[] = {0xFE, 0xFE, 0xFE, 0xFE};
+    Serial.write(sync, 4);
+    // Gửi toàn bộ 1024 bytes buffer của OLED
+    Serial.write(u8g2.getBufferPtr(), 1024);
+};
+
 // --- [POPUP LIST MENU ATOM] ---
 const char* list_items[] = {
     "ScreenOff",
@@ -145,7 +164,7 @@ void draw_popup_menu() {
     u8g2.drawBox(MENU_BOX_X + 2, (int)cursor_y, (int)cursor_w, 11);
     u8g2.setDrawColor(1); // Reset lại chế độ màu
 
-    u8g2.sendBuffer();
+    flush_display();
 }
 
 // --- [SIDE POPUP MENU ATOM] ---
@@ -232,10 +251,10 @@ void draw_side_list_menu() {
     // --- LỚP 4: Thanh bôi đen đảo màu (XOR Mode) ---
     u8g2.setDrawColor(2);
     // Dịch tọa độ X gốc của box về 35 (cách chữ 2px)
-    u8g2.drawBox(35, base_y - 8, (int)side_cursor_w, 11);
+    u8g2.drawBox(39, base_y - 8, (int)side_cursor_w, 11);
     u8g2.setDrawColor(1);
 
-    u8g2.sendBuffer();
+    flush_display();
 }
 
 /****
@@ -280,10 +299,13 @@ void draw_carousel_menu() {
     int str_width = u8g2.getStrWidth(label);
     u8g2.drawStr((128 - str_width) / 2, 58, label);
 
-    u8g2.sendBuffer();
+    flush_display();
 }
 
 void setup() {
+  // Khởi tạo UART tốc độ cực cao để Stream Video 60FPS
+  Serial.begin(921600);
+  
   Wire.begin(47, 48);
   // Tại sao (Why): Đặt I2C lên 400kHz (Fast Mode) bắt buộc để băng thông SPI/I2C đủ xả 1024 Bytes trong 16ms (đạt 60 FPS).
   Wire.setClock(400000); 
