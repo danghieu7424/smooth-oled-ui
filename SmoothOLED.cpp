@@ -3,8 +3,9 @@
 SmoothOLED::SmoothOLED(U8G2* u8g2, Stream* serial) {
     _u8g2 = u8g2;
     _serial = serial;
-
     _app_state = STATE_CAROUSEL;
+    _overlay_state = OVERLAY_NONE;
+    _overlay_anim = PHASE_IDLE;
     _last_switch = 0;
     _last_tick = 0;
     _auto_demo = false;
@@ -85,10 +86,10 @@ void SmoothOLED::update_physics() {
     _cam_x += (_target_cam_x - _cam_x) * LERP_SPEED;
 }
 
-void SmoothOLED::draw_carousel_menu() {
-    _u8g2->drawStr(30, 10, "< MAIN MENU >");
+void SmoothOLED::draw_carousel_menu(int offset_x) {
+    _u8g2->drawStr(30 + offset_x, 10, "< MAIN MENU >");
 
-    int screen_center_x = 64;
+    int screen_center_x = 64 + offset_x;
     int screen_center_y = 32;
 
     for (int i = 0; i < _carousel_count; i++) {
@@ -118,7 +119,7 @@ void SmoothOLED::draw_carousel_menu() {
     if (_carousel_items && _carousel_count > 0) {
         const char* label = _carousel_items[_current_index].title;
         int str_width = _u8g2->getStrWidth(label);
-        _u8g2->drawStr((128 - str_width) / 2, 58, label);
+        _u8g2->drawStr(screen_center_x - (str_width / 2), 58, label);
     }
 }
 
@@ -217,8 +218,9 @@ void SmoothOLED::draw_popup_menu() {
 // =================================================================================
 
 void SmoothOLED::update_side_physics() {
-    _side_parent_x += (TARGET_PARENT_X - _side_parent_x) * SIDE_LERP_FACTOR;
-    _side_arc_radius += (TARGET_ARC_RADIUS - _side_arc_radius) * SIDE_LERP_FACTOR;
+    float target_arc = (_overlay_anim == PHASE_CLOSING) ? 0.0f : TARGET_ARC_RADIUS;
+    
+    _side_arc_radius += (target_arc - _side_arc_radius) * SIDE_LERP_FACTOR;
 
     float target_cam_y = (float)(_side_selected_idx * SIDE_LINE_SPACING);
     _side_list_cam_y += (target_cam_y - _side_list_cam_y) * SIDE_LERP_FACTOR;
@@ -227,18 +229,16 @@ void SmoothOLED::update_side_physics() {
         int target_w = _u8g2->getStrWidth(_side_items[_side_selected_idx]) + 4;
         _side_cursor_w += (target_w - _side_cursor_w) * SIDE_LERP_FACTOR;
     }
+
+    if (_overlay_anim == PHASE_CLOSING && _side_arc_radius < 1.0f) {
+        _overlay_state = OVERLAY_NONE;
+        _overlay_anim = PHASE_IDLE;
+        _last_switch = millis();
+    }
 }
 
 void SmoothOLED::draw_side_list_menu() {
-    _u8g2->drawStr(24, 10, "MAIN MENU");
-
-    _u8g2->setDrawColor(1);
-    
-    // Fallback: draw a basic box if icon isn't accessible directly, or just assume first carousel icon is settings
-    if (_carousel_items && _carousel_count > 2) {
-        _u8g2->drawXBMP((int)_side_parent_x, 24, 24, 24, _carousel_items[2].icon); // icon_settings
-    }
-
+    // Không tự vẽ đè Icon cũ nữa, để Carousel tự dịch chuyển mượt mà làm nền
     _u8g2->setDrawColor(0);
     _u8g2->drawDisc(78, 32, (int)_side_arc_radius);
 
@@ -278,38 +278,41 @@ void SmoothOLED::draw_side_list_menu() {
 void SmoothOLED::update() {
     uint32_t now = millis();
 
-    // --- AUTO DEMO LOGIC ---
-    if (_app_state == STATE_CAROUSEL) {
-        if (_auto_demo && now - _last_switch > 2000) {
-            _last_switch = now;
-            _current_index++;
-            if (_current_index >= _carousel_count) {
-                _current_index = 0;
-                _app_state = STATE_POPUP;
+    // --- AUTO DEMO LOGIC (OVERLAYS) ---
+    if (_auto_demo) {
+        if (_overlay_state == OVERLAY_NONE) {
+            if (now - _last_switch > 2000) {
+                _last_switch = now;
+                _current_index++;
+                if (_current_index >= _carousel_count) {
+                    _current_index = 0;
+                    _overlay_state = OVERLAY_POPUP;
+                    _overlay_anim = PHASE_OPENING;
+                    _target_cursor_w = 0;
+                    _cursor_w = 0;
+                }
             }
-        }
-    } else if (_app_state == STATE_POPUP) {
-        if (_auto_demo && now - _last_switch > 1500) {
-            _last_switch = now;
-            _current_list_selection++;
-            if (_current_list_selection >= _popup_count) {
-                _current_list_selection = 0;
-                _app_state = STATE_SIDE_POPUP;
-                
-                _side_parent_x = 32.0f;
-                _side_arc_radius = 0.0f;
-                _side_list_cam_y = 0.0f;
-                _side_selected_idx = 0;
+        } else if (_overlay_state == OVERLAY_POPUP) {
+            if (now - _last_switch > 1500) {
+                _last_switch = now;
+                _current_list_selection++;
+                if (_current_list_selection >= _popup_count) {
+                    _current_list_selection = 0;
+                    _overlay_state = OVERLAY_SIDE_POPUP;
+                    _overlay_anim = PHASE_OPENING;
+                    _side_arc_radius = 0.0f;
+                    _side_list_cam_y = 0.0f;
+                    _side_selected_idx = 0;
+                }
             }
-        }
-    } else if (_app_state == STATE_SIDE_POPUP) {
-        if (_auto_demo && now - _last_switch > 1800) {
-            _last_switch = now;
-            _side_selected_idx++;
-            if (_side_selected_idx >= _side_count) {
-                _side_selected_idx = 0;
-                _current_index = 0; 
-                _app_state = STATE_CAROUSEL;
+        } else if (_overlay_state == OVERLAY_SIDE_POPUP) {
+            if (now - _last_switch > 1800) {
+                _last_switch = now;
+                _side_selected_idx++;
+                if (_side_selected_idx >= _side_count) {
+                    _side_selected_idx = 0;
+                    _overlay_anim = PHASE_CLOSING;
+                }
             }
         }
     }
@@ -317,18 +320,29 @@ void SmoothOLED::update() {
     // --- PHYSICS & RENDER TICK (60FPS) ---
     if (now - _last_tick >= 16) {
         _last_tick = now;
-        
         _u8g2->clearBuffer();
 
+        int background_offset_x = 0;
+
+        // 1. Overlay Physics
+        if (_overlay_state == OVERLAY_POPUP) {
+            update_list_physics();
+        } else if (_overlay_state == OVERLAY_SIDE_POPUP) {
+            update_side_physics();
+            // Đẩy màn hình nền sang trái dựa trên hoạt ảnh của Side Popup
+            background_offset_x = -(int)((_side_arc_radius / TARGET_ARC_RADIUS) * 46.0f);
+        }
+
+        // 2. Draw Background
         if (_app_state == STATE_CAROUSEL) {
             update_physics();
-            draw_carousel_menu();
-        } else if (_app_state == STATE_POPUP) {
-            update_list_physics();
-            draw_carousel_menu(); // Vẽ nền Main Menu phía sau
+            draw_carousel_menu(background_offset_x);
+        }
+
+        // 3. Draw Overlay
+        if (_overlay_state == OVERLAY_POPUP) {
             draw_popup_menu();
-        } else if (_app_state == STATE_SIDE_POPUP) {
-            update_side_physics();
+        } else if (_overlay_state == OVERLAY_SIDE_POPUP) {
             draw_side_list_menu();
         }
 

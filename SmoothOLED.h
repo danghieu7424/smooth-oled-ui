@@ -11,9 +11,19 @@ struct MenuItem {
 };
 
 enum AppState {
-    STATE_CAROUSEL,
-    STATE_POPUP,
-    STATE_SIDE_POPUP
+    STATE_CAROUSEL
+};
+
+enum OverlayState {
+    OVERLAY_NONE,
+    OVERLAY_POPUP,
+    OVERLAY_SIDE_POPUP
+};
+
+enum AnimPhase {
+    PHASE_IDLE,
+    PHASE_OPENING,
+    PHASE_CLOSING
 };
 
 class SmoothOLED {
@@ -36,6 +46,8 @@ private:
     Stream* _serial;
 
     AppState _app_state;
+    OverlayState _overlay_state;
+    AnimPhase _overlay_anim;
     uint32_t _last_switch;
     uint32_t _last_tick;
     bool _auto_demo;
@@ -87,7 +99,7 @@ private:
     void flush_display();
 
     void update_physics();
-    void draw_carousel_menu();
+    void draw_carousel_menu(int offset_x = 0);
 
     void update_list_physics();
     void draw_popup_menu();
