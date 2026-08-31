@@ -204,7 +204,7 @@ void SmoothOLED::draw_carousel_menu(int offset_x) {
 // =================================================================================
 
 void SmoothOLED::update_list_physics() {
-    _target_cursor_y = (float)(ITEM_START_Y + (_current_list_selection * LINE_HEIGHT) - 8);
+    _target_cursor_y = (float)(ITEM_START_Y + (_current_list_selection * LINE_HEIGHT) - 9);
     int text_pixel_width = 0;
     
     if (_popup_items && _popup_count > 0) {
@@ -234,7 +234,7 @@ void SmoothOLED::update_list_physics() {
             if (_marquee_delay > 0) {
                 _marquee_delay--;
             } else {
-                _marquee_offset += 1.0f;
+                _marquee_offset += 0.5f;
                 if (_marquee_offset > (text_pixel_width - max_visible_w + 6)) { 
                     _marquee_offset = 0;
                     _marquee_delay = 45; 
@@ -247,11 +247,6 @@ void SmoothOLED::update_list_physics() {
 }
 
 void SmoothOLED::draw_popup_menu() {
-    int MENU_BOX_X = 34;
-    int MENU_BOX_Y = 16;
-    int MENU_BOX_W = 64;
-    int MENU_BOX_H = 32;
-
     // Xóa nền đen để che đi phần Main Menu bên dưới
     _u8g2->setDrawColor(0);
     _u8g2->drawBox(MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H);
@@ -282,11 +277,12 @@ void SmoothOLED::draw_popup_menu() {
         }
     }
     
-    _u8g2->setMaxClipWindow();
-
     _u8g2->setDrawColor(2);
     _u8g2->drawBox(MENU_BOX_X + 2, (int)_cursor_y, (int)_cursor_w, 11);
     _u8g2->setDrawColor(1);
+
+    // Trả lại Clip Window SAU KHI vẽ Box XOR để Box không bị tràn viền
+    _u8g2->setMaxClipWindow();
 }
 
 // =================================================================================

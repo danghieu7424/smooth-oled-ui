@@ -69,9 +69,10 @@ const int TOTAL_ITEMS = 4; // BƯỚC 3: Tăng tổng số lượng phần tử 
 const char* popup_items[] = {
     "ScreenOff",
     "PowerOff",
-    "change mod"
+    "change mod",
+    "smooth screen ui"
 };
-const int TOTAL_POPUP_ITEMS = 3;
+const int TOTAL_POPUP_ITEMS = 4;
 
 const char* side_items[] = {
     "Normal",
