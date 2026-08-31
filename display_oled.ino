@@ -169,7 +169,7 @@ float side_cursor_w = 40.0f;       // Chiều dài thanh bôi đen
 const float TARGET_PARENT_X = 18.0f;
 const float TARGET_ARC_RADIUS = 52.0f;
 const float SIDE_LERP_FACTOR = 0.20f;
-const int SIDE_LINE_SPACING = 11;
+const int SIDE_LINE_SPACING = 14;
 
 void update_side_physics() {
     // Hiệu ứng mở cánh menu sang bên trái
@@ -222,14 +222,16 @@ void draw_side_list_menu() {
                 x_offset = side_arc_radius; // Nằm ngoài hình tròn thì đẩy thẳng ra ngoài cùng
             }
             
-            int text_x = 42 + (int)x_offset;
+            // Dịch tọa độ X gốc từ 42 về 30 để áp sát mặt nạ (khoảng cách 4px)
+            int text_x = 30 + (int)x_offset;
             u8g2.drawStr(text_x, item_y, side_list_items[i]);
         }
     }
 
     // --- LỚP 4: Thanh bôi đen đảo màu (XOR Mode) ---
     u8g2.setDrawColor(2);
-    u8g2.drawBox(40, base_y - 8, (int)side_cursor_w, 11);
+    // Dịch tọa độ X gốc của box từ 40 về 28 để ăn khớp với chữ mới
+    u8g2.drawBox(28, base_y - 8, (int)side_cursor_w, 11);
     u8g2.setDrawColor(1);
 
     u8g2.sendBuffer();
