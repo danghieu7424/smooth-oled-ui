@@ -153,6 +153,7 @@ void SmoothOLED::update_carousel_physics() {
 
 void SmoothOLED::draw_carousel_menu() {
     u8g2->clearBuffer();
+    u8g2->setFont(u8g2_font_6x10_tf);
     u8g2->drawStr(30, 10, "< MAIN MENU >");
 
     int screen_center_x = 64;
@@ -189,6 +190,7 @@ void SmoothOLED::draw_carousel_menu() {
 void SmoothOLED::update_popup_physics() {
     target_cursor_y = (float)(ITEM_START_Y + (current_list_selection * LINE_HEIGHT) - 8);
     if (popup_items && popup_count > 0) {
+        u8g2->setFont(u8g2_font_6x10_tf);
         int text_pixel_width = u8g2->getStrWidth(popup_items[current_list_selection]);
         target_cursor_w = (float)(text_pixel_width + 4);
     }
@@ -238,6 +240,7 @@ void SmoothOLED::update_side_physics() {
     float target_list_cam_y = (float)(side_selected_idx * SIDE_LINE_SPACING);
 
     if (side_items && side_count > 0) {
+        u8g2->setFont(u8g2_font_6x10_tf);
         int text_w = u8g2->getStrWidth(side_items[side_selected_idx]);
         float target_w = (float)(text_w + 6);
         side_cursor_w += (target_w - side_cursor_w) * SIDE_PHYSICS_SPEED;
@@ -250,6 +253,7 @@ void SmoothOLED::update_side_physics() {
 
 void SmoothOLED::draw_side_menu() {
     u8g2->clearBuffer();
+    u8g2->setFont(u8g2_font_6x10_tf);
 
     int pr_x = (int)side_parent_x;
     u8g2->drawXBM(pr_x - 12, 32 - 12, 24, 24, carousel_items[current_index].icon);
