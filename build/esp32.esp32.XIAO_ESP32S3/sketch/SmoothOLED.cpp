@@ -291,7 +291,7 @@ void SmoothOLED::draw_popup_menu() {
     }
     
     _u8g2->setDrawColor(2);
-    _u8g2->drawBox(MENU_BOX_X + 2, (int)_cursor_y, (int)_cursor_w, 11);
+    _u8g2->drawBox(MENU_BOX_X + 2, (int)_cursor_y, (int)_cursor_w, 13);
     _u8g2->setDrawColor(1);
 
     // Trả lại Clip Window SAU KHI vẽ Box XOR để Box không bị tràn viền
