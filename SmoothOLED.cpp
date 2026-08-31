@@ -86,7 +86,6 @@ void SmoothOLED::update_physics() {
 }
 
 void SmoothOLED::draw_carousel_menu() {
-    _u8g2->clearBuffer();
     _u8g2->drawStr(30, 10, "< MAIN MENU >");
 
     int screen_center_x = 64;
@@ -173,20 +172,16 @@ void SmoothOLED::update_list_physics() {
 }
 
 void SmoothOLED::draw_popup_menu() {
-    _u8g2->clearBuffer();
+    int MENU_BOX_X = 34;
+    int MENU_BOX_Y = 16;
+    int MENU_BOX_W = 64;
+    int MENU_BOX_H = 32;
 
-    _u8g2->setDrawColor(1);
-    _u8g2->setFont(u8g2_font_courB18_tf);
-    _u8g2->drawStr(5, 42, "12");
-    _u8g2->drawStr(100, 42, "18");
-    _u8g2->setFont(u8g2_font_5x7_tf);
-    _u8g2->drawStr(24, 8, "Tue 01 Oct 2024");
-    _u8g2->drawStr(88, 60, "33.1C");
-
+    // Xóa nền đen để che đi phần Main Menu bên dưới
     _u8g2->setDrawColor(0);
     _u8g2->drawBox(MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H);
-
     _u8g2->setDrawColor(1);
+
     _u8g2->drawFrame(MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H);
 
     _u8g2->setFont(u8g2_font_6x10_tf);
@@ -217,8 +212,6 @@ void SmoothOLED::draw_popup_menu() {
     _u8g2->setDrawColor(2);
     _u8g2->drawBox(MENU_BOX_X + 2, (int)_cursor_y, (int)_cursor_w, 11);
     _u8g2->setDrawColor(1);
-
-    flush_display();
 }
 
 // =================================================================================
@@ -239,10 +232,9 @@ void SmoothOLED::update_side_physics() {
 }
 
 void SmoothOLED::draw_side_list_menu() {
-    _u8g2->clearBuffer();
+    _u8g2->drawStr(24, 10, "MAIN MENU");
 
     _u8g2->setDrawColor(1);
-    _u8g2->drawStr((int)_side_parent_x - 4, 10, "MAIN MENU");
     
     // Fallback: draw a basic box if icon isn't accessible directly, or just assume first carousel icon is settings
     if (_carousel_items && _carousel_count > 2) {
@@ -279,8 +271,6 @@ void SmoothOLED::draw_side_list_menu() {
     _u8g2->setDrawColor(2);
     _u8g2->drawBox(35, base_y - 8, (int)_side_cursor_w, 11);
     _u8g2->setDrawColor(1);
-
-    flush_display();
 }
 
 // =================================================================================
@@ -288,60 +278,27 @@ void SmoothOLED::draw_side_list_menu() {
 // =================================================================================
 
 void SmoothOLED::update() {
-    uint32_t now = millis();
+    if (_auto_demo) {
+        demo_logic();
+    }
 
-    if (_app_state == STATE_CAROUSEL) {
-        if (_auto_demo && now - _last_switch > 2000) {
-            _last_switch = now;
-            _current_index++;
-            if (_current_index >= _carousel_count) {
-                _current_index = 0;
-                _app_state = STATE_POPUP;
-            }
-        }
+    _u8g2->clearBuffer();
 
-        if (now - _last_tick >= 16) {
-            _last_tick = now;
+    switch (_app_state) {
+        case STATE_CAROUSEL:
             update_physics();
             draw_carousel_menu();
-        }
-
-    } else if (_app_state == STATE_POPUP) {
-        if (_auto_demo && now - _last_switch > 1500) {
-            _last_switch = now;
-            _current_list_selection++;
-            if (_current_list_selection >= _popup_count) {
-                _current_list_selection = 0;
-                _app_state = STATE_SIDE_POPUP;
-                
-                _side_parent_x = 32.0f;
-                _side_arc_radius = 0.0f;
-                _side_list_cam_y = 0.0f;
-                _side_selected_idx = 0;
-            }
-        }
-
-        if (now - _last_tick >= 16) {
-            _last_tick = now;
+            break;
+        case STATE_POPUP:
             update_list_physics();
+            draw_carousel_menu(); // Vẽ nền Main Menu phía sau
             draw_popup_menu();
-        }
-
-    } else if (_app_state == STATE_SIDE_POPUP) {
-        if (_auto_demo && now - _last_switch > 1800) {
-            _last_switch = now;
-            _side_selected_idx++;
-            if (_side_selected_idx >= _side_count) {
-                _side_selected_idx = 0;
-                _current_index = 0; 
-                _app_state = STATE_CAROUSEL;
-            }
-        }
-
-        if (now - _last_tick >= 16) {
-            _last_tick = now;
+            break;
+        case STATE_SIDE_POPUP:
             update_side_physics();
             draw_side_list_menu();
-        }
+            break;
     }
+
+    flush_display();
 }
