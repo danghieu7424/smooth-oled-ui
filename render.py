@@ -2,7 +2,6 @@ import serial
 import cv2
 import numpy as np
 
-# Cấu hình cổng COM
 PORT = 'COM14'
 BAUD = 921600
 
@@ -17,24 +16,45 @@ out = cv2.VideoWriter('oled_capture.mp4', cv2.VideoWriter_fourcc(*'mp4v'), 60, (
 print(f"Đang kết nối {PORT}...")
 print("Bấm phím 'q' trên cửa sổ video để dừng và lưu file MP4.")
 
-buffer = b''
+def read_exact(ser, size):
+    buf = b''
+    while len(buf) < size:
+        data = ser.read(size - len(buf))
+        if not data:
+            return buf
+        buf += data
+    return buf
+
 try:
+    buffer = b''
+    synced = False
+    
     while True:
-        b = ser.read(1)
-        if not b:
-            continue
-        buffer += b
-        if len(buffer) > 4:
-            buffer = buffer[1:]
+        if not synced:
+            b = ser.read(1)
+            if not b: continue
+            buffer += b
+            if len(buffer) > 4:
+                buffer = buffer[1:]
+            if buffer == b'\xfe\xfe\xfe\xfe':
+                synced = True
+                buffer = b''
+        else:
+            # Đọc 1024 bytes dữ liệu
+            data = read_exact(ser, 1024)
+            if len(data) != 1024:
+                synced = False
+                continue
+                
+            # Đọc 4 bytes tiếp theo xem có phải Header của Frame sau không
+            next_header = read_exact(ser, 4)
             
-        if buffer == b'\xfe\xfe\xfe\xfe':
-            data = ser.read(1024)
-            if len(data) == 1024:
+            if next_header == b'\xfe\xfe\xfe\xfe':
+                # Khung ảnh hợp lệ 100% vì được kẹp giữa 2 Sync Header!
                 frame = np.zeros((64, 128), dtype=np.uint8)
                 data_arr = np.frombuffer(data, dtype=np.uint8).reshape((8, 128))
                 for page in range(8):
                     for bit in range(8):
-                        # Trích xuất bit từ LSB tới MSB của mỗi byte U8g2
                         frame[page*8 + bit, :] = ((data_arr[page] >> bit) & 1) * 255
                         
                 frame_scaled = cv2.resize(frame, (512, 256), interpolation=cv2.INTER_NEAREST)
@@ -45,6 +65,12 @@ try:
                 
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
+            else:
+                # Bắt nhầm Header ảo nằm bên trong dữ liệu ảnh -> Mất đồng bộ
+                # Đẩy 4 bytes vừa đọc sai vào lại buffer và tìm lại từ đầu
+                buffer = next_header
+                synced = False
+
 except KeyboardInterrupt:
     pass
 except Exception as e:
