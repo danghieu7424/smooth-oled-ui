@@ -95,7 +95,7 @@ void draw_carousel_menu() {
 }
 
 void setup() {
-  Wire.begin(21, 22);
+  Wire.begin(47, 48);
   // Tại sao (Why): Đặt I2C lên 400kHz (Fast Mode) bắt buộc để render đạt 60 FPS không bị nghẽn SPI.
   Wire.setClock(400000); 
   u8g2.begin();
