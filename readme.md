@@ -42,20 +42,78 @@ Script này sẽ tự động dọn dẹp các tiến trình Serial bị kẹt, 
 - **Tách biệt Logic và Render:** Mỗi Atom bao gồm một hàm `update_physics()` để tính toán vị trí, gia tốc độc lập với hàm `draw_menu()` chịu trách nhiệm đẩy Pixel ra màn hình.
 - **Glassmorphism & Masking:** Ứng dụng kỹ thuật xếp lớp (Z-Index bằng thứ tự vẽ) kết hợp XOR `setDrawColor(2)` để tạo cảm giác các khối Menu nổi đè lên nhau.
 
-## 🌐 Hướng dẫn Ghi Video 60FPS
+## 📚 Hướng dẫn tích hợp SmoothOLED (C++)
 
-```Bash
-# Cài đặt thư viện nếu máy bạn chưa có
-pip install pyserial opencv-python numpy
+Thư viện được thiết kế theo hướng đối tượng, đóng gói toàn bộ logic vật lý (Lerp) và render thành class `SmoothOLED`, giúp bạn dễ dàng tích hợp vào project ESP32 bất kỳ.
 
-# Chạy script để xem và thu video màn hình OLED
-python render.py
+### 1. Khởi tạo & Cấu hình (`setup`)
+```cpp
+#include <U8g2lib.h>
+#include <Wire.h>
+#include "SmoothOLED.h"
+
+// 1. Khai báo màn hình U8g2
+U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE, 48, 47);
+
+// 2. Truyền con trỏ u8g2 và cổng Serial vào class UI (Truyền &Serial để kích hoạt tính năng PC Viewer)
+SmoothOLED ui(&u8g2, &Serial); 
+
+void setup() {
+    Serial.begin(921600);
+    u8g2.begin();
+    
+    // 3. Gán dữ liệu cho các Menu
+    ui.setCarouselItems(menu_items, TOTAL_ITEMS, "< MAIN MENU >");
+    ui.setPopupListItems(popup_items, TOTAL_POPUP_ITEMS);
+    ui.setSidePopupItems(side_items, TOTAL_SIDE_ITEMS);
+
+    // 4. Cấu hình tính năng mở rộng
+    ui.enableAutoDemo(false); // Bật/Tắt chế độ tự động chạy Demo
+    ui.enablePCViewer(true);  // Bật xuất khung hình ra Serial (Nên TẮT tính năng này khi Build Release để tối ưu hiệu năng)
+    
+    // 5. Khởi động UI
+    ui.begin();
+}
 ```
-OR:
-```Bash
-# Cài đặt thư viện nếu máy bạn chưa có
-py -m pip install pyserial opencv-python numpy
 
-# Chạy script để xem và thu video màn hình OLED
-py render.py
+### 2. Vòng lặp chính & Xử lý Sự kiện (`loop`)
+```cpp
+void loop() {
+    // 1. Gọi hàm update() liên tục (hệ thống tự giới hạn Frame Limit 60FPS bên trong)
+    ui.update();
+
+    // 2. Chuyển tiếp các tín hiệu điều khiển (từ Nút bấm vật lý hoặc Serial) vào thư viện
+    if (Serial.available() > 0) {
+        char c = Serial.read();
+        if (c == 'U') ui.up();        // Chuyển mục lên / sang trái
+        if (c == 'D') ui.down();      // Chuyển mục xuống / sang phải
+        if (c == 'P') ui.openPopup(); // Mở Menu Popup (dạng Dropdown)
+        if (c == 'S') ui.openSideList();// Mở Menu Side Popup (dạng Cánh cung)
+        if (c == 'C') ui.closeOverlay();// Trở về Menu chính (Đóng các Popup)
+        if (c == 'E') ui.select();    // Chọn mục (Enter)
+    }
+}
 ```
+
+---
+
+## 🎮 Công cụ Giả lập & Ghi hình (PC Viewer)
+
+Hai tệp Script Python đính kèm đóng vai trò như một "Màn hình OLED Ảo" trên PC. Chúng nhận dữ liệu pixel thô từ cổng UART thảy ra từ ESP32 và render bằng OpenCV.
+Điểm đặc biệt là cả 2 script đều được tích hợp **Bộ lắng nghe bàn phím ngầm (Global Keylogger)**, cho phép bạn điều khiển màn hình ESP32 trực tiếp bằng bàn phím máy tính/Bluetooth!
+
+**Yêu cầu thư viện:**
+```bash
+pip install pyserial opencv-python numpy keyboard
+```
+
+### 1. Giám sát trực tiếp (`view.py`)
+Dành cho quá trình phát triển (Debug). Tạo ra một cửa sổ mô phỏng màn hình OLED để tương tác mà không cần cúi xuống nhìn màn hình vật lý.
+- **Lệnh chạy:** `py view.py`
+- **Điều khiển:** Phím Mũi tên (lên/xuống/trái/phải), Home, End, Esc, Enter.
+
+### 2. Trình Quay Video 60FPS (`render.py`)
+Chức năng điều khiển y hệt `view.py`, nhưng có thêm khả năng âm thầm lưu lại mọi khung hình bạn đang thao tác để kết xuất thành video chất lượng cao (`oled_capture.mp4`).
+- **Lệnh chạy:** `py render.py`
+- **Điều khiển:** Sử dụng phím điều hướng tương tự như trên.
+- **Kết thúc ghi hình:** Bấm phím `x` trên bàn phím máy tính hoặc bấm tắt cửa sổ. Script sẽ lập tức dừng thu và lưu file MP4 thành công!
