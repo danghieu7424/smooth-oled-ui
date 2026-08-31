@@ -101,9 +101,20 @@ void SmoothOLED::draw_carousel_menu() {
         }
     }
 
-    _u8g2->drawFrame(48, 14, 32, 32);
-    _u8g2->drawBox(46, 16, 2, 28); 
-    _u8g2->drawBox(80, 16, 2, 28);
+    // --- Vẽ viền khung Sci-fi (Chamfered Bracket) ---
+    // Khung trên
+    _u8g2->drawLine(52, 14, 76, 14); // Ngang trên
+    _u8g2->drawLine(52, 14, 48, 18); // Góc chéo trái
+    _u8g2->drawLine(76, 14, 80, 18); // Góc chéo phải
+    _u8g2->drawLine(48, 18, 48, 22); // Dọc trái xuống
+    _u8g2->drawLine(80, 18, 80, 22); // Dọc phải xuống
+
+    // Khung dưới
+    _u8g2->drawLine(52, 45, 76, 45); // Ngang dưới
+    _u8g2->drawLine(52, 45, 48, 41); // Góc chéo trái
+    _u8g2->drawLine(76, 45, 80, 41); // Góc chéo phải
+    _u8g2->drawLine(48, 41, 48, 37); // Dọc trái lên
+    _u8g2->drawLine(80, 41, 80, 37); // Dọc phải lên
 
     if (_carousel_items && _carousel_count > 0) {
         const char* label = _carousel_items[_current_index].title;
