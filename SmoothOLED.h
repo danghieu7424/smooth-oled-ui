@@ -34,7 +34,7 @@ public:
     void update(); // Gọi liên tục trong loop()
 
     // Cài đặt dữ liệu các màn hình
-    void setCarouselItems(const MenuItem* items, int count);
+    void setCarouselItems(const MenuItem* items, int count, const char* title = "< MAIN MENU >");
     void setPopupListItems(const char** items, int count);
     void setSidePopupItems(const char** items, int count);
 
@@ -55,6 +55,7 @@ private:
     // --- Biến Carousel ---
     const MenuItem* _carousel_items;
     int _carousel_count;
+    const char* _carousel_title;
     int _current_index;
     float _cam_x;
     float _target_cam_x;

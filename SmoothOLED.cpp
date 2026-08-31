@@ -6,6 +6,7 @@ SmoothOLED::SmoothOLED(U8G2* u8g2, Stream* serial) {
     _app_state = STATE_CAROUSEL;
     _overlay_state = OVERLAY_NONE;
     _overlay_anim = PHASE_IDLE;
+    _carousel_title = "< MAIN MENU >";
     _last_switch = 0;
     _last_tick = 0;
     _auto_demo = false;
@@ -47,9 +48,10 @@ void SmoothOLED::begin() {
     _last_switch = millis();
 }
 
-void SmoothOLED::setCarouselItems(const MenuItem* items, int count) {
+void SmoothOLED::setCarouselItems(const MenuItem* items, int count, const char* title) {
     _carousel_items = items;
     _carousel_count = count;
+    _carousel_title = title;
 }
 
 void SmoothOLED::setPopupListItems(const char** items, int count) {
@@ -87,7 +89,10 @@ void SmoothOLED::update_physics() {
 }
 
 void SmoothOLED::draw_carousel_menu(int offset_x) {
-    _u8g2->drawStr(30 + offset_x, 10, "< MAIN MENU >");
+    if (_carousel_title != nullptr) {
+        int title_w = _u8g2->getStrWidth(_carousel_title);
+        _u8g2->drawStr(64 - (title_w / 2) + offset_x, 10, _carousel_title);
+    }
 
     int screen_center_x = 64 + offset_x;
     int screen_center_y = 32;
