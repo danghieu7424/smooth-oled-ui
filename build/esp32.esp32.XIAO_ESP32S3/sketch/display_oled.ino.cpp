@@ -120,7 +120,7 @@ void loop() {
     char c = Serial.read();
     if (c == 'U') ui.up();        // Mũi tên lên / Trái
     else if (c == 'D') ui.down(); // Mũi tên xuống / Phải
-    else if (c == 'P') ui.openPopup(); // Phím Win
+    else if (c == 'P') ui.openPopup(); // Phím End (trước đây là Win)
     else if (c == 'S') ui.openSideList(); // Phím Home
     else if (c == 'C') ui.closeOverlay(); // Phím Esc
     else if (c == 'E') ui.select();       // Phím Enter

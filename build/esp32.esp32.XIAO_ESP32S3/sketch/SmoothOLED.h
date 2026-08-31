@@ -99,6 +99,7 @@ private:
     int _side_selected_idx;
     float _side_parent_x;
     float _side_arc_radius;
+    float _side_slide_x;
     float _side_list_cam_y;
     float _side_cursor_w;
     const float TARGET_PARENT_X = 18.0f;

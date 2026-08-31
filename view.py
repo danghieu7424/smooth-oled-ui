@@ -2,6 +2,7 @@ import serial
 import cv2
 import numpy as np
 import time
+import keyboard
 
 PORT = 'COM14'
 BAUD = 921600
@@ -13,7 +14,38 @@ except Exception as e:
     exit(1)
 
 print(f"Đang kết nối {PORT}...")
+print("=============================================")
+print(" ĐÃ TÍCH HỢP ĐIỀU KHIỂN BÀN PHÍM BLUETOOTH   ")
+print("=============================================")
+print(" - Mũi tên TRÁI / LÊN    : Lên (Up / Prev)")
+print(" - Mũi tên PHẢI / XUỐNG  : Xuống (Down / Next)")
+print(" - Phím HOME             : Mở Side List")
+print(" - Phím END              : Mở Popup List")
+print(" - Phím ESC              : Đóng các Menu")
+print(" - Phím ENTER            : Chọn (Dự phòng)")
 print("Bạn có thể tắt cửa sổ video bằng nút X trên thanh tiêu đề.")
+
+# --- Thiết lập bắt phím ngầm (Global Hook) ---
+last_press = 0
+def send_char(c):
+    global last_press
+    now = time.time()
+    if now - last_press > 0.15:
+        try:
+            ser.write(c.encode())
+            last_press = now
+        except:
+            pass
+
+keyboard.on_press_key('left', lambda _: send_char('U'))
+keyboard.on_press_key('up', lambda _: send_char('U'))
+keyboard.on_press_key('right', lambda _: send_char('D'))
+keyboard.on_press_key('down', lambda _: send_char('D'))
+keyboard.on_press_key('home', lambda _: send_char('S'))
+keyboard.on_press_key('end', lambda _: send_char('P'))
+keyboard.on_press_key('esc', lambda _: send_char('C'))
+keyboard.on_press_key('enter', lambda _: send_char('E'))
+# ---------------------------------------------
 
 def read_exact(ser, size):
     buf = b''

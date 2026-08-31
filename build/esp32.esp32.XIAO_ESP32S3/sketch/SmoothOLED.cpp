@@ -8,6 +8,7 @@ SmoothOLED::SmoothOLED(U8G2* u8g2, Stream* serial) {
     _overlay_state = OVERLAY_NONE;
     _overlay_anim = PHASE_IDLE;
     _carousel_title = "< MAIN MENU >";
+    _side_slide_x = 128.0f;
     _last_switch = 0;
     _last_tick = 0;
     _auto_demo = false;
@@ -80,20 +81,26 @@ void SmoothOLED::enableAutoDemo(bool enable) {
 void SmoothOLED::up() {
     if (_overlay_state == OVERLAY_SIDE_POPUP) {
         if (_side_selected_idx > 0) _side_selected_idx--;
+        else _side_selected_idx = _side_count - 1;
     } else if (_app_state == STATE_POPUP && _overlay_state == OVERLAY_NONE) {
         if (_current_list_selection > 0) _current_list_selection--;
+        else _current_list_selection = _popup_count - 1;
     } else if (_app_state == STATE_CAROUSEL && _overlay_state == OVERLAY_NONE) {
         if (_current_index > 0) _current_index--;
+        else _current_index = _carousel_count - 1;
     }
 }
 
 void SmoothOLED::down() {
     if (_overlay_state == OVERLAY_SIDE_POPUP) {
         if (_side_selected_idx < _side_count - 1) _side_selected_idx++;
+        else _side_selected_idx = 0;
     } else if (_app_state == STATE_POPUP && _overlay_state == OVERLAY_NONE) {
         if (_current_list_selection < _popup_count - 1) _current_list_selection++;
+        else _current_list_selection = 0;
     } else if (_app_state == STATE_CAROUSEL && _overlay_state == OVERLAY_NONE) {
         if (_current_index < _carousel_count - 1) _current_index++;
+        else _current_index = 0;
     }
 }
 
@@ -112,6 +119,7 @@ void SmoothOLED::openSideList() {
         _overlay_state = OVERLAY_SIDE_POPUP;
         _overlay_anim = PHASE_OPENING;
         _side_arc_radius = 0.0f;
+        _side_slide_x = 0.0f;
         _side_list_cam_y = 0.0f;
         _side_selected_idx = 0;
     }
@@ -284,9 +292,13 @@ void SmoothOLED::draw_popup_menu() {
 // =================================================================================
 
 void SmoothOLED::update_side_physics() {
-    float target_arc = (_overlay_anim == PHASE_CLOSING) ? 0.0f : TARGET_ARC_RADIUS;
-    
+    // Khi Opening, arc tăng dần từ 0 -> TARGET_ARC. Khi Closing, arc giữ nguyên
+    float target_arc = (_overlay_anim == PHASE_CLOSING) ? TARGET_ARC_RADIUS : TARGET_ARC_RADIUS;
     _side_arc_radius += (target_arc - _side_arc_radius) * SIDE_LERP_FACTOR;
+
+    // Khi Closing, slide sang phải 128px
+    float target_slide = (_overlay_anim == PHASE_CLOSING) ? 128.0f : 0.0f;
+    _side_slide_x += (target_slide - _side_slide_x) * SIDE_LERP_FACTOR;
 
     float target_cam_y = (float)(_side_selected_idx * SIDE_LINE_SPACING);
     _side_list_cam_y += (target_cam_y - _side_list_cam_y) * SIDE_LERP_FACTOR;
@@ -296,7 +308,8 @@ void SmoothOLED::update_side_physics() {
         _side_cursor_w += (target_w - _side_cursor_w) * SIDE_LERP_FACTOR;
     }
 
-    if (_overlay_anim == PHASE_CLOSING && _side_arc_radius < 1.0f) {
+    // Đóng hoàn toàn khi đã trượt ra ngoài đủ xa
+    if (_overlay_anim == PHASE_CLOSING && _side_slide_x > 126.0f) {
         _overlay_state = OVERLAY_NONE;
         _overlay_anim = PHASE_IDLE;
         _last_switch = millis();
@@ -304,17 +317,21 @@ void SmoothOLED::update_side_physics() {
 }
 
 void SmoothOLED::draw_side_list_menu() {
+    int slide_offset = (int)_side_slide_x;
+
     // Không tự vẽ đè Icon cũ nữa, để Carousel tự dịch chuyển mượt mà làm nền
     _u8g2->setDrawColor(0);
-    _u8g2->drawDisc(78, 32, (int)_side_arc_radius);
+    _u8g2->drawDisc(78 + slide_offset, 32, (int)_side_arc_radius);
 
     _u8g2->setDrawColor(1);
-    _u8g2->drawCircle(78, 32, (int)_side_arc_radius, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_LOWER_LEFT);
+    _u8g2->drawCircle(78 + slide_offset, 32, (int)_side_arc_radius, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_LOWER_LEFT);
 
     _u8g2->setFont(u8g2_font_6x10_tf);
-    int base_y = 37;
+    
+    int list_y_start = 37 - (int)_side_list_cam_y;
+
     for (int i = 0; i < _side_count; i++) {
-        int item_y = base_y + (i * SIDE_LINE_SPACING) - (int)_side_list_cam_y;
+        int item_y = list_y_start + (i * SIDE_LINE_SPACING);
 
         if (item_y > 0 && item_y < 74) {
             float dy = (float)(item_y - 5 - 32); 
@@ -324,17 +341,23 @@ void SmoothOLED::draw_side_list_menu() {
             if (_side_arc_radius > dy) {
                 x_offset = _side_arc_radius - sqrt(_side_arc_radius * _side_arc_radius - dy * dy);
             } else {
-                x_offset = _side_arc_radius;
+                x_offset = _side_arc_radius; 
             }
-            
-            int text_x = 37 + (int)x_offset;
-            _u8g2->drawStr(text_x, item_y, _side_items[i]);
+
+            int final_x = 78 + (int)_side_arc_radius + 4 - (int)x_offset + slide_offset;
+
+            if (i == _side_selected_idx) {
+                _u8g2->setDrawColor(1);
+                _u8g2->drawRBox(final_x - 2, item_y - 8, (int)_side_cursor_w, 10, 2);
+                
+                _u8g2->setDrawColor(0);
+                _u8g2->drawStr(final_x, item_y, _side_items[i]);
+            } else {
+                _u8g2->setDrawColor(1);
+                _u8g2->drawStr(final_x, item_y, _side_items[i]);
+            }
         }
     }
-
-    _u8g2->setDrawColor(2);
-    _u8g2->drawBox(35, base_y - 8, (int)_side_cursor_w, 11);
-    _u8g2->setDrawColor(1);
 }
 
 // =================================================================================
@@ -398,7 +421,12 @@ void SmoothOLED::update() {
         if (_overlay_state == OVERLAY_SIDE_POPUP) {
             update_side_physics();
             // Đẩy màn hình nền sang trái dựa trên hoạt ảnh của Side Popup
-            background_offset_x = -(int)((_side_arc_radius / TARGET_ARC_RADIUS) * 46.0f);
+            // Nhưng kết hợp cả _side_slide_x khi đóng
+            float combined_push = (_side_arc_radius / TARGET_ARC_RADIUS) * 46.0f;
+            if (_overlay_anim == PHASE_CLOSING) {
+                combined_push = (1.0f - (_side_slide_x / 128.0f)) * 46.0f;
+            }
+            background_offset_x = -(int)combined_push;
         }
 
         // 2. Draw Background
