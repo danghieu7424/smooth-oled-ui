@@ -123,7 +123,7 @@ void SmoothOLED::openSideList() {
         _overlay_state = OVERLAY_SIDE_POPUP;
         _overlay_anim = PHASE_OPENING;
         _side_arc_radius = 0.0f;
-        _side_slide_x = 0.0f;
+        _side_slide_x = 128.0f;
         _side_list_cam_y = 0.0f;
         _side_selected_idx = 0;
     }
