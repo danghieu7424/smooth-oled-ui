@@ -59,10 +59,13 @@ const char* list_items[] = {
 };
 
 const char* side_list_items[] = {
-    "Option A",
-    "Option B",
-    "Option C",
-    "Option D"
+    "Normal",
+    "CodeRain",
+    "TerminalSim",
+    "SimClock",
+    "Cube3D",
+    "Snow",
+    "Galaxy"
 };
 
 void setup() {
@@ -80,7 +83,7 @@ void setup() {
     // Truyền dữ liệu vào thư viện giao diện
     ui.setCarouselItems(menu_items, 4);
     ui.setPopupItems(list_items, 3);
-    ui.setSideMenuItems(side_list_items, 4);
+    ui.setSideMenuItems(side_list_items, 7);
 
     // Bật chế độ tự động trình diễn
     ui.enableDemoMode(true);
