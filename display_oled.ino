@@ -3,15 +3,15 @@
 #include <Wire.h>
 #include "SmoothOLED.h"
 
-// Khởi tạo SSD1306 I2C chế độ Full Buffer
-// Căn cứ theo quyết định kinh doanh: Chế độ Full Buffer cần 1024 Bytes RAM nhưng tối ưu tốc độ xé hình tốt nhất.
+// Khởi tạo màn hình
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
-// Khởi tạo thư viện giao diện
-SmoothOLED ui(&u8g2);
+// Truyền tham chiếu màn hình và UART (để Stream) vào lõi thư viện
+SmoothOLED ui(&u8g2, &Serial);
 
-// --- [DATA] ---
-// Các Icon XBM 24x24
+// =======================================================================
+// [DATA] Danh sách Icon (XBM 24x24)
+// =======================================================================
 static const unsigned char icon_home[] U8X8_PROGMEM = {
   0x00, 0x08, 0x00, 0x00, 0x1c, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x7f, 0x00,
   0x80, 0xff, 0x00, 0xc0, 0xff, 0x01, 0xe0, 0xff, 0x03, 0xf0, 0xff, 0x07,
@@ -20,6 +20,7 @@ static const unsigned char icon_home[] U8X8_PROGMEM = {
   0x0e, 0x00, 0x38, 0x0e, 0x00, 0x38, 0x0e, 0x00, 0x38, 0x0e, 0x00, 0x38,
   0x0e, 0x00, 0x38, 0xfe, 0xff, 0x3f, 0xfe, 0xff, 0x3f, 0x00, 0x00, 0x00
 };
+
 static const unsigned char icon_brightness[] U8X8_PROGMEM = {
   0x00, 0x08, 0x00, 0x00, 0x08, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x00,
   0x04, 0x00, 0x10, 0x08, 0xc0, 0x08, 0x10, 0xf0, 0x04, 0x20, 0xf8, 0x02,
@@ -28,6 +29,7 @@ static const unsigned char icon_brightness[] U8X8_PROGMEM = {
   0x20, 0xf8, 0x02, 0x10, 0xf0, 0x04, 0x08, 0xc0, 0x08, 0x04, 0x00, 0x10,
   0x00, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00, 0x08, 0x00, 0x00, 0x08, 0x00
 };
+
 static const unsigned char icon_settings[] U8X8_PROGMEM = {
   0x00, 0x00, 0x00, 0x00, 0x18, 0x00, 0x80, 0x18, 0x00, 0x80, 0x3c, 0x00,
   0x80, 0x7e, 0x00, 0x08, 0x7e, 0x08, 0x1c, 0xff, 0x1c, 0x3e, 0xff, 0x3e,
@@ -36,6 +38,7 @@ static const unsigned char icon_settings[] U8X8_PROGMEM = {
   0x3e, 0xff, 0x3e, 0x1c, 0xff, 0x1c, 0x08, 0x7e, 0x08, 0x80, 0x7e, 0x00,
   0x80, 0x3c, 0x00, 0x80, 0x18, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0x00
 };
+
 static const unsigned char icon_about[] U8X8_PROGMEM = {
   0x00, 0xf8, 0x00, 0x00, 0xfc, 0x01, 0x00, 0xfe, 0x03, 0x00, 0xff, 0x07,
   0x80, 0x8f, 0x0f, 0xc0, 0x07, 0x1f, 0xe0, 0x03, 0x3f, 0xe0, 0x03, 0x3f,
@@ -51,14 +54,16 @@ const MenuItem menu_items[] = {
     {"Settings", icon_settings},
     {"About", icon_about}
 };
+const int TOTAL_ITEMS = 4;
 
-const char* list_items[] = {
+const char* popup_items[] = {
     "ScreenOff",
     "PowerOff",
     "change mod"
 };
+const int TOTAL_POPUP_ITEMS = 3;
 
-const char* side_list_items[] = {
+const char* side_items[] = {
     "Normal",
     "CodeRain",
     "TerminalSim",
@@ -67,29 +72,33 @@ const char* side_list_items[] = {
     "Snow",
     "Galaxy"
 };
+const int TOTAL_SIDE_ITEMS = 7;
 
+
+// =======================================================================
+// [SETUP & LOOP]
+// =======================================================================
 void setup() {
-    // Khởi tạo UART tốc độ cực cao để Stream Video 60FPS
-    Serial.begin(921600);
+  Serial.begin(921600);
+  
+  Wire.begin(47, 48);
+  Wire.setClock(400000); 
+  u8g2.begin();
+  u8g2.setContrast(20);
 
-    Wire.begin(47, 48);
-    // Tại sao (Why): Đặt I2C lên 400kHz (Fast Mode) bắt buộc để băng thông SPI/I2C đủ xả 1024 Bytes trong 16ms (đạt 60 FPS).
-    Wire.setClock(400000); 
-    u8g2.begin();
+  // 1. Gán mảng dữ liệu vào thư viện UI
+  ui.setCarouselItems(menu_items, TOTAL_ITEMS);
+  ui.setPopupListItems(popup_items, TOTAL_POPUP_ITEMS);
+  ui.setSidePopupItems(side_items, TOTAL_SIDE_ITEMS);
 
-    // Tại sao (Why): Màn hình OLED SSD1306 hỗ trợ dải tương phản (0-255). Giảm độ sáng giúp chống cháy điểm ảnh (Burn-in) và giảm chói vào ban đêm.
-    u8g2.setContrast(20); 
+  // 2. Bật chế độ Demo vòng lặp vô hạn
+  ui.enableAutoDemo(true);
 
-    // Truyền dữ liệu vào thư viện giao diện
-    ui.setCarouselItems(menu_items, 4);
-    ui.setPopupItems(list_items, 3);
-    ui.setSideMenuItems(side_list_items, 7);
-
-    // Bật chế độ tự động trình diễn
-    ui.enableDemoMode(true);
+  // 3. Khởi động UI
+  ui.begin();
 }
 
 void loop() {
-    // Gọi liên tục để cập nhật Physics LERP và vẽ giao diện
-    ui.update(millis());
+  // Chỉ 1 dòng duy nhất để xử lý toàn bộ Physics và Render!
+  ui.update();
 }
