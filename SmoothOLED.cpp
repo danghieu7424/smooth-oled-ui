@@ -157,6 +157,8 @@ void SmoothOLED::update_physics() {
 }
 
 void SmoothOLED::draw_carousel_menu(int offset_x) {
+    _u8g2->setDrawColor(1); // Tránh rò rỉ màu từ frame trước
+    
     if (_carousel_title != nullptr) {
         int title_w = _u8g2->getStrWidth(_carousel_title);
         _u8g2->drawStr(64 - (title_w / 2) + offset_x, 10, _carousel_title);
@@ -357,6 +359,8 @@ void SmoothOLED::draw_side_list_menu() {
             }
         }
     }
+    
+    _u8g2->setDrawColor(1); // Reset lại màu chuẩn cho các frame tiếp theo
 }
 
 // =================================================================================
@@ -418,11 +422,13 @@ void SmoothOLED::update() {
 
         // 1. Overlay Physics
         if (_overlay_state == OVERLAY_SIDE_POPUP) {
+            bool was_closing = (_overlay_anim == PHASE_CLOSING);
             update_side_physics();
+            
             // Đẩy màn hình nền sang trái dựa trên hoạt ảnh của Side Popup
             // Nhưng kết hợp cả _side_slide_x khi đóng
             float combined_push = (_side_arc_radius / TARGET_ARC_RADIUS) * 46.0f;
-            if (_overlay_anim == PHASE_CLOSING) {
+            if (was_closing) {
                 combined_push = (1.0f - (_side_slide_x / 128.0f)) * 46.0f;
             }
             background_offset_x = -(int)combined_push;
