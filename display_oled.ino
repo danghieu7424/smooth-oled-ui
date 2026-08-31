@@ -96,9 +96,13 @@ void draw_carousel_menu() {
 
 void setup() {
   Wire.begin(47, 48);
-  // Tại sao (Why): Đặt I2C lên 400kHz (Fast Mode) bắt buộc để render đạt 60 FPS không bị nghẽn SPI.
+  // Tại sao (Why): Đặt I2C lên 400kHz (Fast Mode) bắt buộc để băng thông SPI/I2C đủ xả 1024 Bytes trong 16ms (đạt 60 FPS).
   Wire.setClock(400000); 
   u8g2.begin();
+  
+  // Tại sao (Why): Màn hình OLED SSD1306 hỗ trợ dải tương phản (0-255). Giảm độ sáng giúp chống cháy điểm ảnh (Burn-in) và giảm chói vào ban đêm.
+  u8g2.setContrast(50); // Mức độ sáng 50/255 (khoảng 20%). Bạn có thể đổi số này.
+
   u8g2.setFont(u8g2_font_6x10_tf);
 }
 
