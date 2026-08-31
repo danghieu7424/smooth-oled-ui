@@ -97,9 +97,9 @@ const int MENU_BOX_H = 36;
 const int ITEM_START_Y = 26; 
 const int LINE_HEIGHT = 10;  
 
-float cursor_y = (float)(ITEM_START_Y - 9);
+float cursor_y = (float)(ITEM_START_Y - 8);
 float cursor_w = 56.0f;
-float target_cursor_y = (float)(ITEM_START_Y - 9);
+float target_cursor_y = (float)(ITEM_START_Y - 8);
 float target_cursor_w = 56.0f;
 const float LIST_LERP_FACTOR = 0.22f;
 
@@ -140,7 +140,8 @@ void draw_popup_menu() {
     // Đảo màu XOR (Invert Mode)
     // Tại sao (Why): Đè box XOR màu 2 lên chữ để tạo hiệu ứng chia cắt màu sắc mà không cần tính toán tọa độ font phức tạp
     u8g2.setDrawColor(2);
-    u8g2.drawBox(MENU_BOX_X + 2, (int)cursor_y, (int)cursor_w, 9);
+    // Tăng chiều cao hộp thoại từ 9 lên 11 để bao trọn các ký tự có đuôi (g, y, p...)
+    u8g2.drawBox(MENU_BOX_X + 2, (int)cursor_y, (int)cursor_w, 11);
     u8g2.setDrawColor(1); // Reset lại chế độ màu
 
     u8g2.sendBuffer();
