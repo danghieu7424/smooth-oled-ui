@@ -1,89 +1,191 @@
-# TÀI LIỆU KIẾN TRÚC HỆ THỐNG - FACE ROBOT ESP32-S3
-*(Tài liệu này đóng vai trò như một Single Source of Truth cho toàn bộ dự án)*
+[HW-ELEC]
 
-## 1. TỔNG QUAN KIẾN TRÚC (HYBRID FSD + ATOMIC)
-Dự án được xây dựng dựa trên nguyên lý chia rẽ mối bận tâm (Separation of Concerns) để đảm bảo ESP32-S3 hoạt động ở hiệu suất tối đa (20+ FPS) trong khi vẫn chạy được thuật toán Trí Tuệ Nhân Tạo (AI).
+SDA: **47**
 
-Hệ thống được thiết kế theo cấu trúc Modular hóa C++ đa luồng (Multi-core) độc lập:
+SCL: **48**
 
-- **Core 0 (Não bộ - `AITask` trong `Comms.cpp`):** Đảm nhiệm việc giao tiếp với ESP32 Master qua UART, đọc lệnh thay đổi cảm xúc.
-- **Core 1 (Khuôn mặt - `loop()` trong `face_rbot.ino`):** Đảm nhiệm việc gọi hàm nội suy tọa độ (`updateFaceLogic()` trong `Animation.cpp`) và dựng hình Vector (`renderToScreen()`). Tuyệt đối không chứa logic đọc/ghi Blocking.
 
-Giao tiếp giữa 2 Core được thực hiện qua biến chia sẻ nguyên tử (Atomic Shared Variable) `volatile int targetEmotionCode` được định nghĩa chung trong `FaceGlobals.h`.
+Qua phân tích video, hệ thống UI này được xây dựng trên nền tảng **NWatch** kết hợp các hiệu ứng nội suy mượt mà từ mã nguồn mở **TxtViewer** (phổ biến trong cộng đồng DIY Smartwatch).
 
 ---
 
-## 2. CẤU TRÚC MODULE (C++ MULTI-FILE ARCHITECTURE)
-Để tránh phình to mã nguồn (Monolithic), dự án được chia thành các module với trách nhiệm rõ ràng:
+### 1. Phân tích Các Kỹ thuật Cốt lõi Tạo nên Độ Mượt
 
-### `FaceTypes.h`
-Định nghĩa cấu trúc dữ liệu cơ bản (`struct FaceState`) và toàn bộ các biểu cảm tĩnh (ví dụ: `stateNormal`, `stateHappy`, `stateSleep`).
+1. **Menu trượt ngang (Carousel Icon Menu):**
+* Các icon $16\times16$ hoặc $24\times24$ được định vị theo một trục tọa độ toàn cục ($X$).
+* Tọa độ hiển thị của camera/khung nhìn được kéo bám theo icon được chọn bằng thuật toán quán tính/Lerp:
 
-### `FaceGlobals.h` / `FaceGlobals.cpp`
-Chứa các biến toàn cục (Global Variables) cần dùng chung giữa các Module:
-- `currentFace`, `targetFace` (dùng cho Lerp Animation).
-- `targetEmotionCode`, `lastEmotionCode`, `lastInteractionTime` (dùng cho State Machine).
-- `susWeight`, `blinkFactor` (dùng cho ghi đè Animation).
+$$X_{current} = X_{current} + (X_{target} - X_{current}) \times K \quad (0.1 \le K \le 0.3)$$
 
-### `Display.h` / `Display.cpp`
-Tầng trừu tượng phần cứng (Hardware Abstraction Layer).
-- Khởi tạo thư viện `LovyanGFX`, gán cấu hình cho SPI và màn hình ST7789.
-- Chứa thuật toán vẽ cơ bản cốt lõi `drawGradientAsymmetricRect` (Concentric Layering).
 
-### `Animation.h` / `Animation.cpp`
-Tầng Logic Animation và VFX.
-- `updateFaceLogic()`: Tính toán nội suy (Linear Interpolation - Lerp) để khung hình chuyển động mượt mà.
-- `drawEye()`: Ghép các vòng Rect lại để tạo thành đôi mắt 3D nổi khối.
-- `renderToScreen()`: Tổng hợp Mắt và Miệng, đồng thời thêm các dao động Toán học (Sóng Sin/Cos) để tạo hiệu ứng thở, ngáp, khóc, chóng mặt.
 
-### `Comms.h` / `Comms.cpp`
-Tầng Giao tiếp.
-- Chứa `AITask` chạy độc lập trên Core 0, lắng nghe Serial và cập nhật trạng thái mục tiêu.
 
-### `AI_Logic.h` / `AI_Logic.cpp`
-Tầng Trí tuệ Nhân tạo (Tabular Q-Learning). Đóng gói thuật toán Bellman để máy học từ Cảm biến giả lập. (Mã chờ mở rộng cho tính năng Reinforcement Learning).
+2. **Khung chọn co giãn (Elastic Selection Box):**
+* Trong danh sách dọc hoặc menu icon, khung viền focus không nhảy tức thì mà đồng thời thay đổi cả $X, Y, \text{Width}, \text{Height}$ theo công thức nội suy về kích thước và vị trí đích.
 
-### `face_rbot.ino`
-Điểm neo (Entry point) duy nhất:
-- `#include` các Module trên.
-- Khởi tạo `setup()` (gọi `tft.init()` và `xTaskCreatePinnedToCore`).
-- Xử lý `loop()`:
-  - Logic **Timeout Nhàn rỗi**: Rảnh quá 15s -> Ngó nghiêng xung quanh.
-  - Logic **Timeout Ngủ gật**: Ngó nghiêng quá 10 phút (600s) -> Nhắm mắt đi ngủ.
-  - Điều phối `updateFaceLogic()` và `renderToScreen()`.
+
+3. **Hiệu ứng chuyển cảnh (Window Transitions):**
+* Khi mở/đóng sub-menu, giao diện áp dụng hiệu ứng mở rộng/thu nhỏ hình chữ nhật (Zoom Box Wipe) hoặc trượt dọc đè lên màn hình trước đó.
+
+
+4. **Cơ chế Vẽ 1 Lớp (Single Full Framebuffer):**
+* Toàn bộ phép toán vẽ (Icon, Text, Border) thực thi trên mảng RAM $128 \times 64 \text{ bits} = 1024\text{ Bytes}$. Không can thiệp ghi lẻ tẻ vào SSD1306, chỉ đẩy toàn bộ buffer qua SPI/I2C ở cuối frame.
+
+
 
 ---
 
-## 3. NHỮNG THÀNH TỰU KỸ THUẬT CỐT LÕI (CORE IMPLEMENTATIONS)
+### 2. Sơ đồ Khối Phần cứng & Giao tiếp
 
-### 3.1. Đồ họa Đa lớp Đồng tâm (Concentric Layering)
-* **Vấn đề:** Không thể dùng hàm vẽ Sprite mờ lề (Anti-aliasing) hoặc Easing Alpha của LovyanGFX vì ngốn RAM và giảm FPS trầm trọng.
-* **Giải pháp:** Sử dụng thuật toán **Concentric Layering (Các lớp đồng tâm)** thông qua hàm tự viết `drawGradientAsymmetricRect()`. 
-* **Cách hoạt động:** Dùng Scanline Rasterization kết hợp công thức phương trình Elip `x = r - r * sqrt(1 - (dy/r)^2)` để vẽ các đường `drawFastHLine`. Hình ảnh có cảm giác 3D nổi khối và viền siêu mượt do sự hòa trộn màu gradient theo chiều dọc (VGradient).
+```
+  +-------------------------------------------------------------+
+  |                        ESP32 / STM32                        |
+  |                                                             |
+  |  +------------------+     +-------------------------------+ |
+  |  |  Physics Engine  | --> |     Full Frame Buffer (RAM)   | |
+  |  |  (Lerp / Easing) |     |  128 x 64 bits = 1024 Bytes   | |
+  |  +------------------+     +-------------------------------+ |
+  +-------------------------------------------|-----------------+
+                                              | SPI (SCK/MOSI) @ 10MHz
+                                              | (hoặc I2C @ 400kHz - 800kHz)
+                                              v
+                               +-----------------------------+
+                               |     OLED Module (SSD1306)   |
+                               |    128x64 0.96" / 1.3"      |
+                               +-----------------------------+
 
-### 3.2. Hiệu ứng Hoạt họa Động (Dynamic VFX)
-Thay vì sử dụng Sprite chuyển động truyền thống tốn kém bộ nhớ, các hiệu ứng sinh động được tính toán bằng Toán học (Sóng Sin/Cos) ngay trong quá trình Render:
-* **Ngủ (Sleep):** Mí mắt từ từ sụp xuống thông qua phép nội suy bậc nhất (Linear Interpolation) dựa theo % thời gian kết hợp với sóng Sin tần số siêu nhỏ (`0.008`) để giả lập 1-2 lần chép miệng thèm ăn trong khi đang ngái ngủ.
-* **Chóng mặt (Dizzy):** Cộng thêm đồ thị Hình Sin/Cos (`sin/cos`) vào `offsetX/offsetY` để khiến con mắt xoay mòng mòng liên tục.
-* **Nháy mắt (Wink):** Ghi đè chỉ số `blinkFactor` riêng biệt cho từng mắt tại thời điểm vẽ (Mắt trái khép tịt `0.05f`, mắt phải giữ nguyên).
-
-### 3.3. Sửa Lỗi Hoán Đổi Byte (Endianness Mismatch) của SPI DMA
-* **Vấn đề:** Khi định nghĩa màu Xanh Lá (Green), màn hình lại hiển thị màu Xanh Dương (Blue) hoặc Tím (Magenta).
-* **Nguyên nhân:** CPU ESP32 sử dụng Little-Endian, nhưng chuẩn SPI của màn hình LCD lại là Big-Endian. Khi thư viện DMA đẩy 16-bit màu (RGB565) qua dây cáp, Byte thấp và Byte cao bị đảo ngược. Điều này khiến dải màu Xanh Lá (nằm ở giữa 6-bit) bị cắt đôi và phân bổ lộn xộn vào kênh Đỏ (Red) và Xanh Dương (Blue).
-* **Giải pháp RALL (Phải Tuân Thủ):** 
-  - Khai báo mọi màu sắc gốc dưới dạng **HEX RGB888** (Ví dụ: `0x00DC00` cho Xanh Lá).
-  - Đưa màu vào hàm `lerpColor()`. Bước cuối cùng của hàm này **BẮT BUỘC** phải có thao tác hoán đổi bit (Bitwise Swap).
+```
 
 ---
 
-## 4. QUY TẮC CỨNG DÀNH CHO BẤT KỲ AI ĐỌC/SỬA MÃ NGUỒN (GUARDRAILS)
+### 3. Mã Nguồn Mẫu (ESP32 / Arduino C++ - Chuẩn NWatch/TxtViewer Carousel)
 
-Nếu bạn là tôi trong tương lai hoặc một AI Sparing Partner khác, bạn **BẮT BUỘC PHẢI TUÂN THỦ** các nguyên tắc sau:
+Đoạn code dưới đây triển khai menu trượt ngang biểu tượng động với thuật toán nội suy Lerp hoàn chỉnh, có thể nạp trực tiếp qua Arduino IDE / PlatformIO:
 
-1. **KHÔNG BLOCKING TRÊN CORE 1:** Mọi thao tác chờ đợi (delay, kết nối WiFi) phải đưa vào Task của Core 0 (`Comms.cpp`). Core 1 (`loop()`) chỉ được quyền điều phối Animation.
-2. **KIẾN TRÚC MÔ ĐUN:** Không được nhét thêm logic vào file `face_rbot.ino`. Nó chỉ là file điều phối (Entry point). Khi thêm tính năng, phải xác định xem nó thuộc về `Display` (Hiển thị), `Animation` (Chuyển động), hay `AI` (Tính toán).
-3. **MẮT XÍCH MÀU SẮC:** Khi đổi màu giao diện, phải tuân thủ chuẩn RGB888 và thay đổi ở mảng định nghĩa màu cục bộ. Không được hardcode màu sắc rác trong các thân hàm vẽ.
-4. **COMMENT THEO NGUYÊN TẮC "WHY":** Mọi hàm quan trọng phải có Block Comment giải thích tại sao lại viết như vậy, phục vụ nghiệp vụ gì. Không giải thích cú pháp C++.
-5. **THÁI ĐỘ MÃ NGUỒN:** Cấm sử dụng dấu ba chấm `...` khi cung cấp đoạn mã để sửa đổi. Sửa phần nào thì cung cấp trọn vẹn Logic khối (Block) đó.
+```cpp
+#include <Arduino.h>
+#include <U8g2lib.h>
+#include <Wire.h>
 
-> *Tài liệu này được tạo ra để lưu giữ tư duy kiến trúc ban đầu. Hãy trân trọng và đừng phá vỡ nó.*
+// Khởi tạo SSD1306 I2C chế độ Full Buffer
+U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
+
+// Khai báo Icon mẫu 16x16 (XBM Format)
+static const unsigned char icon_alarm[] U8X8_PROGMEM = {
+  0x00, 0x00, 0x81, 0x81, 0xc3, 0xc3, 0x66, 0x66, 0x3c, 0x3c, 0x18, 0x18, 
+  0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x3c, 0x3c, 0x66, 0x66, 0xc3, 0xc3, 
+  0x81, 0x81, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+static const unsigned char icon_settings[] U8X8_PROGMEM = {
+  0x00, 0x00, 0x81, 0x81, 0x42, 0x42, 0x24, 0x24, 0x18, 0x18, 0x7e, 0x7e, 
+  0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x7e, 0x7e, 0x18, 0x18, 0x24, 0x24, 
+  0x42, 0x42, 0x81, 0x81, 0x00, 0x00, 0x00, 0x00
+};
+
+static const unsigned char icon_battery[] U8X8_PROGMEM = {
+  0x00, 0x00, 0x00, 0x00, 0x3c, 0x3c, 0x7e, 0x7e, 0xff, 0xff, 0xff, 0xff, 
+  0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x7e, 0x7e, 
+  0x3c, 0x3c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+struct MenuItem {
+    const char* title;
+    const unsigned char* icon;
+};
+
+const MenuItem menu_items[] = {
+    {"Alarms", icon_alarm},
+    {"Settings", icon_settings},
+    {"Battery", icon_battery},
+    {"Exit", icon_alarm}
+};
+
+const int TOTAL_ITEMS = 4;
+int current_index = 0;
+
+// Biến trạng thái nội suy camera
+float cam_x = 0.0f;
+float target_cam_x = 0.0f;
+const float LERP_SPEED = 0.18f; // Trọng số mượt mà (0.1 - 0.25)
+
+const int ITEM_SPACING = 40; // Khoảng cách giữa tâm các icon
+
+void setup() {
+    Wire.begin(21, 22);
+    Wire.setClock(400000); // 400kHz Fast I2C
+    u8g2.begin();
+    u8g2.setFont(u8g2_font_6x10_tf);
+}
+
+void update_physics() {
+    // Điểm đích của camera sao cho item được chọn luôn nằm ở giữa màn hình (x = 64)
+    target_cam_x = (float)(current_index * ITEM_SPACING);
+    // Tính Lerp
+    cam_x += (target_cam_x - cam_x) * LERP_SPEED;
+}
+
+void draw_carousel_menu() {
+    u8g2.clearBuffer();
+
+    // 1. Tiêu đề menu trên cùng
+    u8g2.drawStr(30, 10, "< MAIN MENU >");
+
+    // 2. Vẽ danh sách Icon trượt
+    int screen_center_x = 64;
+    int screen_center_y = 32;
+
+    for (int i = 0; i < TOTAL_ITEMS; i++) {
+        // Tọa độ thực tế của từng icon trên màn hình
+        int item_real_x = screen_center_x + (i * ITEM_SPACING) - (int)cam_x - 8; // -8 để căn giữa icon 16x16
+        int item_real_y = screen_center_y - 8;
+
+        // Chỉ vẽ nếu icon nằm trong vùng nhìn thấy của màn hình
+        if (item_real_x > -20 && item_real_x < 128) {
+            u8g2.drawXBMP(item_real_x, item_real_y, 16, 16, menu_items[i].icon);
+        }
+    }
+
+    // 3. Khung cố định ở giữa để làm tiêu điểm (Focus Box dạng NWatch)
+    u8g2.drawFrame(52, 20, 24, 24);
+    u8g2.drawBox(50, 22, 2, 20); // Điểm nhấn góc focus
+    u8g2.drawBox(76, 22, 2, 20);
+
+    // 4. Nhãn tên mục bên dưới
+    const char* label = menu_items[current_index].title;
+    int str_width = u8g2.getStrWidth(label);
+    u8g2.drawStr((128 - str_width) / 2, 58, label);
+
+    u8g2.sendBuffer();
+}
+
+void loop() {
+    static uint32_t last_tick = 0;
+    static uint32_t last_switch = 0;
+    uint32_t now = millis();
+
+    // Tự động chuyển trang sau mỗi 2 giây để demo hiệu ứng
+    if (now - last_switch > 2000) {
+        last_switch = now;
+        current_index = (current_index + 1) % TOTAL_ITEMS;
+    }
+
+    // Cố định chu kỳ render ~60 FPS (16ms)
+    if (now - last_tick >= 16) {
+        last_tick = now;
+        update_physics();
+        draw_carousel_menu();
+    }
+}
+
+```
+
+---
+
+### 4. Quy tắc Tối ưu Khi Tự Phát Triển UI Tương tự
+
+* **Không dùng hàm `delay()`:** Mọi luồng tính toán chuyển động và đọc nút bấm phải dựa trên biến đo thời gian `millis()` hoặc ngắt phần cứng (Hardware Interrupts).
+* **Kiểu dữ liệu số thực (`float`):** Dùng `float` cho các biến vị trí ($X, Y$) trong quá trình tính Lerp để triệt tiêu hiện tượng giật bậc thang khi tốc độ trôi giảm dần, sau đó ép kiểu `(int)` khi truyền vào hàm vẽ của U8g2.
+* **Tăng tốc xung giao tiếp:**
+* SSD1306 SPI: Đặt SPI clock lên $8\text{ MHz} - 10\text{ MHz}$.
+* SSD1306 I2C: Đặt `Wire.setClock(400000)` hoặc `800000` (Fast Mode).
