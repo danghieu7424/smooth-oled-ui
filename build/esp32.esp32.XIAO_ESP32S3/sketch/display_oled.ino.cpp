@@ -74,20 +74,97 @@ const float LERP_SPEED = 0.18f;
 // Tăng Spacing vì Icon đã lớn hơn (từ 40 lên 45)
 const int ITEM_SPACING = 45; 
 
+// --- [STATE MACHINE] ---
+// Tại sao (Why): Phân tách trạng thái để chạy độc lập 2 Atom trên cùng 1 vòng lặp
+enum AppState {
+    STATE_CAROUSEL,
+    STATE_POPUP
+};
+AppState app_state = STATE_CAROUSEL;
+
+// --- [POPUP LIST MENU ATOM] ---
+const char* list_items[] = {
+    "ScreenOff",
+    "PowerOff",
+    "change mod"
+};
+const int TOTAL_LIST_ITEMS = 3;
+int current_list_selection = 0;
+
+const int MENU_BOX_X = 32;
+const int MENU_BOX_Y = 16;
+const int MENU_BOX_W = 64;
+const int MENU_BOX_H = 36;
+const int ITEM_START_Y = 26; 
+const int LINE_HEIGHT = 10;  
+
+float cursor_y = (float)(ITEM_START_Y - 9);
+float cursor_w = 56.0f;
+float target_cursor_y = (float)(ITEM_START_Y - 9);
+float target_cursor_w = 56.0f;
+const float LIST_LERP_FACTOR = 0.22f;
+
+#line 106 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void update_list_physics();
+#line 114 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void draw_popup_menu();
+#line 154 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void update_physics();
+#line 164 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void draw_carousel_menu();
+#line 194 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void setup();
+#line 206 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void loop();
+#line 106 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void update_list_physics() {
+    target_cursor_y = (float)(ITEM_START_Y + (current_list_selection * LINE_HEIGHT) - 8);
+    int text_pixel_width = u8g2.getStrWidth(list_items[current_list_selection]);
+    target_cursor_w = (float)(text_pixel_width + 4);
+    cursor_y += (target_cursor_y - cursor_y) * LIST_LERP_FACTOR;
+    cursor_w += (target_cursor_w - cursor_w) * LIST_LERP_FACTOR;
+}
+
+void draw_popup_menu() {
+    u8g2.clearBuffer();
+
+    // Giả lập mặt đồng hồ tĩnh phía sau
+    u8g2.setDrawColor(1);
+    u8g2.setFont(u8g2_font_courB18_tf);
+    u8g2.drawStr(5, 42, "12");
+    u8g2.drawStr(100, 42, "18");
+    u8g2.setFont(u8g2_font_5x7_tf);
+    u8g2.drawStr(24, 8, "Tue 01 Oct 2024");
+    u8g2.drawStr(88, 60, "33.1C");
+
+    // Xóa nền đen để đè hộp thoại
+    u8g2.setDrawColor(0);
+    u8g2.drawBox(MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H);
+
+    // Vẽ viền hộp thoại
+    u8g2.setDrawColor(1);
+    u8g2.drawFrame(MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H);
+
+    // Vẽ toàn bộ danh sách text
+    u8g2.setFont(u8g2_font_6x10_tf);
+    for (int i = 0; i < TOTAL_LIST_ITEMS; i++) {
+        u8g2.drawStr(MENU_BOX_X + 4, ITEM_START_Y + (i * LINE_HEIGHT), list_items[i]);
+    }
+
+    // Đảo màu XOR (Invert Mode)
+    // Tại sao (Why): Đè box XOR màu 2 lên chữ để tạo hiệu ứng chia cắt màu sắc mà không cần tính toán tọa độ font phức tạp
+    u8g2.setDrawColor(2);
+    u8g2.drawBox(MENU_BOX_X + 2, (int)cursor_y, (int)cursor_w, 9);
+    u8g2.setDrawColor(1); // Reset lại chế độ màu
+
+    u8g2.sendBuffer();
+}
+
 /****
  * [LOGIC] Tính toán nội suy vị trí camera (Physics Engine)
  * Input: Không có
  * Output: Cập nhật biến cam_x để cuộn trượt mượt.
  ****/
-#line 81 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void update_physics();
-#line 91 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void draw_carousel_menu();
-#line 121 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void setup();
-#line 133 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void loop();
-#line 81 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void update_physics() {
     target_cam_x = (float)(current_index * ITEM_SPACING);
     cam_x += (target_cam_x - cam_x) * LERP_SPEED;
@@ -145,18 +222,42 @@ void loop() {
   static uint32_t last_switch = 0;
   uint32_t now = millis();
 
-  // Đổi trang sau mỗi 2s để demo
-  if (now - last_switch > 2000) {
-      last_switch = now;
-      current_index = (current_index + 1) % TOTAL_ITEMS;
-  }
+  // Máy trạng thái (State Machine)
+  if (app_state == STATE_CAROUSEL) {
+      // Đổi trang sau mỗi 2s để demo Carousel
+      if (now - last_switch > 2000) {
+          last_switch = now;
+          current_index++;
+          // Chuyển sang tính năng List Popup sau khi trượt hết 1 vòng
+          if (current_index >= TOTAL_ITEMS) {
+              current_index = 0;
+              app_state = STATE_POPUP;
+          }
+      }
 
-  // Cố định render ~60 FPS (16ms)
-  // Tại sao (Why): Không dùng hàm delay() để CPU rảnh xử lý ngắt và tránh văng Watchdog.
-  if (now - last_tick >= 16) {
-      last_tick = now;
-      update_physics();
-      draw_carousel_menu();
+      if (now - last_tick >= 16) {
+          last_tick = now;
+          update_physics();
+          draw_carousel_menu();
+      }
+
+  } else if (app_state == STATE_POPUP) {
+      // Đổi dòng sau mỗi 1.5s để demo Popup List XOR
+      if (now - last_switch > 1500) {
+          last_switch = now;
+          current_list_selection++;
+          // Quay lại Carousel sau khi trượt hết list
+          if (current_list_selection >= TOTAL_LIST_ITEMS) {
+              current_list_selection = 0;
+              app_state = STATE_CAROUSEL;
+          }
+      }
+
+      if (now - last_tick >= 16) {
+          last_tick = now;
+          update_list_physics();
+          draw_popup_menu();
+      }
   }
 }
 
