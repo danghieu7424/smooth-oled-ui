@@ -120,8 +120,6 @@ void SmoothOLED::draw_carousel_menu() {
         int str_width = _u8g2->getStrWidth(label);
         _u8g2->drawStr((128 - str_width) / 2, 58, label);
     }
-
-    flush_display();
 }
 
 // =================================================================================
