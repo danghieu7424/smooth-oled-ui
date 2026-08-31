@@ -1,3 +1,4 @@
+#line 1 "D:\\all_projects\\rust\\rust\\display_oled\\SmoothOLED.cpp"
 #include "SmoothOLED.h"
 
 SmoothOLED::SmoothOLED(U8G2* u8g2, Stream* serial) {

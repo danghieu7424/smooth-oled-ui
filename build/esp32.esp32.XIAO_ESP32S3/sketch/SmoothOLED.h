@@ -1,3 +1,4 @@
+#line 1 "D:\\all_projects\\rust\\rust\\display_oled\\SmoothOLED.h"
 #ifndef SMOOTH_OLED_H
 #define SMOOTH_OLED_H
 

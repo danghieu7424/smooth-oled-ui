@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XBM Pixel Studio</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Main Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-background"></div>
+    
+    <main class="glass-container">
+        <header class="app-header">
+            <h1>XBM Pixel Studio</h1>
+            <p>Designed for SmoothOLED & U8G2</p>
+        </header>
+
+        <div class="workspace">
+            <!-- Trái: Khu vực vẽ -->
+            <section class="panel left-panel">
+                <div class="controls-row">
+                    <div class="size-inputs">
+                        <label>W: <input type="number" id="grid-width" value="24" min="8" max="128" step="8"></label>
+                        <label>H: <input type="number" id="grid-height" value="24" min="8" max="128" step="8"></label>
+                    </div>
+                    <button class="btn btn-primary" id="btn-upload">Upload Image</button>
+                    <input type="file" id="file-input" accept="image/png, image/jpeg, image/svg+xml" style="display: none;">
+                    <button class="btn btn-secondary" id="btn-clear">Clear</button>
+                </div>
+                
+                <div class="canvas-container" id="canvas-container">
+                    <canvas id="pixel-canvas"></canvas>
+                </div>
+                
+                <div class="tips">
+                    <p>✨ Click or drag on the grid to draw. LSB-first format.</p>
+                </div>
+            </section>
+
+            <!-- Phải: Khu vực Code -->
+            <section class="panel right-panel">
+                <div class="code-header">
+                    <h2>C++ XBM Array</h2>
+                    <div class="actions">
+                        <button class="btn btn-secondary" id="btn-load-code">Import Code</button>
+                        <button class="btn btn-primary" id="btn-copy">Copy to Clipboard</button>
+                    </div>
+                </div>
+                
+                <textarea id="code-output" spellcheck="false" placeholder="Paste XBM array here to load, or draw on the grid to generate code..."></textarea>
+            </section>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

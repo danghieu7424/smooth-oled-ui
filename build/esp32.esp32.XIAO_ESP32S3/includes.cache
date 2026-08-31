@@ -25,6 +25,11 @@
     "Includepath": null
   },
   {
+    "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\SmoothOLED.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
     "Sourcefile": "C:\\Users\\dangh\\Documents\\Arduino\\libraries\\U8g2\\src\\U8g2lib.cpp",
     "Include": "",
     "Includepath": null

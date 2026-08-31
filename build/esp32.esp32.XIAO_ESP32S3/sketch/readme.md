@@ -1,6 +1,8 @@
 #line 1 "D:\\all_projects\\rust\\rust\\display_oled\\readme.md"
 # Smooth OLED UI (ESP32 + U8g2)
 
+![Smooth OLED UI Demo](data/oled_capture.gif)
+
 Một dự án thiết kế giao diện động (Dynamic UI) chất lượng cao cho màn hình OLED 128x64 sử dụng vi điều khiển ESP32-S3. Giao diện được thiết kế theo kiến trúc **Hybrid FSD + Atomic**, tập trung tối ưu hóa các hiệu ứng chuyển động vật lý bằng thuật toán Nội suy tuyến tính (LERP) đảm bảo tần số quét mượt mà 60FPS.
 
 ## 🚀 Tính năng nổi bật
@@ -40,3 +42,21 @@ Script này sẽ tự động dọn dẹp các tiến trình Serial bị kẹt, 
 - **State Machine:** Chia tách logic Render thành từng Atom độc lập (Carousel, List, Side Popup) giúp mã nguồn sạch và dễ bảo trì.
 - **Tách biệt Logic và Render:** Mỗi Atom bao gồm một hàm `update_physics()` để tính toán vị trí, gia tốc độc lập với hàm `draw_menu()` chịu trách nhiệm đẩy Pixel ra màn hình.
 - **Glassmorphism & Masking:** Ứng dụng kỹ thuật xếp lớp (Z-Index bằng thứ tự vẽ) kết hợp XOR `setDrawColor(2)` để tạo cảm giác các khối Menu nổi đè lên nhau.
+
+## 🌐 Hướng dẫn Ghi Video 60FPS
+
+```Bash
+# Cài đặt thư viện nếu máy bạn chưa có
+pip install pyserial opencv-python numpy
+
+# Chạy script để xem và thu video màn hình OLED
+python render.py
+```
+OR:
+```Bash
+# Cài đặt thư viện nếu máy bạn chưa có
+py -m pip install pyserial opencv-python numpy
+
+# Chạy script để xem và thu video màn hình OLED
+py render.py
+```
