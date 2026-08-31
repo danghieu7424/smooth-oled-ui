@@ -235,8 +235,8 @@ void SmoothOLED::draw_popup_menu() {
 }
 
 void SmoothOLED::update_side_physics() {
-    float target_parent_x = 0.0f;
-    float target_arc_radius = 50.0f;
+    float target_parent_x = 18.0f;
+    float target_arc_radius = 52.0f;
     float target_list_cam_y = (float)(side_selected_idx * SIDE_LINE_SPACING);
 
     if (side_items && side_count > 0) {

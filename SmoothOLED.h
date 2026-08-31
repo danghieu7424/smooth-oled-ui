@@ -82,7 +82,7 @@ private:
     float side_arc_radius;
     float side_list_cam_y;
     float side_cursor_w;
-    const int SIDE_LINE_SPACING = 16;
+    const int SIDE_LINE_SPACING = 14;
     const float SIDE_PHYSICS_SPEED = 0.2f;
 
     // --- Nội bộ ---
