@@ -199,7 +199,8 @@ void draw_side_list_menu() {
     u8g2.drawDisc(78, 32, (int)side_arc_radius);
 
     u8g2.setDrawColor(1);
-    u8g2.drawCircle(78, 32, (int)side_arc_radius, U8G2_DRAW_ALL);
+    // Tại sao (Why): Chỉ vẽ 1/4 cung trên trái và 1/4 cung dưới trái để triệt tiêu phần viền thừa bị tràn ra cạnh phải màn hình
+    u8g2.drawCircle(78, 32, (int)side_arc_radius, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_LOWER_LEFT);
 
     // --- LỚP 3: Danh sách chữ cuộn dọc (Scroll List) ---
     u8g2.setFont(u8g2_font_6x10_tf);
@@ -209,7 +210,20 @@ void draw_side_list_menu() {
 
         // Chỉ vẽ text nếu nằm trong giới hạn hiển thị dọc của màn hình
         if (item_y > 10 && item_y < 64) {
-            u8g2.drawStr(42, item_y, side_list_items[i]);
+            // Hiệu ứng cong chữ: Tính toán tọa độ X của chữ trượt bám theo bán kính đường tròn
+            float dy = (float)(item_y - 32); // Khoảng cách từ tâm Y của đường tròn (32)
+            if (dy < 0) dy = -dy;
+            
+            float x_offset = 0;
+            if (side_arc_radius > dy) {
+                // Tính độ võng ngang (dùng định lý Pytago R^2 = X^2 + Y^2)
+                x_offset = side_arc_radius - sqrt(side_arc_radius * side_arc_radius - dy * dy);
+            } else {
+                x_offset = side_arc_radius; // Nằm ngoài hình tròn thì đẩy thẳng ra ngoài cùng
+            }
+            
+            int text_x = 42 + (int)x_offset;
+            u8g2.drawStr(text_x, item_y, side_list_items[i]);
         }
     }
 
