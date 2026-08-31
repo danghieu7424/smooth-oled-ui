@@ -249,7 +249,7 @@ void SmoothOLED::draw_side_list_menu() {
     for (int i = 0; i < _side_count; i++) {
         int item_y = base_y + (i * SIDE_LINE_SPACING) - (int)_side_list_cam_y;
 
-        if (item_y > 10 && item_y < 70) {
+        if (item_y > 0 && item_y < 74) {
             float dy = (float)(item_y - 5 - 32); 
             if (dy < 0) dy = -dy;
             
