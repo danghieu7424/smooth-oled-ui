@@ -9,6 +9,8 @@ SmoothOLED::SmoothOLED(U8G2* u8g2, Stream* serial) {
     _overlay_anim = PHASE_IDLE;
     _carousel_title = "< MAIN MENU >";
     _side_slide_x = 128.0f;
+    _list_cam_target_idx = 0;
+    _list_cam_y = 0.0f;
     _last_switch = 0;
     _last_tick = 0;
     _auto_demo = false;
@@ -108,8 +110,11 @@ void SmoothOLED::openPopup() {
     if (_overlay_state == OVERLAY_NONE) {
         _app_state = STATE_POPUP;
         _current_list_selection = 0;
-        _target_cursor_w = 0;
-        _cursor_w = 0;
+        _list_cam_target_idx = 0;
+        _list_cam_y = 0.0f;
+        _cursor_y = (float)(ITEM_START_Y - 9);
+        _cursor_w = 10.0f;
+        _marquee_offset = 0;
     }
 }
 
@@ -204,7 +209,15 @@ void SmoothOLED::draw_carousel_menu(int offset_x) {
 // =================================================================================
 
 void SmoothOLED::update_list_physics() {
-    _target_cursor_y = (float)(ITEM_START_Y + (_current_list_selection * LINE_HEIGHT) - 9);
+    if (_current_list_selection < _list_cam_target_idx) {
+        _list_cam_target_idx = _current_list_selection;
+    } else if (_current_list_selection > _list_cam_target_idx + 2) {
+        _list_cam_target_idx = _current_list_selection - 2;
+    }
+    float target_cam_y = (float)(_list_cam_target_idx * LINE_HEIGHT);
+    _list_cam_y += (target_cam_y - _list_cam_y) * LIST_LERP_FACTOR;
+
+    _target_cursor_y = (float)(ITEM_START_Y + (_current_list_selection * LINE_HEIGHT) - _list_cam_y - 9);
     int text_pixel_width = 0;
     
     if (_popup_items && _popup_count > 0) {
@@ -260,7 +273,7 @@ void SmoothOLED::draw_popup_menu() {
     
     for (int i = 0; i < _popup_count; i++) {
         int text_w = _u8g2->getStrWidth(_popup_items[i]);
-        int y_pos = ITEM_START_Y + (i * LINE_HEIGHT);
+        int y_pos = ITEM_START_Y + (i * LINE_HEIGHT) - (int)_list_cam_y;
         int max_w = MENU_BOX_W - 8;
         
         if (i == _current_list_selection && text_w > max_w) {

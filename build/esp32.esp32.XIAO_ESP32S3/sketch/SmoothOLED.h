@@ -79,6 +79,8 @@ private:
     float _cursor_w;
     float _target_cursor_y;
     float _target_cursor_w;
+    int _list_cam_target_idx;
+    float _list_cam_y;
     const float LIST_LERP_FACTOR = 0.22f;
     const int MENU_BOX_X = 32;
     const int MENU_BOX_Y = 16;
