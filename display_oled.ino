@@ -105,6 +105,9 @@ void setup() {
   // 2. Bật chế độ Demo vòng lặp vô hạn (Tạm tắt để dùng Serial Control)
   ui.enableAutoDemo(false);
 
+  // 2.5. Bật chế độ xuất khung hình ra Serial cho PC Viewer (Tắt khi Release)
+  ui.enablePCViewer(true);
+
   // 3. Khởi động UI
   ui.begin();
 }

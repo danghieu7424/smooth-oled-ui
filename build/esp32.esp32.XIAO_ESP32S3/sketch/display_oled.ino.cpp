@@ -92,7 +92,7 @@ const int TOTAL_SIDE_ITEMS = 7;
 // =======================================================================
 #line 92 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup();
-#line 112 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 115 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void loop();
 #line 92 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup() {
@@ -110,6 +110,9 @@ void setup() {
 
   // 2. Bật chế độ Demo vòng lặp vô hạn (Tạm tắt để dùng Serial Control)
   ui.enableAutoDemo(false);
+
+  // 2.5. Bật chế độ xuất khung hình ra Serial cho PC Viewer (Tắt khi Release)
+  ui.enablePCViewer(true);
 
   // 3. Khởi động UI
   ui.begin();

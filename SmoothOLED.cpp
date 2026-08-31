@@ -13,6 +13,7 @@ SmoothOLED::SmoothOLED(U8G2* u8g2, Stream* serial) {
     _last_switch = 0;
     _last_tick = 0;
     _auto_demo = false;
+    _pc_viewer_enabled = true;
 
     // --- Biến Carousel ---
     _carousel_items = nullptr;
@@ -73,6 +74,10 @@ void SmoothOLED::setSidePopupItems(const char** items, int count) {
 
 void SmoothOLED::enableAutoDemo(bool enable) {
     _auto_demo = enable;
+}
+
+void SmoothOLED::enablePCViewer(bool enable) {
+    _pc_viewer_enabled = enable;
 }
 
 // =================================================================================
@@ -144,8 +149,8 @@ void SmoothOLED::select() {
 void SmoothOLED::flush_display() {
     _u8g2->sendBuffer();
 
-    // Stream UART nếu có khai báo cổng Serial
-    if (_serial) {
+    // Stream UART nếu có khai báo cổng Serial VÀ đang bật chế độ PC Viewer
+    if (_serial && _pc_viewer_enabled) {
         uint8_t sync[] = {0xFE, 0xFE, 0xFE, 0xFE};
         _serial->write(sync, 4);
         _serial->write(_u8g2->getBufferPtr(), 1024);

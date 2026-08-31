@@ -38,8 +38,9 @@ public:
     void setPopupListItems(const char** items, int count);
     void setSidePopupItems(const char** items, int count);
 
-    // Bật chế độ tự động chuyển mục để chạy Demo Loop
+    // Tính năng Demo và Simulator
     void enableAutoDemo(bool enable);
+    void enablePCViewer(bool enable);
 
     // --- Input API ---
     void up();
@@ -59,6 +60,7 @@ private:
     uint32_t _last_switch;
     uint32_t _last_tick;
     bool _auto_demo;
+    bool _pc_viewer_enabled;
 
     // --- Biến Carousel ---
     const MenuItem* _carousel_items;
