@@ -75,10 +75,11 @@ const float LERP_SPEED = 0.18f;
 const int ITEM_SPACING = 45; 
 
 // --- [STATE MACHINE] ---
-// Tại sao (Why): Phân tách trạng thái để chạy độc lập 2 Atom trên cùng 1 vòng lặp
+// Tại sao (Why): Phân tách trạng thái để chạy độc lập các Atom trên cùng 1 vòng lặp
 enum AppState {
     STATE_CAROUSEL,
-    STATE_POPUP
+    STATE_POPUP,
+    STATE_SIDE_POPUP
 };
 AppState app_state = STATE_CAROUSEL;
 
@@ -104,19 +105,23 @@ float target_cursor_y = (float)(ITEM_START_Y - 8);
 float target_cursor_w = 56.0f;
 const float LIST_LERP_FACTOR = 0.22f;
 
-#line 106 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 107 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void update_list_physics();
-#line 114 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 115 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void draw_popup_menu();
-#line 155 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 174 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void update_side_physics();
+#line 188 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void draw_side_list_menu();
+#line 246 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void update_physics();
-#line 165 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 256 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void draw_carousel_menu();
-#line 195 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 286 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup();
-#line 207 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 298 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void loop();
-#line 106 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 107 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void update_list_physics() {
     target_cursor_y = (float)(ITEM_START_Y + (current_list_selection * LINE_HEIGHT) - 8);
     int text_pixel_width = u8g2.getStrWidth(list_items[current_list_selection]);
@@ -157,6 +162,96 @@ void draw_popup_menu() {
     // Tăng chiều cao hộp thoại từ 9 lên 11 để bao trọn các ký tự có đuôi (g, y, p...)
     u8g2.drawBox(MENU_BOX_X + 2, (int)cursor_y, (int)cursor_w, 11);
     u8g2.setDrawColor(1); // Reset lại chế độ màu
+
+    u8g2.sendBuffer();
+}
+
+// --- [SIDE POPUP MENU ATOM] ---
+const char* side_list_items[] = {
+    "Normal",
+    "CodeRain",
+    "TerminalSim",
+    "SimClock",
+    "Cube3D",
+    "Snow",
+    "Galaxy"
+};
+const int TOTAL_SIDE_ITEMS = 7;
+int side_selected_idx = 0;
+
+float side_parent_x = 32.0f;       // Tọa độ X của menu/icon cha (bị đẩy lùi về trái)
+float side_arc_radius = 0.0f;      // Bán kính hình tròn che nền
+float side_list_cam_y = 0.0f;      // Vị trí cuộn danh sách dọc
+float side_cursor_w = 40.0f;       // Chiều dài thanh bôi đen
+
+const float TARGET_PARENT_X = 18.0f;
+const float TARGET_ARC_RADIUS = 52.0f;
+const float SIDE_LERP_FACTOR = 0.20f;
+const int SIDE_LINE_SPACING = 14;
+
+void update_side_physics() {
+    // Hiệu ứng mở cánh menu sang bên trái
+    side_parent_x += (TARGET_PARENT_X - side_parent_x) * SIDE_LERP_FACTOR;
+    side_arc_radius += (TARGET_ARC_RADIUS - side_arc_radius) * SIDE_LERP_FACTOR;
+
+    // Điểm đích cuộn sao cho item đang chọn luôn nằm ở vùng hiển thị giữa (Y ~ 26)
+    float target_cam_y = (float)(side_selected_idx * SIDE_LINE_SPACING);
+    side_list_cam_y += (target_cam_y - side_list_cam_y) * SIDE_LERP_FACTOR;
+
+    // Nội suy chiều rộng thanh focus theo độ dài ký tự
+    int target_w = u8g2.getStrWidth(side_list_items[side_selected_idx]) + 4;
+    side_cursor_w += (target_w - side_cursor_w) * SIDE_LERP_FACTOR;
+}
+
+void draw_side_list_menu() {
+    u8g2.clearBuffer();
+
+    // --- LỚP 1: Giao diện cha bên dưới (Đang bị đẩy sang trái) ---
+    u8g2.setDrawColor(1);
+    u8g2.drawStr((int)side_parent_x - 4, 10, "MAIN MENU");
+    // Sử dụng lại icon Settings làm icon nền
+    u8g2.drawXBMP((int)side_parent_x, 24, 24, 24, icon_settings);
+
+    // --- LỚP 2: Cánh cung / Mặt nạ che nền (Circular Mask) ---
+    u8g2.setDrawColor(0);
+    u8g2.drawDisc(78, 32, (int)side_arc_radius);
+
+    u8g2.setDrawColor(1);
+    // Tại sao (Why): Chỉ vẽ 1/4 cung trên trái và 1/4 cung dưới trái để triệt tiêu phần viền thừa bị tràn ra cạnh phải màn hình
+    u8g2.drawCircle(78, 32, (int)side_arc_radius, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_LOWER_LEFT);
+
+    // --- LỚP 3: Danh sách chữ cuộn dọc (Scroll List) ---
+    u8g2.setFont(u8g2_font_6x10_tf);
+    int base_y = 37; // Chuyển base_y về 37 để Center thị giác (Baseline 37 -> Tâm chữ ~32)
+    for (int i = 0; i < TOTAL_SIDE_ITEMS; i++) {
+        int item_y = base_y + (i * SIDE_LINE_SPACING) - (int)side_list_cam_y;
+
+        // Chỉ vẽ text nếu nằm trong giới hạn hiển thị dọc của màn hình
+        if (item_y > 10 && item_y < 70) {
+            // Hiệu ứng cong chữ: Tính toán tọa độ X của chữ trượt bám theo bán kính đường tròn
+            // Trừ đi 5 vì item_y là baseline dưới, trừ đi 5 mới ra đúng tâm của chữ để căn đường cong Pytago
+            float dy = (float)(item_y - 5 - 32); 
+            if (dy < 0) dy = -dy;
+            
+            float x_offset = 0;
+            if (side_arc_radius > dy) {
+                // Tính độ võng ngang (dùng định lý Pytago R^2 = X^2 + Y^2)
+                x_offset = side_arc_radius - sqrt(side_arc_radius * side_arc_radius - dy * dy);
+            } else {
+                x_offset = side_arc_radius; // Nằm ngoài hình tròn thì đẩy thẳng ra ngoài cùng
+            }
+            
+            // Dịch tọa độ X gốc về 33 để tạo khoảng cách gap 7px so với mặt nạ (mặt nạ ở X=26)
+            int text_x = 33 + (int)x_offset;
+            u8g2.drawStr(text_x, item_y, side_list_items[i]);
+        }
+    }
+
+    // --- LỚP 4: Thanh bôi đen đảo màu (XOR Mode) ---
+    u8g2.setDrawColor(2);
+    // Dịch tọa độ X gốc của box về 31 (cách chữ 2px)
+    u8g2.drawBox(31, base_y - 8, (int)side_cursor_w, 11);
+    u8g2.setDrawColor(1);
 
     u8g2.sendBuffer();
 }
@@ -247,10 +342,16 @@ void loop() {
       if (now - last_switch > 1500) {
           last_switch = now;
           current_list_selection++;
-          // Quay lại Carousel sau khi trượt hết list
+          // Chuyển tiếp sang Side Popup sau khi trượt hết list
           if (current_list_selection >= TOTAL_LIST_ITEMS) {
               current_list_selection = 0;
-              app_state = STATE_CAROUSEL;
+              app_state = STATE_SIDE_POPUP;
+              
+              // Reset physics variables cho Side Popup để hiệu ứng animation chạy mượt từ đầu
+              side_parent_x = 32.0f;
+              side_arc_radius = 0.0f;
+              side_list_cam_y = 0.0f;
+              side_selected_idx = 0;
           }
       }
 
@@ -258,6 +359,25 @@ void loop() {
           last_tick = now;
           update_list_physics();
           draw_popup_menu();
+      }
+
+  } else if (app_state == STATE_SIDE_POPUP) {
+      // Đổi mục cuộn dọc sau mỗi 1.8 giây để minh họa hiệu ứng cuộn mượt
+      if (now - last_switch > 1800) {
+          last_switch = now;
+          side_selected_idx++;
+          // Quay vòng lại Carousel ban đầu
+          if (side_selected_idx >= TOTAL_SIDE_ITEMS) {
+              side_selected_idx = 0;
+              current_index = 0; 
+              app_state = STATE_CAROUSEL;
+          }
+      }
+
+      if (now - last_tick >= 16) {
+          last_tick = now;
+          update_side_physics();
+          draw_side_list_menu();
       }
   }
 }
