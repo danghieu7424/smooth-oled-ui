@@ -74,10 +74,11 @@ const float LERP_SPEED = 0.18f;
 const int ITEM_SPACING = 45; 
 
 // --- [STATE MACHINE] ---
-// Tại sao (Why): Phân tách trạng thái để chạy độc lập 2 Atom trên cùng 1 vòng lặp
+// Tại sao (Why): Phân tách trạng thái để chạy độc lập các Atom trên cùng 1 vòng lặp
 enum AppState {
     STATE_CAROUSEL,
-    STATE_POPUP
+    STATE_POPUP,
+    STATE_SIDE_POPUP
 };
 AppState app_state = STATE_CAROUSEL;
 
@@ -143,6 +144,79 @@ void draw_popup_menu() {
     // Tăng chiều cao hộp thoại từ 9 lên 11 để bao trọn các ký tự có đuôi (g, y, p...)
     u8g2.drawBox(MENU_BOX_X + 2, (int)cursor_y, (int)cursor_w, 11);
     u8g2.setDrawColor(1); // Reset lại chế độ màu
+
+    u8g2.sendBuffer();
+}
+
+// --- [SIDE POPUP MENU ATOM] ---
+const char* side_list_items[] = {
+    "Normal",
+    "CodeRain",
+    "TerminalSim",
+    "SimClock",
+    "Cube3D",
+    "Snow",
+    "Galaxy"
+};
+const int TOTAL_SIDE_ITEMS = 7;
+int side_selected_idx = 0;
+
+float side_parent_x = 32.0f;       // Tọa độ X của menu/icon cha (bị đẩy lùi về trái)
+float side_arc_radius = 0.0f;      // Bán kính hình tròn che nền
+float side_list_cam_y = 0.0f;      // Vị trí cuộn danh sách dọc
+float side_cursor_w = 40.0f;       // Chiều dài thanh bôi đen
+
+const float TARGET_PARENT_X = 18.0f;
+const float TARGET_ARC_RADIUS = 52.0f;
+const float SIDE_LERP_FACTOR = 0.20f;
+const int SIDE_LINE_SPACING = 11;
+
+void update_side_physics() {
+    // Hiệu ứng mở cánh menu sang bên trái
+    side_parent_x += (TARGET_PARENT_X - side_parent_x) * SIDE_LERP_FACTOR;
+    side_arc_radius += (TARGET_ARC_RADIUS - side_arc_radius) * SIDE_LERP_FACTOR;
+
+    // Điểm đích cuộn sao cho item đang chọn luôn nằm ở vùng hiển thị giữa (Y ~ 26)
+    float target_cam_y = (float)(side_selected_idx * SIDE_LINE_SPACING);
+    side_list_cam_y += (target_cam_y - side_list_cam_y) * SIDE_LERP_FACTOR;
+
+    // Nội suy chiều rộng thanh focus theo độ dài ký tự
+    int target_w = u8g2.getStrWidth(side_list_items[side_selected_idx]) + 4;
+    side_cursor_w += (target_w - side_cursor_w) * SIDE_LERP_FACTOR;
+}
+
+void draw_side_list_menu() {
+    u8g2.clearBuffer();
+
+    // --- LỚP 1: Giao diện cha bên dưới (Đang bị đẩy sang trái) ---
+    u8g2.setDrawColor(1);
+    u8g2.drawStr((int)side_parent_x - 4, 10, "MAIN MENU");
+    // Sử dụng lại icon Settings làm icon nền
+    u8g2.drawXBMP((int)side_parent_x, 24, 24, 24, icon_settings);
+
+    // --- LỚP 2: Cánh cung / Mặt nạ che nền (Circular Mask) ---
+    u8g2.setDrawColor(0);
+    u8g2.drawDisc(78, 32, (int)side_arc_radius);
+
+    u8g2.setDrawColor(1);
+    u8g2.drawCircle(78, 32, (int)side_arc_radius, U8G2_DRAW_ALL);
+
+    // --- LỚP 3: Danh sách chữ cuộn dọc (Scroll List) ---
+    u8g2.setFont(u8g2_font_6x10_tf);
+    int base_y = 28; // Vị trí dòng được chọn trên màn hình
+    for (int i = 0; i < TOTAL_SIDE_ITEMS; i++) {
+        int item_y = base_y + (i * SIDE_LINE_SPACING) - (int)side_list_cam_y;
+
+        // Chỉ vẽ text nếu nằm trong giới hạn hiển thị dọc của màn hình
+        if (item_y > 10 && item_y < 64) {
+            u8g2.drawStr(42, item_y, side_list_items[i]);
+        }
+    }
+
+    // --- LỚP 4: Thanh bôi đen đảo màu (XOR Mode) ---
+    u8g2.setDrawColor(2);
+    u8g2.drawBox(40, base_y - 8, (int)side_cursor_w, 11);
+    u8g2.setDrawColor(1);
 
     u8g2.sendBuffer();
 }
@@ -233,10 +307,16 @@ void loop() {
       if (now - last_switch > 1500) {
           last_switch = now;
           current_list_selection++;
-          // Quay lại Carousel sau khi trượt hết list
+          // Chuyển tiếp sang Side Popup sau khi trượt hết list
           if (current_list_selection >= TOTAL_LIST_ITEMS) {
               current_list_selection = 0;
-              app_state = STATE_CAROUSEL;
+              app_state = STATE_SIDE_POPUP;
+              
+              // Reset physics variables cho Side Popup để hiệu ứng animation chạy mượt từ đầu
+              side_parent_x = 32.0f;
+              side_arc_radius = 0.0f;
+              side_list_cam_y = 0.0f;
+              side_selected_idx = 0;
           }
       }
 
@@ -244,6 +324,25 @@ void loop() {
           last_tick = now;
           update_list_physics();
           draw_popup_menu();
+      }
+
+  } else if (app_state == STATE_SIDE_POPUP) {
+      // Đổi mục cuộn dọc sau mỗi 1.8 giây để minh họa hiệu ứng cuộn mượt
+      if (now - last_switch > 1800) {
+          last_switch = now;
+          side_selected_idx++;
+          // Quay vòng lại Carousel ban đầu
+          if (side_selected_idx >= TOTAL_SIDE_ITEMS) {
+              side_selected_idx = 0;
+              current_index = 0; 
+              app_state = STATE_CAROUSEL;
+          }
+      }
+
+      if (now - last_tick >= 16) {
+          last_tick = now;
+          update_side_physics();
+          draw_side_list_menu();
       }
   }
 }
