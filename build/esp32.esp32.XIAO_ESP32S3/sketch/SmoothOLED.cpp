@@ -269,7 +269,7 @@ void SmoothOLED::draw_popup_menu() {
 
     _u8g2->setFont(u8g2_font_6x10_tf);
     
-    _u8g2->setClipWindow(MENU_BOX_X + 2, MENU_BOX_Y + 1, MENU_BOX_X + MENU_BOX_W - 2, MENU_BOX_Y + MENU_BOX_H - 1);
+    _u8g2->setClipWindow(MENU_BOX_X + 2, MENU_BOX_Y + 2, MENU_BOX_X + MENU_BOX_W - 3, MENU_BOX_Y + MENU_BOX_H - 3);
     
     int cam_y_int = (int)(_list_cam_y + 0.5f);
 

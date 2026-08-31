@@ -64413,7 +64413,7 @@ LOAD c:/users/dangh/appdata/local/arduino15/packages/esp32/tools/xtensa-esp32s3-
  *fill*         0x0000000042001afd        0x3 
  .text._ZN10SmoothOLED15draw_popup_menuEv
                 0x0000000042001b00      0x192 D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\sketch\SmoothOLED.cpp.o
-                                        0x1c2 (size before relaxing)
+                                        0x1c6 (size before relaxing)
                 0x0000000042001b00                SmoothOLED::draw_popup_menu()
  *fill*         0x0000000042001c92        0x2 
  .text._ZN10SmoothOLED19update_side_physicsEv

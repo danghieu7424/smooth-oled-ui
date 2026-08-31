@@ -84,7 +84,7 @@ private:
     const int MENU_BOX_X = 32;
     const int MENU_BOX_Y = 16;
     const int MENU_BOX_W = 64;
-    const int MENU_BOX_H = 40;
+    const int MENU_BOX_H = 41;
     const int ITEM_START_Y = 27;
     const int LINE_HEIGHT = 12;
 
