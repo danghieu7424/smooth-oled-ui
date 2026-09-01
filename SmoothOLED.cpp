@@ -644,8 +644,8 @@ void SmoothOLED::draw_text_input_menu(int offset_x) {
     temp[_cursor_pos] = '\0';
     int cursor_x = 8 + _u8g2->getStrWidth(temp);
 
-    // Vẽ gạch dưới con trỏ đậm (thêm _ bên dưới chữ để xác định rõ hơn)
-    _u8g2->drawBox(cursor_x + offset_x, 37, 6, 2);
+    // Vẽ gạch dưới con trỏ mỏng (1px) không chạm chữ và không chạm khung
+    _u8g2->drawLine(cursor_x + offset_x, 37, cursor_x + 5 + offset_x, 37);
     // Mũi tên gợi ý chỉnh ký tự bên trên
     _u8g2->drawTriangle(cursor_x + 3 + offset_x, 20, cursor_x + offset_x, 23, cursor_x + 6 + offset_x, 23);
 }
