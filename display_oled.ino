@@ -347,6 +347,9 @@ void setup() {
   
   SystemState state = load_system_state();
   saved_brightness = state.brightness;
+  if (saved_brightness == 0 || saved_brightness == 255) {
+      saved_brightness = 20; // Default brightness
+  }
   current_brightness = saved_brightness;
 
   Wire.begin(47, 48);
@@ -354,32 +357,34 @@ void setup() {
   u8g2.begin();
   u8g2.setContrast(current_brightness); // Áp dụng độ sáng đã lưu
 
-  // Khởi động lại: Xem trạng thái trước đó có đang kết nối không
-  if (state.on) {
-      // Nếu có thì bật wifi và kết nối lại ssid và password cũ
-      WiFi.mode(WIFI_STA);
-      WiFi.disconnect(true); // Xóa state lơ lửng của phần cứng
-      delay(100);
+  // --- KẾT NỐI WIFI MẶC ĐỊNH ---
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect(true); // Xóa state lơ lửng của phần cứng
+  delay(100);
+  
+  if (state.on && strlen(state.ssid) > 0) {
+      // Dùng cấu hình từ EEPROM
       WiFi.begin(state.ssid, state.pwd);
-      WiFi.setAutoReconnect(true); // Tự động kết nối lại nếu rớt mạng
   } else {
-      // Nếu không thì không bật
-      WiFi.mode(WIFI_OFF);
+      // Dùng cấu hình mặc định hardcode
+      WiFi.begin(connecting_ssid.c_str(), connecting_pwd.c_str());
   }
+  WiFi.setAutoReconnect(true); // Tự động kết nối lại nếu rớt mạng
 
   // 1. Gán mảng dữ liệu vào thư viện UI
   ui.setCarouselItems(menu_items, TOTAL_MAIN_ITEMS, "< MAIN MENU >");
   ui.setPopupListItems(popup_items, TOTAL_POPUP_ITEMS);
   ui.setSidePopupItems(side_items, TOTAL_SIDE_ITEMS);
 
-  // 2. Bật chế độ Demo vòng lặp vô hạn (Tạm tắt để dùng Serial Control)
+  // 2. Bật chế độ xuất khung hình ra Serial cho PC Viewer
   ui.enableAutoDemo(false);
-
-  // 2.5. Bật chế độ xuất khung hình ra Serial cho PC Viewer (Tắt khi Release)
   ui.enablePCViewer(true);
 
   // 3. Khởi động UI
   ui.begin();
+
+  // 4. MẶC ĐỊNH MỞ MÀN HÌNH ĐỒNG HỒ
+  open_home_clock();
 }
 
 void loop() {
@@ -575,7 +580,7 @@ void loop() {
       }
   }
 
-  // --- CLOCK TICK LOGIC ---
+  // --- CLOCK TICK & SYNC LOGIC ---
   if (is_time_synced) {
       if (millis() - last_second_tick >= 1000) {
           last_second_tick += 1000;
@@ -596,6 +601,13 @@ void loop() {
       
       // Đồng bộ lại với API mỗi 1 giờ để bù sai số và cập nhật ngày
       if (millis() - last_time_sync > 3600000) {
+          sync_time_with_api();
+      }
+  } else {
+      // Chưa đồng bộ được thời gian (do mới khởi động) -> Thử đồng bộ liên tục mỗi 2 giây nếu có mạng
+      static uint32_t last_sync_try = 0;
+      if (WiFi.status() == WL_CONNECTED && millis() - last_sync_try > 2000) {
+          last_sync_try = millis();
           sync_time_with_api();
       }
   }
