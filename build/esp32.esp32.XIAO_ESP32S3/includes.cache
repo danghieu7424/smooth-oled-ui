@@ -31,8 +31,13 @@
   },
   {
     "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\display_oled.ino.cpp",
-    "Include": "EEPROM.h",
-    "Includepath": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\EEPROM\\src"
+    "Include": "LittleFS.h",
+    "Includepath": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\LittleFS\\src"
+  },
+  {
+    "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\display_oled.ino.cpp",
+    "Include": "FS.h",
+    "Includepath": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\FS\\src"
   },
   {
     "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\display_oled.ino.cpp",
@@ -775,7 +780,17 @@
     "Includepath": null
   },
   {
-    "Sourcefile": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\EEPROM\\src\\EEPROM.cpp",
+    "Sourcefile": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\LittleFS\\src\\LittleFS.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\FS\\src\\FS.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\FS\\src\\vfs_api.cpp",
     "Include": "",
     "Includepath": null
   },

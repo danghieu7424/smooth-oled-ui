@@ -3,7 +3,7 @@
 #include <Wire.h>
 #include <Preferences.h>
 #include <WiFi.h>
-#include <EEPROM.h>
+#include <LittleFS.h>
 #include "SmoothOLED.h"
 
 // Khởi tạo Preferences lưu trữ vào Flash
@@ -102,11 +102,7 @@ const char* popup_items[] = {
 };
 const int TOTAL_POPUP_ITEMS = 4;
 
-void on_reset() {
-    ESP.restart();
-}
-
-void on_reboot() {
+void on_restart() {
     ESP.restart(); // Sửa lại lệnh chuẩn của ESP32
 }
 
@@ -115,11 +111,10 @@ void on_power_off() {
 }
 
 const MenuItem side_items[] = {
-    {"Reset", nullptr, on_reset},
-    {"Reboot", nullptr, on_reboot},
+    {"Restart", nullptr, on_restart},
     {"PowerOff", nullptr, on_power_off}
 };
-const int TOTAL_SIDE_ITEMS = 3;
+const int TOTAL_SIDE_ITEMS = 2;
 
 
 // =======================================================================
@@ -167,45 +162,36 @@ void on_brightness_change(int val) {
 
 char text_input_title_buf[64];
 
-// Đọc ghi RAW EEPROM để tránh 100% lỗi bộ nhớ ảo NVS
-void save_wifi_eeprom(String ssid, String pwd) {
-    EEPROM.begin(512);
-    // Xóa vùng nhớ cũ
-    for(int i=0; i<128; i++) EEPROM.write(i, 0);
-    
-    // Ghi SSID ở vị trí 0
-    for(int i=0; i<ssid.length(); i++) {
-        EEPROM.write(i, ssid[i]);
+// Sử dụng LittleFS để bỏ qua hoàn toàn phân vùng NVS (tránh lỗi bộ nhớ bị hỏng/đầy)
+void save_wifi_fs(String ssid, String pwd) {
+    if(!LittleFS.begin(true)) return;
+    File f = LittleFS.open("/wifi.txt", "w");
+    if(f) {
+        f.println(ssid);
+        f.println(pwd);
+        f.close();
     }
-    
-    // Ghi PWD ở vị trí 64
-    for(int i=0; i<pwd.length(); i++) {
-        EEPROM.write(64+i, pwd[i]);
-    }
-    
-    EEPROM.commit();
 }
 
-String get_ssid_eeprom() {
-    EEPROM.begin(512);
-    String s = "";
-    for(int i=0; i<64; i++) {
-        char c = EEPROM.read(i);
-        if(c == 0 || c == 255) break;
-        s += c;
-    }
+String get_ssid_fs() {
+    if(!LittleFS.begin(true)) return "";
+    File f = LittleFS.open("/wifi.txt", "r");
+    if(!f) return "";
+    String s = f.readStringUntil('\n');
+    s.trim(); // Xóa khoảng trắng/xuống dòng thừa
+    f.close();
     return s;
 }
 
-String get_pwd_eeprom() {
-    EEPROM.begin(512);
-    String s = "";
-    for(int i=64; i<128; i++) {
-        char c = EEPROM.read(i);
-        if(c == 0 || c == 255) break;
-        s += c;
-    }
-    return s;
+String get_pwd_fs() {
+    if(!LittleFS.begin(true)) return "";
+    File f = LittleFS.open("/wifi.txt", "r");
+    if(!f) return "";
+    f.readStringUntil('\n'); // Bỏ qua dòng SSID
+    String p = f.readStringUntil('\n');
+    p.trim(); // Xóa khoảng trắng/xuống dòng thừa
+    f.close();
+    return p;
 }
 
 // Bộ đệm RAM để nhớ mật khẩu ngay lập tức (Chống lỗi NVS ghi chậm hoặc hỏng)
@@ -250,8 +236,8 @@ void on_wifi_selected(int idx) {
       String saved_pwd = get_pwd_cache(wifi_raw_ssid[idx]);
       if (saved_pwd == "") {
           // Nếu RAM chưa có, kiểm tra xem có phải mạng kết nối gần nhất không
-          if (String(wifi_raw_ssid[idx]) == get_ssid_eeprom()) {
-              saved_pwd = get_pwd_eeprom();
+          if (String(wifi_raw_ssid[idx]) == get_ssid_fs()) {
+              saved_pwd = get_pwd_fs();
           }
       }
       
@@ -319,9 +305,9 @@ void setup() {
   u8g2.setContrast(current_brightness); // Áp dụng độ sáng đã lưu
 
   // Tự động kết nối lại Wi-Fi cũ (nếu có)
-  String last_ssid = get_ssid_eeprom();
+  String last_ssid = get_ssid_fs();
   if (last_ssid.length() > 0) {
-      String last_pwd = get_pwd_eeprom();
+      String last_pwd = get_pwd_fs();
       WiFi.mode(WIFI_STA);
       WiFi.disconnect(true); // Xóa state cũ bị kẹt sau khi Soft Reset
       delay(100);
@@ -479,8 +465,8 @@ void loop() {
       if (WiFi.status() == WL_CONNECTED) {
           is_connecting_wifi = false;
           
-          // Lưu mạng vừa kết nối vào EEPROM (không dùng Preferences nữa)
-          save_wifi_eeprom(connecting_ssid, connecting_pwd);
+          // Lưu mạng vừa kết nối vào LittleFS
+          save_wifi_fs(connecting_ssid, connecting_pwd);
           save_pwd_cache(connecting_ssid, connecting_pwd); // Lưu vào RAM luôn cho chắc
           
           // Lưu Last SSID để auto-connect khi boot
