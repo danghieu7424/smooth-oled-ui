@@ -1014,6 +1014,7 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
             // New digit sliding UP from bottom
             buf[0] = '0' + d.next_val;
             _u8g2->drawStr(offset_x + x, y + h - offset, buf);
+        }
     };
 
     // Clip window ensures digits don't overwrite the dates
