@@ -3,14 +3,83 @@
 #include <U8g2lib.h>
 #include <Wire.h>
 #include <WiFi.h>
-#include <Preferences.h>
+#include <EEPROM.h>
+#include <nvs_flash.h>
+#include <HTTPClient.h>
+#include <WiFiClientSecure.h>
+#include <ArduinoJson.h>
 #include "SmoothOLED.h"
 
 int saved_brightness = 20;
 
-Preferences prefs;
+// Clock State
+int current_hour = 0;
+int current_minute = 0;
+int current_second = 0;
+String solar_date_str = "";
+String lunar_date_str = "";
+uint32_t last_time_sync = 0;
+uint32_t last_second_tick = 0;
+bool is_time_synced = false;
 
-// Cấu trúc lưu toàn bộ hệ thống
+#line 24 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void sync_time_with_api();
+#line 74 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void save_system_state(bool on, int brightness, String ssid, String pwd);
+#line 86 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+SystemState load_system_state();
+#line 202 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void on_restart();
+#line 206 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void on_power_off();
+#line 334 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void setup();
+#line 384 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void loop();
+#line 24 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void sync_time_with_api() {
+    if (WiFi.status() == WL_CONNECTED) {
+        WiFiClientSecure *client = new WiFiClientSecure;
+        client->setInsecure();
+        HTTPClient http;
+        if (http.begin(*client, "https://dh74.io.vn/api/time?tz=7")) {
+            int httpCode = http.GET();
+            if (httpCode == HTTP_CODE_OK) {
+                String payload = http.getString();
+                JsonDocument doc;
+                DeserializationError error = deserializeJson(doc, payload);
+                if (!error) {
+                    current_hour = doc["data"]["time"]["hour"];
+                    current_minute = doc["data"]["time"]["minute"];
+                    current_second = doc["data"]["time"]["second"];
+                    
+                    int s_d = doc["data"]["solar"]["day"];
+                    int s_m = doc["data"]["solar"]["month"];
+                    int s_y = doc["data"]["solar"]["year"];
+                    char buf[32];
+                    snprintf(buf, sizeof(buf), "%02d/%02d/%04d", s_d, s_m, s_y);
+                    solar_date_str = String(buf);
+                    
+                    int l_d = doc["data"]["lunar"]["day"];
+                    int l_m = doc["data"]["lunar"]["month"];
+                    const char* l_y_can_chi = doc["data"]["lunar"]["year_can_chi"];
+                    char l_buf[64];
+                    snprintf(l_buf, sizeof(l_buf), "Am lich: %02d/%02d %s", l_d, l_m, l_y_can_chi);
+                    lunar_date_str = String(l_buf);
+                    
+                    is_time_synced = true;
+                    last_time_sync = millis();
+                    last_second_tick = millis();
+                    ui.updateClock(current_hour, current_minute, current_second, solar_date_str.c_str(), lunar_date_str.c_str());
+                }
+            }
+            http.end();
+        }
+        delete client;
+    }
+}
+
+// Cấu trúc lưu toàn bộ hệ thống bằng EEPROM thô (chống mọi lỗi NVS)
 struct SystemState {
     bool on;
     char ssid[32];
@@ -18,44 +87,32 @@ struct SystemState {
     int brightness;
 };
 
-#line 20 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void save_system_state(bool on, int brightness, String ssid, String pwd);
-#line 29 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-SystemState load_system_state();
-#line 146 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void on_restart();
-#line 150 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void on_power_off();
-#line 270 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void setup();
-#line 312 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void loop();
-#line 20 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void save_system_state(bool on, int brightness, String ssid, String pwd) {
-    prefs.begin("sys_cfg", false);
-    prefs.putBool("wifi_on", on);
-    prefs.putInt("bright", brightness);
-    prefs.putString("ssid", ssid);
-    prefs.putString("pwd", pwd);
-    prefs.end();
+    SystemState state;
+    state.on = on;
+    state.brightness = brightness;
+    strncpy(state.ssid, ssid.c_str(), 31);
+    state.ssid[31] = '\0';
+    strncpy(state.pwd, pwd.c_str(), 63);
+    state.pwd[63] = '\0';
+    EEPROM.put(0, state);
+    EEPROM.commit();
 }
 
 SystemState load_system_state() {
     SystemState state;
-    prefs.begin("sys_cfg", true);
+    EEPROM.get(0, state);
     
-    state.on = prefs.getBool("wifi_on", false);
-    state.brightness = prefs.getInt("bright", 20);
-    
-    String s_ssid = prefs.getString("ssid", "");
-    String s_pwd = prefs.getString("pwd", "");
-    
-    strncpy(state.ssid, s_ssid.c_str(), 31);
-    state.ssid[31] = '\0';
-    strncpy(state.pwd, s_pwd.c_str(), 63);
-    state.pwd[63] = '\0';
-    
-    prefs.end();
+    // Nếu EEPROM hoàn toàn trống (chưa từng ghi), ESP32 sẽ trả về toàn 255 (0xFF)
+    if (state.ssid[0] == (char)255) {
+        state.on = false;
+        state.ssid[0] = '\0';
+        state.pwd[0] = '\0';
+    } else {
+        // Ép kết thúc chuỗi an toàn
+        state.ssid[31] = '\0';
+        state.pwd[63] = '\0';
+    }
     
     // Đảm bảo brightness luôn nằm trong khoảng hợp lệ
     if (state.brightness < 0 || state.brightness > 255) {
@@ -134,9 +191,10 @@ void open_brightness_slider();
 void on_brightness_change(int val);
 void on_enter_wifi();
 void on_wifi_password_submit(const char* pwd);
+void open_home_clock();
 
 const MenuItem menu_items[] = {
-    {"Home", icon_home, nullptr},
+    {"Home", icon_home, open_home_clock},
     {"Settings", icon_settings, open_settings_menu},
     {"About", icon_about, nullptr}
 };
@@ -199,6 +257,14 @@ String connecting_pwd = "";
 // --- CÀI ĐẶT CÁC HÀM XỬ LÝ SỰ KIỆN ---
 
 void on_wifi_selected(int idx);
+
+void open_home_clock() {
+  ui.openClock();
+  ui.updateClock(current_hour, current_minute, current_second, solar_date_str.c_str(), lunar_date_str.c_str());
+  if (!is_time_synced && WiFi.status() == WL_CONNECTED) {
+      sync_time_with_api();
+  }
+}
 
 void open_settings_menu() {
   current_level = LEVEL_SETTINGS;
@@ -284,7 +350,15 @@ void on_wifi_password_submit(const char* pwd) {
 void setup() {
   Serial.begin(921600);
   
-  // Đọc cấu hình đã lưu từ NVS Preferences
+  // Tự động khôi phục phân vùng NVS bị hỏng (Lý do cốt lõi khiến Flash không lưu được)
+  esp_err_t err = nvs_flash_init();
+  if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+      nvs_flash_erase();
+      nvs_flash_init();
+  }
+  
+  // Nạp cấu hình từ Flash
+  EEPROM.begin(512); // Khởi tạo vùng nhớ EEPROM thô để lưu WiFi và Brightness
   
   SystemState state = load_system_state();
   saved_brightness = state.brightness;
@@ -511,6 +585,32 @@ void loop() {
           // Hiển thị lại Text Input với Mật khẩu cũ để người dùng sửa thay vì hiển thị Modal Failed
           snprintf(text_input_title_buf, sizeof(text_input_title_buf), "FAIL: %s", connecting_ssid.c_str());
           ui.openTextInput(text_input_title_buf, on_wifi_password_submit, connecting_pwd.c_str());
+      }
+      }
+  }
+
+  // --- CLOCK TICK LOGIC ---
+  if (is_time_synced) {
+      if (millis() - last_second_tick >= 1000) {
+          last_second_tick += 1000;
+          current_second++;
+          if (current_second >= 60) {
+              current_second = 0;
+              current_minute++;
+              if (current_minute >= 60) {
+                  current_minute = 0;
+                  current_hour++;
+                  if (current_hour >= 24) {
+                      current_hour = 0;
+                  }
+              }
+          }
+          ui.updateClock(current_hour, current_minute, current_second, solar_date_str.c_str(), lunar_date_str.c_str());
+      }
+      
+      // Đồng bộ lại với API mỗi 1 giờ để bù sai số và cập nhật ngày
+      if (millis() - last_time_sync > 3600000) {
+          sync_time_with_api();
       }
   }
 

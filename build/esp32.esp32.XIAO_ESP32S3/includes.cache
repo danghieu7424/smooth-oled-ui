@@ -26,8 +26,23 @@
   },
   {
     "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\display_oled.ino.cpp",
-    "Include": "Preferences.h",
-    "Includepath": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\Preferences\\src"
+    "Include": "EEPROM.h",
+    "Includepath": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\EEPROM\\src"
+  },
+  {
+    "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\display_oled.ino.cpp",
+    "Include": "HTTPClient.h",
+    "Includepath": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\HTTPClient\\src"
+  },
+  {
+    "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\display_oled.ino.cpp",
+    "Include": "WiFiClientSecure.h",
+    "Includepath": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\WiFiClientSecure\\src"
+  },
+  {
+    "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\display_oled.ino.cpp",
+    "Include": "ArduinoJson.h",
+    "Includepath": "C:\\Users\\dangh\\Documents\\Arduino\\libraries\\ArduinoJson\\src"
   },
   {
     "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\display_oled.ino.cpp",
@@ -765,7 +780,27 @@
     "Includepath": null
   },
   {
-    "Sourcefile": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\Preferences\\src\\Preferences.cpp",
+    "Sourcefile": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\EEPROM\\src\\EEPROM.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\HTTPClient\\src\\HTTPClient.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\WiFiClientSecure\\src\\WiFiClientSecure.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\WiFiClientSecure\\src\\esp_crt_bundle.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\WiFiClientSecure\\src\\ssl_client.cpp",
     "Include": "",
     "Includepath": null
   },

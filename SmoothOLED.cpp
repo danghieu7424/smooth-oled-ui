@@ -353,8 +353,10 @@ void SmoothOLED::inputChar(char c) {
             
             // Đánh dấu để lần gõ phím máy tính tiếp theo sẽ đẩy con trỏ
             s_advance_on_next_char = true;
-            _last_tick = millis();
+            _slider_title = "Progress";
         }
+    } else if (_app_state == STATE_CLOCK) {
+        _app_state = _prev_app_state;
     }
 }
 
@@ -784,6 +786,14 @@ void SmoothOLED::draw_modal_dialog() {
     _u8g2->setMaxClipWindow();
 }
 
+void SmoothOLED::update_clock_physics() {
+    // Clock logic
+}
+
+void SmoothOLED::draw_clock_menu() {
+    // Clock drawing
+}
+
 // =================================================================================
 // GAME LOOP (Cập nhật 60FPS)
 // =================================================================================
@@ -905,6 +915,9 @@ void SmoothOLED::update() {
             if (_overlay_state == OVERLAY_NONE) {
                 draw_modal_dialog();
             }
+        } else if (_app_state == STATE_CLOCK) {
+            update_clock_physics();
+            draw_clock_menu(background_offset_x);
         }
 
         // 3. Draw Overlay
@@ -914,4 +927,118 @@ void SmoothOLED::update() {
 
         flush_display();
     }
+}
+
+// =================================================================================
+// CLOCK ATOM
+// =================================================================================
+
+void SmoothOLED::openClock() {
+    if (_overlay_state == OVERLAY_NONE) {
+        _prev_app_state = _app_state;
+        _app_state = STATE_CLOCK;
+        _clock_h1.current_val = _clock_h1.next_val = 0;
+        _clock_h2.current_val = _clock_h2.next_val = 0;
+        _clock_m1.current_val = _clock_m1.next_val = 0;
+        _clock_m2.current_val = _clock_m2.next_val = 0;
+        _clock_s1.current_val = _clock_s1.next_val = 0;
+        _clock_s2.current_val = _clock_s2.next_val = 0;
+        _clock_h1.anim_y = _clock_h2.anim_y = _clock_m1.anim_y = _clock_m2.anim_y = _clock_s1.anim_y = _clock_s2.anim_y = 0.0f;
+        memset(_clock_solar, 0, sizeof(_clock_solar));
+        memset(_clock_lunar, 0, sizeof(_clock_lunar));
+    }
+}
+
+void SmoothOLED::updateClock(int h, int m, int s, const char* solar_date, const char* lunar_date) {
+    auto updateDigit = [](ClockDigit& d, int new_val) {
+        if (d.next_val != new_val) {
+            d.current_val = d.next_val; 
+            d.next_val = new_val;
+            d.anim_y = 0.0f;
+        }
+    };
+
+    updateDigit(_clock_h1, h / 10);
+    updateDigit(_clock_h2, h % 10);
+    updateDigit(_clock_m1, m / 10);
+    updateDigit(_clock_m2, m % 10);
+    updateDigit(_clock_s1, s / 10);
+    updateDigit(_clock_s2, s % 10);
+
+    if (solar_date) strncpy(_clock_solar, solar_date, 31);
+    if (lunar_date) strncpy(_clock_lunar, lunar_date, 63);
+}
+
+void SmoothOLED::update_clock_physics() {
+    auto physDigit = [](ClockDigit& d) {
+        if (d.current_val != d.next_val) {
+            d.anim_y += 0.1f; // Animation speed
+            if (d.anim_y >= 1.0f) {
+                d.anim_y = 1.0f;
+                d.current_val = d.next_val;
+            }
+        } else {
+            d.anim_y = 0.0f;
+        }
+    };
+
+    physDigit(_clock_h1);
+    physDigit(_clock_h2);
+    physDigit(_clock_m1);
+    physDigit(_clock_m2);
+    physDigit(_clock_s1);
+    physDigit(_clock_s2);
+}
+
+void SmoothOLED::draw_clock_menu(int offset_x) {
+    // 1. Draw Solar Date
+    _u8g2->setFont(u8g2_font_profont12_tf);
+    int sw = _u8g2->getStrWidth(_clock_solar);
+    _u8g2->drawStr(offset_x + (128 - sw) / 2, 10, _clock_solar);
+
+    // 2. Draw Lunar Date
+    sw = _u8g2->getStrWidth(_clock_lunar);
+    _u8g2->drawStr(offset_x + (128 - sw) / 2, 62, _clock_lunar);
+
+    auto drawDigit = [&](ClockDigit& d, int x, bool is_small) {
+        if (is_small) _u8g2->setFont(u8g2_font_logisoso24_tn);
+        else _u8g2->setFont(u8g2_font_logisoso32_tn);
+
+        char buf[2];
+        buf[1] = '\0';
+        int h = is_small ? 24 : 32;
+        int y = 45; // Baseline
+
+        if (d.current_val == d.next_val) {
+            buf[0] = '0' + d.current_val;
+            _u8g2->drawStr(offset_x + x, y, buf);
+        } else {
+            int offset = (int)(d.anim_y * h);
+            
+            // Old digit sliding UP
+            buf[0] = '0' + d.current_val;
+            _u8g2->drawStr(offset_x + x, y - offset, buf);
+            
+            // New digit sliding UP from bottom
+            buf[0] = '0' + d.next_val;
+            _u8g2->drawStr(offset_x + x, y + h - offset, buf);
+        }
+    };
+
+    // Clip window ensures digits don't overwrite the dates
+    _u8g2->setClipWindow(offset_x, 13, offset_x + 128, 50);
+
+    drawDigit(_clock_h1, 0, false);
+    drawDigit(_clock_h2, 21, false);
+
+    _u8g2->setFont(u8g2_font_logisoso32_tn);
+    _u8g2->drawStr(offset_x + 42, 42, ":"); // ":" is slightly higher
+
+    drawDigit(_clock_m1, 52, false);
+    drawDigit(_clock_m2, 73, false);
+
+    drawDigit(_clock_s1, 98, true);
+    drawDigit(_clock_s2, 114, true);
+
+    _u8g2->setMaxClipWindow();
 }

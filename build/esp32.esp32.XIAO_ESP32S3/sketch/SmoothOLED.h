@@ -23,7 +23,8 @@ enum AppState {
     STATE_SLIDER,
     STATE_TEXT_INPUT,
     STATE_FULL_LIST,
-    STATE_MODAL
+    STATE_MODAL,
+    STATE_CLOCK
 };
 
 enum OverlayState {
@@ -35,6 +36,12 @@ enum AnimPhase {
     PHASE_IDLE,
     PHASE_OPENING,
     PHASE_CLOSING
+};
+
+struct ClockDigit {
+    int current_val;
+    int next_val;
+    float anim_y;
 };
 
 class SmoothOLED {
@@ -64,6 +71,8 @@ public:
     void openSlider(const char* title, int current_val, int max_val, SliderCallback on_change = nullptr);
     void openTextInput(const char* title, TextCallback on_submit, const char* initial_text = nullptr);
     void openFullList(const char* title, const char** items, int count, ListCallback on_select = nullptr);
+    void openClock();
+    void updateClock(int h, int m, int s, const char* solar_date, const char* lunar_date);
     void closeOverlay();
     bool backspace();
     void select();
@@ -166,6 +175,11 @@ private:
     const char* _modal_title;
     const char* _modal_text;
 
+    // --- Biến Clock ---
+    ClockDigit _clock_h1, _clock_h2, _clock_m1, _clock_m2, _clock_s1, _clock_s2;
+    char _clock_solar[32];
+    char _clock_lunar[64];
+
     void flush_display();
 
     void update_physics();
@@ -184,6 +198,9 @@ private:
     
     void draw_text_input_menu(int offset_x = 0);
     void draw_full_list_menu(int offset_x = 0);
+    
+    void update_clock_physics();
+    void draw_clock_menu(int offset_x = 0);
 };
 
 #endif
