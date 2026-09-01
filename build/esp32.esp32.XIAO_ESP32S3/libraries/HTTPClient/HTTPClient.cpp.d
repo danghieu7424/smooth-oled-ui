@@ -1,8 +1,38 @@
-D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\libraries\Preferences\Preferences.cpp.o: \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\Preferences\src\Preferences.cpp \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\Preferences\src\Preferences.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Arduino.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/esp_arduino_version.h \
+D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\libraries\HTTPClient\HTTPClient.cpp.o: \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\HTTPClient\src\HTTPClient.cpp \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/HardwareSerial.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Stream.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Print.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/WString.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/pgmspace.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Printable.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/esp32-hal.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_system/include/esp_system.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_common/include/esp_err.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_common/include/esp_compiler.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_common/include/esp_attr.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_common/include/esp_bit_defs.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_common/include/esp_idf_version.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_hw_support/include/esp_mac.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_hw_support/include/esp_chip_info.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_hw_support/include/esp_random.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_hw_support/include/esp_sleep.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/hal/include/hal/touch_sensor_types.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/soc.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_common/include/esp_assert.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/soc_caps.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/brownout_caps.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/cpu_caps.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/i2c_caps.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/ledc_caps.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/mpu_caps.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/twai_caps.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/hal/include/hal/gpio_types.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/include/soc/gpio_periph.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/io_mux_reg.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/gpio_struct.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/gpio_reg.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/gpio_sig_map.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/freertos/include/freertos/FreeRTOS.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/freertos/include/esp_additions/freertos/FreeRTOSConfig.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_common/include/esp_compiler.h \
@@ -22,9 +52,6 @@ D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\libraries\
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_rom/include/esp_rom_sys.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/reset_reasons.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_rom/include/esp32s3/rom/ets_sys.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/soc.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_common/include/esp_assert.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_common/include/esp_bit_defs.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/freertos/include/freertos/projdefs.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/freertos/include/freertos/portable.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/freertos/include/freertos/deprecated_definitions.h \
@@ -38,19 +65,9 @@ D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\libraries\
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_hw_support/include/soc/cpu.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_hw_support/include/esp_cpu.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/hal/include/hal/cpu_hal.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_common/include/esp_err.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_common/include/esp_compiler.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/soc_caps.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/brownout_caps.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/cpu_caps.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/i2c_caps.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/ledc_caps.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/mpu_caps.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/twai_caps.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/hal/include/hal/cpu_types.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/hal/esp32s3/include/hal/cpu_ll.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/xtensa/esp32s3/include/xtensa/config/extreg.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_common/include/esp_attr.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_hw_support/include/soc/compare_set.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/include/soc/soc_memory_types.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_system/include/esp_private/crosscore_int.h \
@@ -58,11 +75,6 @@ D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\libraries\
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/newlib/platform_include/esp_newlib.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/heap/include/esp_heap_caps.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/heap/include/multi_heap.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_system/include/esp_system.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_common/include/esp_idf_version.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_hw_support/include/esp_mac.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_hw_support/include/esp_chip_info.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_hw_support/include/esp_random.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/freertos/port/xtensa/include/freertos/portbenchmark.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/xtensa/include/xtensa/xtensa_api.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/xtensa/include/xtensa/xtensa_context.h \
@@ -71,18 +83,9 @@ D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\libraries\
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/freertos/include/freertos/task.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/freertos/include/freertos/list.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/freertos/include/esp_additions/freertos/task_snapshot.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/freertos/include/freertos/semphr.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/freertos/include/freertos/queue.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/freertos/include/freertos/task.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/esp32-hal.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_hw_support/include/esp_sleep.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/hal/include/hal/touch_sensor_types.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/hal/include/hal/gpio_types.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/include/soc/gpio_periph.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/io_mux_reg.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/gpio_struct.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/gpio_reg.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/gpio_sig_map.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/freertos/include/freertos/semphr.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/freertos/include/freertos/queue.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/freertos/include/freertos/event_groups.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/freertos/include/freertos/timers.h \
@@ -110,24 +113,6 @@ D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\libraries\
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/esp32-hal-psram.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/esp32-hal-rgb-led.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/esp32-hal-cpu.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/esp8266-compat.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/stdlib_noniso.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/binary.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/WCharacter.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/WString.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/pgmspace.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Stream.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Print.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Printable.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/IPAddress.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/WString.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Printable.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Client.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Server.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Udp.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Stream.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/IPAddress.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/HardwareSerial.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/HWCDC.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_event/include/esp_event.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_event/include/esp_event_base.h \
@@ -169,6 +154,21 @@ D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\libraries\
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/lwip/include/apps/dhcpserver/dhcpserver.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/lwip/lwip/src/include/lwip/err.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_netif/include/esp_netif_sta_list.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Arduino.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/esp_arduino_version.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/esp8266-compat.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/stdlib_noniso.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/binary.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/WCharacter.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/IPAddress.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/WString.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Printable.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Client.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Server.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Udp.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Stream.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/IPAddress.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/HardwareSerial.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Esp.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/spi_flash/include/esp_partition.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/spi_flash/include/esp_flash.h \
@@ -179,6 +179,67 @@ D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\libraries\
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_hw_support/include/soc/esp32/spiram.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/io_pin_remap.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Arduino.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/nvs_flash/include/nvs.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/nvs_flash/include/nvs_flash.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/nvs_flash/include/nvs.h
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/esp32-hal-log.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/StreamString.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/base64.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\HTTPClient\src\HTTPClient.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\WiFi\src/WiFiClient.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Client.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\WiFiClientSecure\src/WiFiClientSecure.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\WiFi\src/WiFi.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Print.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/IPv6Address.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\WiFi\src/WiFiType.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\WiFi\src/WiFiSTA.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\WiFi\src/WiFiGeneric.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_wifi/include/esp_smartconfig.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/wifi_provisioning/include/wifi_provisioning/manager.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/protocomm/include/common/protocomm.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/protocomm/include/security/protocomm_security.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/wifi_provisioning/include/wifi_provisioning/wifi_config.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\WiFi\src/WiFiAP.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\WiFi\src/WiFiScan.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\WiFi\src/WiFiClient.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\WiFi\src/WiFiServer.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Server.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\WiFi\src/WiFiUdp.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Udp.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/cbuf.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\WiFiClientSecure\src/ssl_client.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/platform.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/port/include/mbedtls/esp_config.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/config.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/check_config.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/port/include/esp_mem.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/platform_time.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/net.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/net_sockets.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/ssl.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/port/include/mbedtls/bignum.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/bignum.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/ecp.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/ssl_ciphersuites.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/pk.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/md.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/platform_util.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/rsa.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/ecdsa.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/cipher.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/x509_crt.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/x509.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/asn1.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/x509_crl.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/dhm.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/ecdh.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/debug.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/entropy.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/sha512.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/port/include/sha512_alt.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/hal/include/hal/sha_types.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_rom/include/esp32s3/rom/sha.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/ctr_drbg.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/aes.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/port/include/aes_alt.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/port/include/aes/esp_aes.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/hal/include/hal/aes_types.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/error.h

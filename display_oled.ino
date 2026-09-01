@@ -572,7 +572,6 @@ void loop() {
           snprintf(text_input_title_buf, sizeof(text_input_title_buf), "FAIL: %s", connecting_ssid.c_str());
           ui.openTextInput(text_input_title_buf, on_wifi_password_submit, connecting_pwd.c_str());
       }
-      }
   }
 
   // --- CLOCK TICK LOGIC ---

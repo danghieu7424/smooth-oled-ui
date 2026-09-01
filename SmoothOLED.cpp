@@ -786,14 +786,6 @@ void SmoothOLED::draw_modal_dialog() {
     _u8g2->setMaxClipWindow();
 }
 
-void SmoothOLED::update_clock_physics() {
-    // Clock logic
-}
-
-void SmoothOLED::draw_clock_menu() {
-    // Clock drawing
-}
-
 // =================================================================================
 // GAME LOOP (Cập nhật 60FPS)
 // =================================================================================
