@@ -646,12 +646,13 @@ void SmoothOLED::draw_text_input_menu(int offset_x) {
 
     // Vẽ gạch dưới con trỏ mỏng (1px) không chạm chữ và không chạm khung
     _u8g2->drawLine(cursor_x + offset_x, 37, cursor_x + 5 + offset_x, 37);
+    // Mũi tên trên chỉ Lên (2 lớp: đỉnh 2px, đáy 4px) nằm cách viền khung (y=24) 1px
+    _u8g2->drawLine(cursor_x + 2 + offset_x, 21, cursor_x + 3 + offset_x, 21);
+    _u8g2->drawLine(cursor_x + 1 + offset_x, 22, cursor_x + 4 + offset_x, 22);
     
-    // Mũi tên trên chỉ xuống (2 tầng pixel: đáy y=23 rộng 5px, đỉnh y=22)
-    _u8g2->drawTriangle(cursor_x + 3 + offset_x, 22, cursor_x + 1 + offset_x, 23, cursor_x + 5 + offset_x, 23);
-    
-    // Mũi tên dưới chỉ lên (2 tầng pixel: đáy y=41 rộng 5px, đỉnh y=42)
-    _u8g2->drawTriangle(cursor_x + 3 + offset_x, 42, cursor_x + 1 + offset_x, 41, cursor_x + 5 + offset_x, 41);
+    // Mũi tên dưới chỉ Xuống (2 lớp: đáy 4px, đỉnh 2px) nằm cách viền khung (y=39) 1px
+    _u8g2->drawLine(cursor_x + 1 + offset_x, 41, cursor_x + 4 + offset_x, 41);
+    _u8g2->drawLine(cursor_x + 2 + offset_x, 42, cursor_x + 3 + offset_x, 42);
 }
 
 void SmoothOLED::draw_full_list_menu(int offset_x) {
