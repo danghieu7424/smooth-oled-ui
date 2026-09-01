@@ -4,12 +4,7 @@
 #include <Wire.h>
 #include <Preferences.h>
 #include <WiFi.h>
-#include <nvs_flash.h>
 #include "SmoothOLED.h"
-
-// Biến lưu trong bộ nhớ RTC (Bất tử khi bấm Reset/Restart)
-RTC_DATA_ATTR char rtc_last_ssid[33] = {0};
-RTC_DATA_ATTR char rtc_last_pwd[65] = {0};
 
 // Khởi tạo Preferences lưu trữ vào Flash
 Preferences prefs;
@@ -61,20 +56,20 @@ static const unsigned char icon_about[] U8X8_PROGMEM = {
 
 // [MỚI] Icon WiFi - Vẽ trên khung 24x24 px
 static const unsigned char icon_wifi[] U8X8_PROGMEM = {
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
-  0x80, 0xff, 0x01, 0xe0, 0xff, 0x07, 0xf0, 0x00, 0x0f, 0x38, 0x00, 0x1c, 
-  0x1c, 0xff, 0x38, 0xc0, 0xff, 0x03, 0xe0, 0x81, 0x07, 0x70, 0x00, 0x0e, 
-  0x00, 0x7e, 0x00, 0x80, 0xff, 0x01, 0x80, 0xc3, 0x01, 0x00, 0x00, 0x00, 
-  0x00, 0x18, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x18, 0x00, 
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  
+  0x80, 0xff, 0x01, 0xe0, 0xff, 0x07, 0xf0, 0x00, 0x0f, 0x38, 0x00, 0x1c,  
+  0x1c, 0xff, 0x38, 0xc0, 0xff, 0x03, 0xe0, 0x81, 0x07, 0x70, 0x00, 0x0e,  
+  0x00, 0x7e, 0x00, 0x80, 0xff, 0x01, 0x80, 0xc3, 0x01, 0x00, 0x00, 0x00,  
+  0x00, 0x18, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x18, 0x00,  
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 // [MỚI] Icon esp now - Vẽ trên khung 24x24 px
 static const unsigned char icon_esp_now[] U8X8_PROGMEM = {
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x02, 0x60, 0x00, 0x06, 
-  0x30, 0x00, 0x0c, 0x10, 0x42, 0x08, 0x18, 0x81, 0x18, 0x18, 0x99, 0x18, 
-  0x18, 0x99, 0x18, 0x18, 0x81, 0x18, 0x10, 0x42, 0x08, 0x30, 0x18, 0x0c, 
-  0x60, 0x18, 0x06, 0x40, 0x18, 0x02, 0x00, 0x18, 0x00, 0x00, 0x18, 0x00, 
-  0x00, 0x18, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x3c, 0x00, 
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x02, 0x60, 0x00, 0x06,  
+  0x30, 0x00, 0x0c, 0x10, 0x42, 0x08, 0x18, 0x81, 0x18, 0x18, 0x99, 0x18,  
+  0x18, 0x99, 0x18, 0x18, 0x81, 0x18, 0x10, 0x42, 0x08, 0x30, 0x18, 0x0c,  
+  0x60, 0x18, 0x06, 0x40, 0x18, 0x02, 0x00, 0x18, 0x00, 0x00, 0x18, 0x00,  
+  0x00, 0x18, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x3c, 0x00,  
   0x00, 0x7e, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
@@ -107,25 +102,15 @@ const char* popup_items[] = {
 };
 const int TOTAL_POPUP_ITEMS = 4;
 
-#line 109 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 104 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void on_restart();
-#line 113 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 108 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void on_power_off();
-#line 170 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void save_wifi_credentials(String ssid, String pwd);
-#line 188 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-String get_saved_ssid();
-#line 193 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-String get_saved_pwd();
-#line 206 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void save_pwd_cache(String ssid, String pwd);
-#line 220 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-String get_pwd_cache(String ssid);
-#line 295 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 218 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup();
-#line 336 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 262 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void loop();
-#line 109 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 104 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void on_restart() {
     ESP.restart(); // Sửa lại lệnh chuẩn của ESP32
 }
@@ -186,64 +171,6 @@ void on_brightness_change(int val) {
 
 char text_input_title_buf[64];
 
-// Cơ chế lưu kép cực kỳ an toàn
-void save_wifi_credentials(String ssid, String pwd) {
-    // 1. Lưu vào RTC Memory (Chống lỗi khi Reset / Restart)
-    strncpy(rtc_last_ssid, ssid.c_str(), 32);
-    strncpy(rtc_last_pwd, pwd.c_str(), 64);
-    
-    // 2. Lưu vào NVS Flash (Chống lỗi khi rút điện)
-    size_t written = prefs.putString("last_ssid", ssid);
-    prefs.putString("last_pwd", pwd);
-    
-    // Nếu NVS bị hỏng/đầy khiến không ghi được, ép buộc Format để sửa lỗi phần cứng ESP32
-    if (written == 0) {
-        nvs_flash_erase();
-        nvs_flash_init();
-        prefs.putString("last_ssid", ssid);
-        prefs.putString("last_pwd", pwd);
-    }
-}
-
-String get_saved_ssid() {
-    if (strlen(rtc_last_ssid) > 0) return String(rtc_last_ssid);
-    return prefs.getString("last_ssid", "");
-}
-
-String get_saved_pwd() {
-    if (strlen(rtc_last_pwd) > 0) return String(rtc_last_pwd);
-    return prefs.getString("last_pwd", "");
-}
-
-// Bộ đệm RAM để nhớ mật khẩu ngay lập tức (Chống lỗi)
-struct WiFiCache {
-    String ssid;
-    String pwd;
-};
-WiFiCache wifi_cache[10];
-int wifi_cache_count = 0;
-
-void save_pwd_cache(String ssid, String pwd) {
-    for (int i = 0; i < wifi_cache_count; i++) {
-        if (wifi_cache[i].ssid == ssid) {
-            wifi_cache[i].pwd = pwd;
-            return;
-        }
-    }
-    if (wifi_cache_count < 10) {
-        wifi_cache[wifi_cache_count].ssid = ssid;
-        wifi_cache[wifi_cache_count].pwd = pwd;
-        wifi_cache_count++;
-    }
-}
-
-String get_pwd_cache(String ssid) {
-    for (int i = 0; i < wifi_cache_count; i++) {
-        if (wifi_cache[i].ssid == ssid) return wifi_cache[i].pwd;
-    }
-    return "";
-}
-
 void on_wifi_selected(int idx) {
   // Chặn mở mật khẩu nếu đang Scanning, không có mạng, hoặc lỗi
   if (idx >= 0 && idx < wifi_count && strncmp(wifi_ssid[0], "Scanning", 8) != 0 && strncmp(wifi_ssid[0], "No networks", 10) != 0 && strncmp(wifi_ssid[0], "Scan Failed", 11) != 0) {
@@ -253,23 +180,9 @@ void on_wifi_selected(int idx) {
           return;
       }
 
-      // Lấy mật khẩu từ RAM Cache trước (chắc chắn nhất)
-      String saved_pwd = get_pwd_cache(wifi_raw_ssid[idx]);
-      if (saved_pwd == "") {
-          // Nếu RAM chưa có, kiểm tra RTC hoặc NVS
-          if (String(wifi_raw_ssid[idx]) == get_saved_ssid()) {
-              saved_pwd = get_saved_pwd();
-          }
-      }
-      
-      if (saved_pwd.length() > 0) {
-          // Nếu đã có mật khẩu lưu trữ, kết nối thẳng luôn
-          on_wifi_password_submit(saved_pwd.c_str());
-      } else {
-          snprintf(text_input_title_buf, sizeof(text_input_title_buf), "PWD: %s", wifi_raw_ssid[idx]);
-          // Chưa có mật khẩu, mở hộp thoại yêu cầu nhập
-          ui.openTextInput(text_input_title_buf, on_wifi_password_submit, "");
-      }
+      snprintf(text_input_title_buf, sizeof(text_input_title_buf), "PWD: %s", wifi_raw_ssid[idx]);
+      // Giao diện như cũ: mở hộp thoại yêu cầu nhập mật khẩu
+      ui.openTextInput(text_input_title_buf, on_wifi_password_submit, "");
   }
 }
 
@@ -325,17 +238,20 @@ void setup() {
   u8g2.begin();
   u8g2.setContrast(current_brightness); // Áp dụng độ sáng đã lưu
 
-  // Khởi động WiFi và TỰ ĐỘNG kết nối lại dựa vào bộ nhớ kép
-  String last_ssid = get_saved_ssid();
-  if (last_ssid.length() > 0) {
-      String last_pwd = get_saved_pwd();
+  // Khởi động lại: Xem trạng thái trước đó có đang kết nối không
+  bool wifi_on = prefs.getBool("wifi_on", false);
+  if (wifi_on) {
+      // Nếu có thì bật wifi và kết nối lại ssid và password cũ
+      String last_ssid = prefs.getString("wifi_ssid", "");
+      String last_pwd = prefs.getString("wifi_pwd", "");
       WiFi.mode(WIFI_STA);
       WiFi.disconnect(true); // Xóa state lơ lửng của phần cứng
       delay(100);
       WiFi.begin(last_ssid.c_str(), last_pwd.c_str());
       WiFi.setAutoReconnect(true); // Tự động kết nối lại nếu rớt mạng
   } else {
-      WiFi.mode(WIFI_STA);
+      // Nếu không thì không bật
+      WiFi.mode(WIFI_OFF);
   }
 
   // 1. Gán mảng dữ liệu vào thư viện UI
@@ -387,6 +303,7 @@ void loop() {
                     // Nếu thoát ra mà không có kết nối nào, tắt Wi-Fi để tiết kiệm pin
                     if (WiFi.status() != WL_CONNECTED) {
                         WiFi.mode(WIFI_OFF);
+                        prefs.putBool("wifi_on", false);
                     }
                 }
                 ui.closeOverlay();
@@ -407,6 +324,8 @@ void loop() {
                   // Đang ở danh sách Wi-Fi (hoặc Modal), ấn Backspace để ngắt kết nối hiện tại
                   if (WiFi.status() == WL_CONNECTED) {
                       WiFi.disconnect();
+                      prefs.putBool("wifi_on", false); // Cập nhật trạng thái tắt kết nối vào flash
+                      
                       // Xóa dấu * khỏi danh sách ngay lập tức
                       for (int i = 0; i < wifi_count; i++) {
                           if (wifi_ssid[i][0] == '*') {
@@ -488,9 +407,10 @@ void loop() {
       if (WiFi.status() == WL_CONNECTED) {
           is_connecting_wifi = false;
           
-          // Lưu mạng vừa kết nối vào bộ nhớ kép
-          save_wifi_credentials(connecting_ssid, connecting_pwd);
-          save_pwd_cache(connecting_ssid, connecting_pwd); 
+          // Mật khẩu đúng và kết nối thành công: Lưu trạng thái bật và SSID/PWD vào Flash
+          prefs.putBool("wifi_on", true);
+          prefs.putString("wifi_ssid", connecting_ssid);
+          prefs.putString("wifi_pwd", connecting_pwd);
           
           Serial.printf("\n[WiFi] Connected successfully to %s\n", connecting_ssid.c_str());
           
