@@ -49,23 +49,28 @@ static const unsigned char icon_about[] U8X8_PROGMEM = {
   0x80, 0xe7, 0x01, 0x00, 0x3c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-// [MỚI] Icon Thoát (Exit) - Vẽ trên khung 24x24 px
-static const unsigned char icon_exit[] U8X8_PROGMEM = {
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfe, 0x07,
-  0x00, 0x02, 0x04, 0x00, 0x02, 0x04, 0x00, 0x02, 0x04, 0x00, 0x02, 0x04,
-  0xc0, 0x03, 0x04, 0xe0, 0x02, 0x04, 0x70, 0xe2, 0x07, 0x38, 0xf2, 0x07,
-  0x1c, 0xfa, 0x07, 0x38, 0xf2, 0x07, 0x70, 0xe2, 0x07, 0xe0, 0x02, 0x04,
-  0xc0, 0x03, 0x04, 0x00, 0x02, 0x04, 0x00, 0x02, 0x04, 0x00, 0x02, 0x04,
-  0x00, 0x02, 0x04, 0x00, 0xfe, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+// [MỚI] Icon WiFi - Vẽ trên khung 24x24 px
+static const unsigned char icon_wifi[] U8X8_PROGMEM = {
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+  0x80, 0xff, 0x01, 0xe0, 0xff, 0x07, 0xf0, 0x00, 0x0f, 0x38, 0x00, 0x1c, 
+  0x1c, 0xff, 0x38, 0xc0, 0xff, 0x03, 0xe0, 0x81, 0x07, 0x70, 0x00, 0x0e, 
+  0x00, 0x7e, 0x00, 0x80, 0xff, 0x01, 0x80, 0xc3, 0x01, 0x00, 0x00, 0x00, 
+  0x00, 0x18, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x18, 0x00, 
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
 const MenuItem menu_items[] = {
     {"Home", icon_home},
-    {"Brightness", icon_brightness},
     {"Settings", icon_settings},
     {"About", icon_about}
 };
-const int TOTAL_ITEMS = 4; // BƯỚC 3: Tăng tổng số lượng phần tử lên (từ 4 lên 5)
+const int TOTAL_MAIN_ITEMS = 3;
+
+const MenuItem settings_items[] = {
+    {"WiFi", icon_wifi},
+    {"Brightness", icon_brightness}
+};
+const int TOTAL_SETTINGS_ITEMS = 2;
 
 const char* popup_items[] = {
     "ScreenOff",
@@ -90,11 +95,16 @@ const int TOTAL_SIDE_ITEMS = 7;
 // =======================================================================
 // [SETUP & LOOP]
 // =======================================================================
-#line 92 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+
+// Quản lý trạng thái Menu đa cấp
+enum MenuLevel { LEVEL_MAIN, LEVEL_SETTINGS };
+MenuLevel current_level = LEVEL_MAIN;
+
+#line 102 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup();
-#line 115 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 125 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void loop();
-#line 92 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 102 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup() {
   Serial.begin(921600);
   
@@ -104,12 +114,12 @@ void setup() {
   u8g2.setContrast(20);
 
   // 1. Gán mảng dữ liệu vào thư viện UI
-  ui.setCarouselItems(menu_items, TOTAL_ITEMS);
+  ui.setCarouselItems(menu_items, TOTAL_MAIN_ITEMS, "< MAIN MENU >");
   ui.setPopupListItems(popup_items, TOTAL_POPUP_ITEMS);
   ui.setSidePopupItems(side_items, TOTAL_SIDE_ITEMS);
 
   // 2. Bật chế độ Demo vòng lặp vô hạn (Tạm tắt để dùng Serial Control)
-  ui.enableAutoDemo(true);
+  ui.enableAutoDemo(false);
 
   // 2.5. Bật chế độ xuất khung hình ra Serial cho PC Viewer (Tắt khi Release)
   ui.enablePCViewer(true);
@@ -126,8 +136,25 @@ void loop() {
     else if (c == 'D') ui.down(); // Mũi tên xuống / Phải
     else if (c == 'P') ui.openPopup(); // Phím End (trước đây là Win)
     else if (c == 'S') ui.openSideList(); // Phím Home
-    else if (c == 'C') ui.closeOverlay(); // Phím Esc
-    else if (c == 'E') ui.select();       // Phím Enter
+    else if (c == 'C') { // Phím Esc
+      if (!ui.isOverlayOpen() && current_level == LEVEL_SETTINGS) {
+        // Nếu không có popup nào đang mở và đang ở màn hình Settings, thì Back về Main Menu
+        current_level = LEVEL_MAIN;
+        ui.setCarouselItems(menu_items, TOTAL_MAIN_ITEMS, "< MAIN MENU >");
+      } else {
+        ui.closeOverlay();
+      }
+    }
+    else if (c == 'E') { // Phím Enter
+      ui.select();
+      if (!ui.isOverlayOpen() && current_level == LEVEL_MAIN) {
+        // Nếu đang ở Main Menu, kiểm tra mục nào đang được chọn
+        if (ui.getCarouselIndex() == 1) { // 1 là vị trí của "Settings"
+          current_level = LEVEL_SETTINGS;
+          ui.setCarouselItems(settings_items, TOTAL_SETTINGS_ITEMS, "< SETTINGS >");
+        }
+      }
+    }
   }
 
   // Cập nhật UI (60FPS)

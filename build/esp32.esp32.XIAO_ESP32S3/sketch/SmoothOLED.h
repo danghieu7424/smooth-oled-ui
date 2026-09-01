@@ -51,6 +51,10 @@ public:
     void closeOverlay();
     void select();
 
+    // --- State API ---
+    int getCarouselIndex() const { return _current_index; }
+    bool isOverlayOpen() const { return _overlay_state != OVERLAY_NONE; }
+
 private:
     U8G2* _u8g2;
     Stream* _serial;
