@@ -2,13 +2,14 @@
 #include <U8g2lib.h>
 #include <Wire.h>
 #include <WiFi.h>
-#include <EEPROM.h>
-#include <nvs_flash.h>
+#include <Preferences.h>
 #include "SmoothOLED.h"
 
 int saved_brightness = 20;
 
-// Cấu trúc lưu toàn bộ hệ thống bằng EEPROM thô (chống mọi lỗi NVS)
+Preferences prefs;
+
+// Cấu trúc lưu toàn bộ hệ thống
 struct SystemState {
     bool on;
     char ssid[32];
@@ -17,31 +18,30 @@ struct SystemState {
 };
 
 void save_system_state(bool on, int brightness, String ssid, String pwd) {
-    SystemState state;
-    state.on = on;
-    state.brightness = brightness;
-    strncpy(state.ssid, ssid.c_str(), 31);
-    state.ssid[31] = '\0';
-    strncpy(state.pwd, pwd.c_str(), 63);
-    state.pwd[63] = '\0';
-    EEPROM.put(0, state);
-    EEPROM.commit();
+    prefs.begin("sys_cfg", false);
+    prefs.putBool("wifi_on", on);
+    prefs.putInt("bright", brightness);
+    prefs.putString("ssid", ssid);
+    prefs.putString("pwd", pwd);
+    prefs.end();
 }
 
 SystemState load_system_state() {
     SystemState state;
-    EEPROM.get(0, state);
+    prefs.begin("sys_cfg", true);
     
-    // Nếu EEPROM hoàn toàn trống (chưa từng ghi), ESP32 sẽ trả về toàn 255 (0xFF)
-    if (state.ssid[0] == (char)255) {
-        state.on = false;
-        state.ssid[0] = '\0';
-        state.pwd[0] = '\0';
-    } else {
-        // Ép kết thúc chuỗi an toàn
-        state.ssid[31] = '\0';
-        state.pwd[63] = '\0';
-    }
+    state.on = prefs.getBool("wifi_on", false);
+    state.brightness = prefs.getInt("bright", 20);
+    
+    String s_ssid = prefs.getString("ssid", "");
+    String s_pwd = prefs.getString("pwd", "");
+    
+    strncpy(state.ssid, s_ssid.c_str(), 31);
+    state.ssid[31] = '\0';
+    strncpy(state.pwd, s_pwd.c_str(), 63);
+    state.pwd[63] = '\0';
+    
+    prefs.end();
     
     // Đảm bảo brightness luôn nằm trong khoảng hợp lệ
     if (state.brightness < 0 || state.brightness > 255) {
@@ -270,15 +270,7 @@ void on_wifi_password_submit(const char* pwd) {
 void setup() {
   Serial.begin(921600);
   
-  // Tự động khôi phục phân vùng NVS bị hỏng (Lý do cốt lõi khiến Flash không lưu được)
-  esp_err_t err = nvs_flash_init();
-  if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-      nvs_flash_erase();
-      nvs_flash_init();
-  }
-  
-  // Nạp cấu hình từ Flash
-  EEPROM.begin(512); // Khởi tạo vùng nhớ EEPROM thô để lưu WiFi và Brightness
+  // Đọc cấu hình đã lưu từ NVS Preferences
   
   SystemState state = load_system_state();
   saved_brightness = state.brightness;

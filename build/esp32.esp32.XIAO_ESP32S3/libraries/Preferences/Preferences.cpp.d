@@ -1,6 +1,6 @@
-D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\libraries\EEPROM\EEPROM.cpp.o: \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\EEPROM\src\EEPROM.cpp \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\EEPROM\src\EEPROM.h \
+D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\libraries\Preferences\Preferences.cpp.o: \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\Preferences\src\Preferences.cpp \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\Preferences\src\Preferences.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Arduino.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/esp_arduino_version.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/freertos/include/freertos/FreeRTOS.h \
@@ -179,4 +179,6 @@ D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\libraries\
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_hw_support/include/soc/esp32/spiram.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/io_pin_remap.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Arduino.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/nvs_flash/include/nvs.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/nvs_flash/include/nvs_flash.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/nvs_flash/include/nvs.h
