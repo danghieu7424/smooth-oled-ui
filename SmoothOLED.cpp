@@ -541,7 +541,8 @@ void SmoothOLED::update_side_physics() {
     _side_list_cam_y += (target_cam_y - _side_list_cam_y) * SIDE_LERP_FACTOR;
 
     if (_side_items && _side_count > 0) {
-        int target_w = _u8g2->getStrWidth(_side_items[_side_selected_idx]) + 4;
+        _u8g2->setFont(u8g2_font_6x10_tf);
+        int target_w = _u8g2->getStrWidth(_side_items[_side_selected_idx].title) + 4;
         _side_cursor_w += (target_w - _side_cursor_w) * SIDE_LERP_FACTOR;
     }
 
