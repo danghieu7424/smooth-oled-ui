@@ -11,57 +11,7 @@
 
 int saved_brightness = 20;
 
-// Clock State
-int current_hour = 0;
-int current_minute = 0;
-int current_second = 0;
-String solar_date_str = "";
-String lunar_date_str = "";
-uint32_t last_time_sync = 0;
-uint32_t last_second_tick = 0;
-bool is_time_synced = false;
-
-void sync_time_with_api() {
-    if (WiFi.status() == WL_CONNECTED) {
-        WiFiClientSecure *client = new WiFiClientSecure;
-        client->setInsecure();
-        HTTPClient http;
-        if (http.begin(*client, "https://dh74.io.vn/api/time?tz=7")) {
-            int httpCode = http.GET();
-            if (httpCode == HTTP_CODE_OK) {
-                String payload = http.getString();
-                JsonDocument doc;
-                DeserializationError error = deserializeJson(doc, payload);
-                if (!error) {
-                    current_hour = doc["data"]["time"]["hour"];
-                    current_minute = doc["data"]["time"]["minute"];
-                    current_second = doc["data"]["time"]["second"];
-                    
-                    int s_d = doc["data"]["solar"]["day"];
-                    int s_m = doc["data"]["solar"]["month"];
-                    int s_y = doc["data"]["solar"]["year"];
-                    char buf[32];
-                    snprintf(buf, sizeof(buf), "%02d/%02d/%04d", s_d, s_m, s_y);
-                    solar_date_str = String(buf);
-                    
-                    int l_d = doc["data"]["lunar"]["day"];
-                    int l_m = doc["data"]["lunar"]["month"];
-                    const char* l_y_can_chi = doc["data"]["lunar"]["year_can_chi"];
-                    char l_buf[64];
-                    snprintf(l_buf, sizeof(l_buf), "Am lich: %02d/%02d %s", l_d, l_m, l_y_can_chi);
-                    lunar_date_str = String(l_buf);
-                    
-                    is_time_synced = true;
-                    last_time_sync = millis();
-                    last_second_tick = millis();
-                    ui.updateClock(current_hour, current_minute, current_second, solar_date_str.c_str(), lunar_date_str.c_str());
-                }
-            }
-            http.end();
-        }
-        delete client;
-    }
-}
+// Clock State variables moved down
 
 // Cấu trúc lưu toàn bộ hệ thống bằng EEPROM thô (chống mọi lỗi NVS)
 struct SystemState {
@@ -241,6 +191,58 @@ String connecting_pwd = "";
 // --- CÀI ĐẶT CÁC HÀM XỬ LÝ SỰ KIỆN ---
 
 void on_wifi_selected(int idx);
+
+// Clock State
+int current_hour = 0;
+int current_minute = 0;
+int current_second = 0;
+String solar_date_str = "";
+String lunar_date_str = "";
+uint32_t last_time_sync = 0;
+uint32_t last_second_tick = 0;
+bool is_time_synced = false;
+
+void sync_time_with_api() {
+    if (WiFi.status() == WL_CONNECTED) {
+        WiFiClientSecure *client = new WiFiClientSecure;
+        client->setInsecure();
+        HTTPClient http;
+        if (http.begin(*client, "https://dh74.io.vn/api/time?tz=7")) {
+            int httpCode = http.GET();
+            if (httpCode == HTTP_CODE_OK) {
+                String payload = http.getString();
+                JsonDocument doc;
+                DeserializationError error = deserializeJson(doc, payload);
+                if (!error) {
+                    current_hour = doc["data"]["time"]["hour"];
+                    current_minute = doc["data"]["time"]["minute"];
+                    current_second = doc["data"]["time"]["second"];
+                    
+                    int s_d = doc["data"]["solar"]["day"];
+                    int s_m = doc["data"]["solar"]["month"];
+                    int s_y = doc["data"]["solar"]["year"];
+                    char buf[32];
+                    snprintf(buf, sizeof(buf), "%02d/%02d/%04d", s_d, s_m, s_y);
+                    solar_date_str = String(buf);
+                    
+                    int l_d = doc["data"]["lunar"]["day"];
+                    int l_m = doc["data"]["lunar"]["month"];
+                    const char* l_y_can_chi = doc["data"]["lunar"]["year_can_chi"];
+                    char l_buf[64];
+                    snprintf(l_buf, sizeof(l_buf), "Am lich: %02d/%02d %s", l_d, l_m, l_y_can_chi);
+                    lunar_date_str = String(l_buf);
+                    
+                    is_time_synced = true;
+                    last_time_sync = millis();
+                    last_second_tick = millis();
+                    ui.updateClock(current_hour, current_minute, current_second, solar_date_str.c_str(), lunar_date_str.c_str());
+                }
+            }
+            http.end();
+        }
+        delete client;
+    }
+}
 
 void open_home_clock() {
   ui.openClock();
