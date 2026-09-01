@@ -117,6 +117,7 @@ private:
     const float TARGET_PARENT_X = 18.0f;
     const float TARGET_ARC_RADIUS = 52.0f;
     const float SIDE_LERP_FACTOR = 0.20f;
+    const int SIDE_LINE_SPACING = 14;
     // --- Biến Slider ---
     float _slider_val;
     float _target_slider_val;
