@@ -992,14 +992,13 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
     sw = _u8g2->getStrWidth(_clock_lunar);
     _u8g2->drawStr(offset_x + (128 - sw) / 2, 62, _clock_lunar);
 
-    auto drawDigit = [&](ClockDigit& d, int x, bool is_small) {
-        if (is_small) _u8g2->setFont(u8g2_font_logisoso24_tn);
-        else _u8g2->setFont(u8g2_font_logisoso32_tn);
+    auto drawDigit = [&](ClockDigit& d, int x) {
+        _u8g2->setFont(u8g2_font_logisoso24_tn);
 
         char buf[2];
         buf[1] = '\0';
-        int h = is_small ? 24 : 32;
-        int y = 45; // Baseline
+        int h = 24;
+        int y = 42; // Baseline
 
         if (d.current_val == d.next_val) {
             buf[0] = '0' + d.current_val;
@@ -1018,19 +1017,22 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
     };
 
     // Clip window ensures digits don't overwrite the dates
-    _u8g2->setClipWindow(offset_x, 13, offset_x + 128, 50);
+    _u8g2->setClipWindow(offset_x, 13, offset_x + 128, 48);
 
-    drawDigit(_clock_h1, 2, false);
-    drawDigit(_clock_h2, 24, false);
+    drawDigit(_clock_h1, 6);
+    drawDigit(_clock_h2, 22);
 
-    _u8g2->setFont(u8g2_font_logisoso32_tn);
-    _u8g2->drawStr(offset_x + 46, 42, ":"); // ":" is slightly higher
+    _u8g2->setFont(u8g2_font_logisoso24_tn);
+    _u8g2->drawStr(offset_x + 38, 38, ":"); // ":" 1
 
-    drawDigit(_clock_m1, 56, false);
-    drawDigit(_clock_m2, 78, false);
+    drawDigit(_clock_m1, 48);
+    drawDigit(_clock_m2, 64);
 
-    drawDigit(_clock_s1, 102, true);
-    drawDigit(_clock_s2, 116, true);
+    _u8g2->setFont(u8g2_font_logisoso24_tn);
+    _u8g2->drawStr(offset_x + 80, 38, ":"); // ":" 2
+
+    drawDigit(_clock_s1, 90);
+    drawDigit(_clock_s2, 106);
 
     _u8g2->setMaxClipWindow();
     _u8g2->setFont(u8g2_font_6x10_tf); // QUAN TRỌNG: Phải reset font để không làm hỏng Menu khác

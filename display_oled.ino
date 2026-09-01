@@ -227,9 +227,8 @@ void sync_time_with_api() {
                     
                     int l_d = doc["data"]["lunar"]["day"];
                     int l_m = doc["data"]["lunar"]["month"];
-                    const char* l_y_can_chi = doc["data"]["lunar"]["year_can_chi"];
                     char l_buf[64];
-                    snprintf(l_buf, sizeof(l_buf), "Am lich: %02d/%02d %s", l_d, l_m, l_y_can_chi);
+                    snprintf(l_buf, sizeof(l_buf), "AL: %02d/%02d", l_d, l_m);
                     lunar_date_str = String(l_buf);
                     
                     is_time_synced = true;
