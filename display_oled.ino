@@ -275,6 +275,10 @@ void loop() {
                 if (current_level == LEVEL_WIFI) {
                     current_level = LEVEL_SETTINGS; // Lùi về Settings
                     ui.setCarouselItems(settings_items, TOTAL_SETTINGS_ITEMS, "< SETTINGS >");
+                    // Nếu thoát ra mà không có kết nối nào, tắt Wi-Fi để tiết kiệm pin
+                    if (WiFi.status() != WL_CONNECTED) {
+                        WiFi.mode(WIFI_OFF);
+                    }
                 }
                 ui.closeOverlay();
               } else if (ui.getAppState() == STATE_SLIDER) {
@@ -290,6 +294,12 @@ void loop() {
             else if (cmd == 'B') { // Phím Backspace
               if (ui.getAppState() == STATE_TEXT_INPUT) {
                 ui.backspace();
+              } else if (current_level == LEVEL_WIFI) {
+                  // Đang ở danh sách Wi-Fi (hoặc Modal), ấn Backspace để ngắt kết nối hiện tại
+                  if (WiFi.status() == WL_CONNECTED) {
+                      WiFi.disconnect();
+                      ui.openModal("Disconnected", "Wi-Fi is now disconnected");
+                  }
               }
             }
             else if (cmd == 'E') { // Phím Enter

@@ -755,8 +755,8 @@ void SmoothOLED::draw_modal_dialog() {
     _u8g2->drawRFrame(MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H, 2);
 
     int button_bar_y = MENU_BOX_Y + MENU_BOX_H - 18;
-    _u8g2->drawLine(MENU_BOX_X, button_bar_y, MENU_BOX_X + MENU_BOX_W, button_bar_y);
-    _u8g2->drawLine(MENU_BOX_X + MENU_BOX_W / 2, button_bar_y, MENU_BOX_X + MENU_BOX_W / 2, MENU_BOX_Y + MENU_BOX_H);
+    _u8g2->drawLine(MENU_BOX_X, button_bar_y, MENU_BOX_X + MENU_BOX_W - 1, button_bar_y);
+    _u8g2->drawLine(MENU_BOX_X + MENU_BOX_W / 2, button_bar_y, MENU_BOX_X + MENU_BOX_W / 2, MENU_BOX_Y + MENU_BOX_H - 1);
 
     _u8g2->setFont(u8g2_font_5x7_tf);
     
