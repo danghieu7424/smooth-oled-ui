@@ -410,6 +410,8 @@ void loop() {
                 ui.closeOverlay(); // Esc -> Thoát thẳng nhập Pass
               } else if (ui.getAppState() == STATE_POPUP || ui.getAppState() == STATE_MODAL) {
                 ui.closeOverlay(); // Đóng Popup/Modal
+              } else if (ui.getAppState() == STATE_CLOCK) {
+                ui.closeOverlay(); // Thoát khỏi đồng hồ về Menu chính
               } else if (ui.getAppState() == STATE_FULL_LIST) {
                 if (current_level == LEVEL_WIFI) {
                     current_level = LEVEL_SETTINGS; // Lùi về Settings

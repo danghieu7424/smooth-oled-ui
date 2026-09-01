@@ -1016,22 +1016,218 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
             buf[0] = '0' + d.next_val;
             _u8g2->drawStr(offset_x + x, y + h - offset, buf);
         }
+                        _side_selected_idx = 0;
+                    }
+                }
+            }
+        } else if (_overlay_state == OVERLAY_SIDE_POPUP) {
+            if (now - _last_switch > 1800) {
+                _last_switch = now;
+                _side_selected_idx++;
+                if (_side_selected_idx >= _side_count) {
+                    _side_selected_idx = 0;
+                    _overlay_anim = PHASE_CLOSING;
+                }
+            }
+        }
+    }
+
+    // --- PHYSICS & RENDER TICK (60FPS) ---
+    if (now - _last_tick >= 16) {
+        _last_tick = now;
+        _u8g2->clearBuffer();
+
+        int background_offset_x = 0;
+
+        // 1. Overlay Physics
+        if (_overlay_state == OVERLAY_SIDE_POPUP) {
+            bool was_closing = (_overlay_anim == PHASE_CLOSING);
+            update_side_physics();
+            
+            // Đẩy màn hình nền sang trái dựa trên hoạt ảnh của Side Popup
+            // Nhưng kết hợp cả _side_slide_x khi đóng
+            float combined_push = (_side_arc_radius / TARGET_ARC_RADIUS) * 46.0f;
+            if (was_closing) {
+                combined_push = (1.0f - (_side_slide_x / 128.0f)) * 46.0f;
+            }
+            background_offset_x = -(int)combined_push;
+        }
+
+        // 2. Draw Background
+        if (_app_state == STATE_CAROUSEL) {
+            update_physics();
+            draw_carousel_menu(background_offset_x);
+        } else if (_app_state == STATE_POPUP) {
+            update_list_physics();
+            // Tự động render lại màn hình nền dựa trên _prev_app_state
+            if (_prev_app_state == STATE_CAROUSEL) {
+                draw_carousel_menu(background_offset_x);
+            } else if (_prev_app_state == STATE_SLIDER) {
+                draw_slider_menu(background_offset_x);
+            }
+            // Nếu có Side List đè lên thì không vẽ box Popup nữa để tránh lỗi UI
+            if (_overlay_state == OVERLAY_NONE) {
+                draw_popup_menu();
+            }
+        } else if (_app_state == STATE_SLIDER) {
+            update_slider_physics();
+            draw_slider_menu(background_offset_x);
+        } else if (_app_state == STATE_TEXT_INPUT) {
+            // Tự động render lại màn hình nền dựa trên _prev_app_state
+            if (_prev_app_state == STATE_CAROUSEL) {
+                draw_carousel_menu(background_offset_x);
+            } else if (_prev_app_state == STATE_POPUP) {
+                // Tình huống: Popup đè lên Carousel, TextInput đè lên Popup
+                draw_carousel_menu(background_offset_x); 
+                draw_popup_menu();
+            } else if (_prev_app_state == STATE_FULL_LIST) {
+                draw_full_list_menu(background_offset_x);
+            }
+            if (_overlay_state == OVERLAY_NONE) {
+                draw_text_input_menu();
+            }
+        } else if (_app_state == STATE_FULL_LIST) {
+            if (_overlay_state == OVERLAY_NONE) {
+                draw_full_list_menu(background_offset_x);
+            }
+        } else if (_app_state == STATE_MODAL) {
+            update_modal_physics();
+            if (_prev_app_state == STATE_CAROUSEL) {
+                draw_carousel_menu(background_offset_x);
+            } else if (_prev_app_state == STATE_POPUP) {
+                draw_carousel_menu(background_offset_x); 
+                draw_popup_menu();
+            } else if (_prev_app_state == STATE_FULL_LIST) {
+                draw_full_list_menu(background_offset_x);
+            }
+            if (_overlay_state == OVERLAY_NONE) {
+                draw_modal_dialog();
+            }
+        } else if (_app_state == STATE_CLOCK) {
+            update_clock_physics();
+            draw_clock_menu(background_offset_x);
+        }
+
+        // 3. Draw Overlay
+        if (_overlay_state == OVERLAY_SIDE_POPUP) {
+            draw_side_list_menu();
+        }
+
+        flush_display();
+    }
+}
+
+// =================================================================================
+// CLOCK ATOM
+// =================================================================================
+
+void SmoothOLED::openClock() {
+    if (_overlay_state == OVERLAY_NONE) {
+        _prev_app_state = _app_state;
+        _app_state = STATE_CLOCK;
+        _clock_h1.current_val = _clock_h1.next_val = 0;
+        _clock_h2.current_val = _clock_h2.next_val = 0;
+        _clock_m1.current_val = _clock_m1.next_val = 0;
+        _clock_m2.current_val = _clock_m2.next_val = 0;
+        _clock_s1.current_val = _clock_s1.next_val = 0;
+        _clock_s2.current_val = _clock_s2.next_val = 0;
+        _clock_h1.anim_y = _clock_h2.anim_y = _clock_m1.anim_y = _clock_m2.anim_y = _clock_s1.anim_y = _clock_s2.anim_y = 0.0f;
+        memset(_clock_solar, 0, sizeof(_clock_solar));
+        memset(_clock_lunar, 0, sizeof(_clock_lunar));
+    }
+}
+
+void SmoothOLED::updateClock(int h, int m, int s, const char* solar_date, const char* lunar_date) {
+    auto updateDigit = [](ClockDigit& d, int new_val) {
+        if (d.next_val != new_val) {
+            d.current_val = d.next_val; 
+            d.next_val = new_val;
+            d.anim_y = 0.0f;
+        }
+    };
+
+    updateDigit(_clock_h1, h / 10);
+    updateDigit(_clock_h2, h % 10);
+    updateDigit(_clock_m1, m / 10);
+    updateDigit(_clock_m2, m % 10);
+    updateDigit(_clock_s1, s / 10);
+    updateDigit(_clock_s2, s % 10);
+
+    if (solar_date) strncpy(_clock_solar, solar_date, 31);
+    if (lunar_date) strncpy(_clock_lunar, lunar_date, 63);
+}
+
+void SmoothOLED::update_clock_physics() {
+    auto physDigit = [](ClockDigit& d) {
+        if (d.current_val != d.next_val) {
+            d.anim_y += 0.1f; // Animation speed
+            if (d.anim_y >= 1.0f) {
+                d.anim_y = 1.0f;
+                d.current_val = d.next_val;
+            }
+        } else {
+            d.anim_y = 0.0f;
+        }
+    };
+
+    physDigit(_clock_h1);
+    physDigit(_clock_h2);
+    physDigit(_clock_m1);
+    physDigit(_clock_m2);
+    physDigit(_clock_s1);
+    physDigit(_clock_s2);
+}
+
+void SmoothOLED::draw_clock_menu(int offset_x) {
+    // 1. Draw Solar Date
+    _u8g2->setFont(u8g2_font_profont12_tf);
+    int sw = _u8g2->getStrWidth(_clock_solar);
+    _u8g2->drawStr(offset_x + (128 - sw) / 2, 10, _clock_solar);
+
+    // 2. Draw Lunar Date
+    sw = _u8g2->getStrWidth(_clock_lunar);
+    _u8g2->drawStr(offset_x + (128 - sw) / 2, 62, _clock_lunar);
+
+    auto drawDigit = [&](ClockDigit& d, int x, bool is_small) {
+        if (is_small) _u8g2->setFont(u8g2_font_logisoso24_tn);
+        else _u8g2->setFont(u8g2_font_logisoso32_tn);
+
+        char buf[2];
+        buf[1] = '\0';
+        int h = is_small ? 24 : 32;
+        int y = 45; // Baseline
+
+        if (d.current_val == d.next_val) {
+            buf[0] = '0' + d.current_val;
+            _u8g2->drawStr(offset_x + x, y, buf);
+        } else {
+            int offset = (int)(d.anim_y * h);
+            
+            // Old digit sliding UP
+            buf[0] = '0' + d.current_val;
+            _u8g2->drawStr(offset_x + x, y - offset, buf);
+            
+            // New digit sliding UP from bottom
+            buf[0] = '0' + d.next_val;
+            _u8g2->drawStr(offset_x + x, y + h - offset, buf);
+        }
     };
 
     // Clip window ensures digits don't overwrite the dates
     _u8g2->setClipWindow(offset_x, 13, offset_x + 128, 50);
 
-    drawDigit(_clock_h1, 0, false);
-    drawDigit(_clock_h2, 21, false);
+    drawDigit(_clock_h1, 2, false);
+    drawDigit(_clock_h2, 24, false);
 
     _u8g2->setFont(u8g2_font_logisoso32_tn);
-    _u8g2->drawStr(offset_x + 42, 42, ":"); // ":" is slightly higher
+    _u8g2->drawStr(offset_x + 46, 42, ":"); // ":" is slightly higher
 
-    drawDigit(_clock_m1, 52, false);
-    drawDigit(_clock_m2, 73, false);
+    drawDigit(_clock_m1, 56, false);
+    drawDigit(_clock_m2, 78, false);
 
-    drawDigit(_clock_s1, 98, true);
-    drawDigit(_clock_s2, 114, true);
+    drawDigit(_clock_s1, 102, true);
+    drawDigit(_clock_s2, 116, true);
 
     _u8g2->setMaxClipWindow();
+    _u8g2->setFont(u8g2_font_6x10_tf); // QUAN TRỌNG: Phải reset font để không làm hỏng Menu khác
 }
