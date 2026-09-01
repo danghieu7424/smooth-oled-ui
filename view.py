@@ -22,7 +22,8 @@ print(" - Mũi tên PHẢI / XUỐNG  : Xuống (Down / Next)")
 print(" - Phím HOME             : Mở Side List")
 print(" - Phím END              : Mở Popup List")
 print(" - Phím ESC              : Đóng các Menu")
-print(" - Phím ENTER            : Chọn (Dự phòng)")
+print(" - Phím BACKSPACE        : Xóa ký tự (khi nhập pass)")
+print(" - Phím ENTER            : Chọn / Xác nhận")
 print("Bạn có thể tắt cửa sổ video bằng nút X trên thanh tiêu đề.")
 
 # --- Thiết lập bắt phím ngầm (Global Hook) ---
@@ -44,6 +45,7 @@ keyboard.on_press_key('down', lambda _: send_char('D'))
 keyboard.on_press_key('home', lambda _: send_char('S'))
 keyboard.on_press_key('end', lambda _: send_char('P'))
 keyboard.on_press_key('esc', lambda _: send_char('C'))
+keyboard.on_press_key('backspace', lambda _: send_char('B'))
 keyboard.on_press_key('enter', lambda _: send_char('E'))
 # ---------------------------------------------
 

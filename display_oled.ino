@@ -230,9 +230,7 @@ void loop() {
       if (ui.isOverlayOpen()) {
         ui.closeOverlay(); // Đóng Side List
       } else if (ui.getAppState() == STATE_TEXT_INPUT) {
-        if (!ui.backspace()) {
-           // Nếu backspace trả về false (nghĩa là đã xóa hết chữ và bấm tiếp), nó sẽ tự đóng và lùi về Popup/FullList
-        }
+        ui.closeOverlay(); // Esc -> Thoát thẳng nhập Pass
       } else if (ui.getAppState() == STATE_POPUP) {
         ui.closeOverlay(); // Đóng Popup List
       } else if (ui.getAppState() == STATE_FULL_LIST) {
@@ -248,6 +246,11 @@ void loop() {
       } else if (ui.getAppState() == STATE_CAROUSEL && current_level == LEVEL_SETTINGS) {
         current_level = LEVEL_MAIN; // Lùi về Main Menu
         ui.setCarouselItems(menu_items, TOTAL_MAIN_ITEMS, "< MAIN MENU >");
+      }
+    }
+    else if (c == 'B') { // Phím Backspace
+      if (ui.getAppState() == STATE_TEXT_INPUT) {
+        ui.backspace();
       }
     }
     else if (c == 'E') { // Phím Enter

@@ -189,7 +189,7 @@ void SmoothOLED::openSlider(const char* title, int current_val, int max_val, Sli
 }
 
 void SmoothOLED::openTextInput(const char* title, TextCallback on_submit) {
-    if (_overlay_state == OVERLAY_NONE && (_app_state == STATE_CAROUSEL || _app_state == STATE_POPUP)) {
+    if (_overlay_state == OVERLAY_NONE && (_app_state == STATE_CAROUSEL || _app_state == STATE_POPUP || _app_state == STATE_FULL_LIST)) {
         _prev_app_state = _app_state;
         _app_state = STATE_TEXT_INPUT;
         _text_input_title = title;
@@ -608,12 +608,12 @@ void SmoothOLED::draw_full_list_menu(int offset_x) {
     float target_y = _list_selected_index * 12;
     _list_camera_y += (target_y - _list_camera_y) * 0.3f;
     
-    int start_y = 24 - (int)_list_camera_y;
+    int start_y = 28 - (int)_list_camera_y;
     
     // Vẽ danh sách
     for (int i = 0; i < _list_count; i++) {
         int y = start_y + i * 12;
-        if (y > 10 && y < 70) {
+        if (y > 22 && y < 70) {
             if (i == _list_selected_index) {
                 // Highlight box
                 _u8g2->setDrawColor(1);
