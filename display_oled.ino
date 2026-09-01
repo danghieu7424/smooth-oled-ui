@@ -158,6 +158,13 @@ void on_brightness_change(int val) {
 
 char text_input_title_buf[64];
 
+// Hàm rút gọn Key để lưu NVS (giới hạn 15 ký tự)
+String getNvsKey(const char* ssid) {
+    String key = String(ssid);
+    if (key.length() > 15) return key.substring(0, 15);
+    return key;
+}
+
 void on_wifi_selected(int idx) {
   // Chặn mở mật khẩu nếu đang Scanning, không có mạng, hoặc lỗi
   if (idx >= 0 && idx < wifi_count && strncmp(wifi_ssid[0], "Scanning", 8) != 0 && strncmp(wifi_ssid[0], "No networks", 10) != 0 && strncmp(wifi_ssid[0], "Scan Failed", 11) != 0) {
@@ -170,7 +177,7 @@ void on_wifi_selected(int idx) {
       snprintf(text_input_title_buf, sizeof(text_input_title_buf), "PWD: %s", wifi_raw_ssid[idx]);
       
       // Lấy mật khẩu đã lưu từ Preferences
-      String saved_pwd = prefs.getString(wifi_raw_ssid[idx], "");
+      String saved_pwd = prefs.getString(getNvsKey(wifi_raw_ssid[idx]).c_str(), "");
       
       // Mở Popup Text Input và điền sẵn mật khẩu cũ (nếu có)
       ui.openTextInput(text_input_title_buf, on_wifi_password_submit, saved_pwd.c_str());
@@ -228,6 +235,14 @@ void setup() {
   Wire.setClock(400000); 
   u8g2.begin();
   u8g2.setContrast(current_brightness); // Áp dụng độ sáng đã lưu
+
+  // Tự động kết nối lại Wi-Fi cũ (nếu có)
+  String last_ssid = prefs.getString("last_ssid", "");
+  if (last_ssid != "") {
+      String last_pwd = prefs.getString(getNvsKey(last_ssid.c_str()).c_str(), "");
+      WiFi.mode(WIFI_STA);
+      WiFi.begin(last_ssid.c_str(), last_pwd.c_str());
+  }
 
   // 1. Gán mảng dữ liệu vào thư viện UI
   ui.setCarouselItems(menu_items, TOTAL_MAIN_ITEMS, "< MAIN MENU >");
@@ -298,6 +313,14 @@ void loop() {
                   // Đang ở danh sách Wi-Fi (hoặc Modal), ấn Backspace để ngắt kết nối hiện tại
                   if (WiFi.status() == WL_CONNECTED) {
                       WiFi.disconnect();
+                      // Xóa dấu * khỏi danh sách ngay lập tức
+                      for (int i = 0; i < wifi_count; i++) {
+                          if (wifi_ssid[i][0] == '*') {
+                              String temp = String(wifi_ssid[i]).substring(2); // Cắt bỏ "* "
+                              strncpy(wifi_ssid[i], temp.c_str(), 31);
+                              wifi_ssid[i][31] = '\0';
+                          }
+                      }
                       ui.openModal("Disconnected", "Wi-Fi is now disconnected");
                   }
               }
@@ -372,7 +395,10 @@ void loop() {
           is_connecting_wifi = false;
           
           // Lưu mật khẩu vào NVS để nhớ cho lần sau
-          prefs.putString(connecting_ssid.c_str(), connecting_pwd);
+          prefs.putString(getNvsKey(connecting_ssid.c_str()).c_str(), connecting_pwd);
+          // Lưu Last SSID để auto-connect khi boot
+          prefs.putString("last_ssid", connecting_ssid);
+          
           Serial.printf("\n[WiFi] Connected successfully to %s\n", connecting_ssid.c_str());
           
           // Hiển thị thông báo thành công
@@ -397,8 +423,9 @@ void loop() {
           WiFi.disconnect();
           Serial.println("\n[WiFi] Connection timeout or failed");
           
-          // Hiển thị thông báo thất bại
-          ui.openModal("Failed!", "Wrong Pass / Timeout");
+          // Hiển thị lại Text Input với Mật khẩu cũ để người dùng sửa thay vì hiển thị Modal Failed
+          snprintf(text_input_title_buf, sizeof(text_input_title_buf), "FAIL: %s", connecting_ssid.c_str());
+          ui.openTextInput(text_input_title_buf, on_wifi_password_submit, connecting_pwd.c_str());
       }
   }
 
