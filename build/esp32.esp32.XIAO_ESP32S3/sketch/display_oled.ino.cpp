@@ -142,15 +142,15 @@ String connecting_pwd = "";
 
 void on_wifi_selected(int idx);
 
-#line 162 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-String getNvsKey(const char* ssid);
-#line 177 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 161 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+const char * getNvsKey(const char* ssid);
+#line 184 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void save_pwd_cache(String ssid, String pwd);
-#line 191 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 198 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 String get_pwd_cache(String ssid);
-#line 264 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 271 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup();
-#line 300 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 307 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void loop();
 #line 144 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void open_settings_menu() {
@@ -168,14 +168,21 @@ void on_brightness_change(int val) {
   u8g2.setContrast(current_brightness); // Lệnh phần cứng đổi độ sáng OLED trực tiếp
 }
 
-char text_input_title_buf[64];
-
-// Hàm rút gọn Key để lưu NVS (giới hạn 15 ký tự)
-String getNvsKey(const char* ssid) {
-    String key = String(ssid);
-    key.replace(" ", "_"); // Tránh lỗi phím trắng trên NVS
-    if (key.length() > 15) return key.substring(0, 15);
-    return key;
+// Hàm rút gọn Key để lưu NVS (giới hạn 15 ký tự, dùng mảng tĩnh chống lỗi bộ nhớ)
+char nvs_key_buf[16];
+const char* getNvsKey(const char* ssid) {
+    strncpy(nvs_key_buf, ssid, 15);
+    nvs_key_buf[15] = '\0';
+    for (int i = 0; i < 15; i++) {
+        if (nvs_key_buf[i] == ' ' || nvs_key_buf[i] == '\0') {
+            nvs_key_buf[i] = '_';
+            if (ssid[i] == '\0') {
+                nvs_key_buf[i] = '\0'; // Giữ nguyên kết thúc chuỗi
+                break;
+            }
+        }
+    }
+    return nvs_key_buf;
 }
 
 // Bộ đệm RAM để nhớ mật khẩu ngay lập tức (Chống lỗi NVS ghi chậm hoặc hỏng)
@@ -220,7 +227,7 @@ void on_wifi_selected(int idx) {
       String saved_pwd = get_pwd_cache(wifi_raw_ssid[idx]);
       if (saved_pwd == "") {
           // Nếu RAM chưa có, lấy từ Flash NVS
-          saved_pwd = prefs.getString(getNvsKey(wifi_raw_ssid[idx]).c_str(), "");
+          saved_pwd = prefs.getString(getNvsKey(wifi_raw_ssid[idx]), "");
       }
       
       if (saved_pwd.length() > 0) {
@@ -289,7 +296,7 @@ void setup() {
   // Tự động kết nối lại Wi-Fi cũ (nếu có)
   String last_ssid = prefs.getString("last_ssid", "");
   if (last_ssid != "") {
-      String last_pwd = prefs.getString(getNvsKey(last_ssid.c_str()).c_str(), "");
+      String last_pwd = prefs.getString(getNvsKey(last_ssid.c_str()), "");
       WiFi.mode(WIFI_STA);
       WiFi.begin(last_ssid.c_str(), last_pwd.c_str());
   }
@@ -445,7 +452,7 @@ void loop() {
           is_connecting_wifi = false;
           
           // Lưu mật khẩu vào NVS để nhớ cho lần sau
-          prefs.putString(getNvsKey(connecting_ssid.c_str()).c_str(), connecting_pwd);
+          prefs.putString(getNvsKey(connecting_ssid.c_str()), connecting_pwd);
           save_pwd_cache(connecting_ssid, connecting_pwd); // Lưu vào RAM luôn cho chắc
           
           // Lưu Last SSID để auto-connect khi boot
