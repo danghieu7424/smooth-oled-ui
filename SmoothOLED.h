@@ -161,6 +161,10 @@ private:
     float _list_camera_y;
     ListCallback _list_on_select;
 
+    // --- Biến Modal ---
+    const char* _modal_title;
+    const char* _modal_text;
+
     void flush_display();
 
     void update_physics();
@@ -168,6 +172,7 @@ private:
 
     void update_list_physics();
     void draw_popup_menu();
+    void draw_modal_dialog();
 
     void update_side_physics();
     void draw_side_list_menu();
