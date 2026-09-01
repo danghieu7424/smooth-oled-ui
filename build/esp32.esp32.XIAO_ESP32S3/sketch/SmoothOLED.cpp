@@ -213,6 +213,8 @@ void SmoothOLED::openModal(const char* title, const char* text) {
         _app_state = STATE_MODAL;
         _modal_title = title;
         _modal_text = text;
+        _marquee_offset = 0;
+        _marquee_delay = 30;
     }
 }
 
@@ -721,6 +723,32 @@ void SmoothOLED::draw_full_list_menu(int offset_x) {
 // MODAL DIALOG ATOM
 // =================================================================================
 
+void SmoothOLED::update_modal_physics() {
+    int text_pixel_width = 0;
+    if (_modal_text) {
+        text_pixel_width = _u8g2->getStrWidth(_modal_text);
+    }
+    
+    uint32_t now = millis();
+    if (now - _marquee_last_time >= 30) { 
+        _marquee_last_time = now;
+        int max_visible_w = MENU_BOX_W - 8;
+        if (text_pixel_width > max_visible_w) {
+            if (_marquee_delay > 0) {
+                _marquee_delay--;
+            } else {
+                _marquee_offset += 0.5f;
+                if (_marquee_offset > (text_pixel_width - max_visible_w + 6)) { 
+                    _marquee_offset = 0;
+                    _marquee_delay = 45; 
+                }
+            }
+        } else {
+            _marquee_offset = 0;
+        }
+    }
+}
+
 void SmoothOLED::draw_modal_dialog() {
     _u8g2->setDrawColor(0);
     _u8g2->drawRBox(MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H, 2);
@@ -746,7 +774,11 @@ void SmoothOLED::draw_modal_dialog() {
     
     _u8g2->setDrawColor(1);
     _u8g2->drawStr(MENU_BOX_X + 4, MENU_BOX_Y + 11, _modal_title);
-    _u8g2->drawStr(MENU_BOX_X + 4, MENU_BOX_Y + 25, _modal_text);
+    
+    _u8g2->setClipWindow(MENU_BOX_X + 2, MENU_BOX_Y + 13, MENU_BOX_X + MENU_BOX_W - 2, button_bar_y - 1);
+    int offset_int = (int)(_marquee_offset + 0.5f);
+    _u8g2->drawStr(MENU_BOX_X + 4 - offset_int, MENU_BOX_Y + 25, _modal_text);
+    _u8g2->setMaxClipWindow();
 }
 
 // =================================================================================
@@ -858,6 +890,7 @@ void SmoothOLED::update() {
                 draw_full_list_menu(background_offset_x);
             }
         } else if (_app_state == STATE_MODAL) {
+            update_modal_physics();
             if (_prev_app_state == STATE_CAROUSEL) {
                 draw_carousel_menu(background_offset_x);
             } else if (_prev_app_state == STATE_POPUP) {

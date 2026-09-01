@@ -172,6 +172,7 @@ private:
 
     void update_list_physics();
     void draw_popup_menu();
+    void update_modal_physics();
     void draw_modal_dialog();
 
     void update_side_physics();
