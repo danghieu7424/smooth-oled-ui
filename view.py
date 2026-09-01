@@ -17,8 +17,8 @@ print(f"Đang kết nối {PORT}...")
 print("=============================================")
 print(" ĐÃ TÍCH HỢP ĐIỀU KHIỂN BÀN PHÍM BLUETOOTH   ")
 print("=============================================")
-print(" - Mũi tên TRÁI / LÊN    : Lên (Up / Prev)")
-print(" - Mũi tên PHẢI / XUỐNG  : Xuống (Down / Next)")
+print(" - Mũi tên TRÁI / PHẢI  : Trái (Left) / Phải (Right)")
+print(" - Mũi tên LÊN / XUỐNG   : Lên (Up) / Xuống (Down)")
 print(" - Phím HOME             : Mở Side List")
 print(" - Phím END              : Mở Popup List")
 print(" - Phím ESC              : Đóng các Menu")
@@ -38,9 +38,9 @@ def send_char(c):
         except:
             pass
 
-keyboard.on_press_key('left', lambda _: send_char('U'))
+keyboard.on_press_key('left', lambda _: send_char('L'))
 keyboard.on_press_key('up', lambda _: send_char('U'))
-keyboard.on_press_key('right', lambda _: send_char('D'))
+keyboard.on_press_key('right', lambda _: send_char('R'))
 keyboard.on_press_key('down', lambda _: send_char('D'))
 keyboard.on_press_key('home', lambda _: send_char('S'))
 keyboard.on_press_key('end', lambda _: send_char('P'))

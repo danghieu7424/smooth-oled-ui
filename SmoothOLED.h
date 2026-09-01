@@ -54,6 +54,8 @@ public:
     // --- Input API ---
     void up();
     void down();
+    void left();
+    void right();
     void openPopup();
     void openSideList();
     void openSlider(const char* title, int current_val, int max_val, SliderCallback on_change = nullptr);

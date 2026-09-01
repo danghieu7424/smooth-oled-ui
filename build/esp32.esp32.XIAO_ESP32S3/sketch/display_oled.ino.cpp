@@ -136,9 +136,9 @@ bool is_scanning_wifi = false;
 
 void on_wifi_selected(int idx);
 
-#line 190 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 191 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup();
-#line 218 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 219 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void loop();
 #line 138 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void open_settings_menu() {
@@ -156,12 +156,13 @@ void on_brightness_change(int val) {
   u8g2.setContrast(current_brightness); // Lệnh phần cứng đổi độ sáng OLED trực tiếp
 }
 
+char text_input_title_buf[64];
+
 void on_wifi_selected(int idx) {
   // Chặn mở mật khẩu nếu đang Scanning, không có mạng, hoặc lỗi
   if (idx >= 0 && idx < wifi_count && strncmp(wifi_ssid[0], "Scanning", 8) != 0 && strncmp(wifi_ssid[0], "No networks", 10) != 0 && strncmp(wifi_ssid[0], "Scan Failed", 11) != 0) {
-      char title[32];
-      snprintf(title, sizeof(title), "PWD: %s", wifi_raw_ssid[idx]);
-      ui.openTextInput(title, on_wifi_password_submit);
+      snprintf(text_input_title_buf, sizeof(text_input_title_buf), "PWD: %s", wifi_raw_ssid[idx]);
+      ui.openTextInput(text_input_title_buf, on_wifi_password_submit);
   }
 }
 
@@ -225,8 +226,10 @@ void loop() {
   // Lắng nghe lệnh từ cổng Serial (gửi từ Python Script)
   if (Serial.available() > 0) {
     char c = Serial.read();
-    if (c == 'U') ui.up();        // Mũi tên lên / Trái
-    else if (c == 'D') ui.down(); // Mũi tên xuống / Phải
+    if (c == 'U') ui.up();        // Mũi tên Lên
+    else if (c == 'D') ui.down(); // Mũi tên Xuống
+    else if (c == 'L') ui.left(); // Mũi tên Trái
+    else if (c == 'R') ui.right();// Mũi tên Phải
     else if (c == 'P') {
       ui.setPopupListItems(popup_items, TOTAL_POPUP_ITEMS);
       ui.openPopup(); // Phím End
