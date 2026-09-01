@@ -5,6 +5,7 @@ SmoothOLED::SmoothOLED(U8G2* u8g2, Stream* serial) {
     _u8g2 = u8g2;
     _serial = serial;
     _app_state = STATE_CAROUSEL;
+    _prev_app_state = STATE_CAROUSEL;
     _overlay_state = OVERLAY_NONE;
     _overlay_anim = PHASE_IDLE;
     _carousel_title = "< MAIN MENU >";
@@ -123,7 +124,8 @@ void SmoothOLED::down() {
 }
 
 void SmoothOLED::openPopup() {
-    if (_overlay_state == OVERLAY_NONE && _app_state == STATE_CAROUSEL) {
+    if (_overlay_state == OVERLAY_NONE && (_app_state == STATE_CAROUSEL || _app_state == STATE_SLIDER)) {
+        _prev_app_state = _app_state;
         _app_state = STATE_POPUP;
         _current_list_selection = 0;
         _list_cam_target_idx = 0;
@@ -135,8 +137,10 @@ void SmoothOLED::openPopup() {
 }
 
 void SmoothOLED::openSideList() {
-    if (_overlay_state == OVERLAY_NONE && (_app_state == STATE_CAROUSEL || _app_state == STATE_POPUP)) {
-        _app_state = STATE_CAROUSEL; // Đóng popup nếu có
+    if (_overlay_state == OVERLAY_NONE && (_app_state == STATE_CAROUSEL || _app_state == STATE_POPUP || _app_state == STATE_SLIDER)) {
+        if (_app_state == STATE_POPUP) {
+            _app_state = _prev_app_state; // Đóng popup nếu có, trả về màn hình gốc
+        }
         _overlay_state = OVERLAY_SIDE_POPUP;
         _overlay_anim = PHASE_OPENING;
         _side_arc_radius = 0.0f;
@@ -160,7 +164,9 @@ void SmoothOLED::openSlider(const char* title, int current_val, int max_val) {
 void SmoothOLED::closeOverlay() {
     if (_overlay_state == OVERLAY_SIDE_POPUP) {
         _overlay_anim = PHASE_CLOSING;
-    } else if (_app_state == STATE_POPUP || _app_state == STATE_SLIDER) {
+    } else if (_app_state == STATE_POPUP) {
+        _app_state = _prev_app_state; // Trả về Carousel hoặc Slider
+    } else if (_app_state == STATE_SLIDER) {
         _app_state = STATE_CAROUSEL;
     }
 }
@@ -418,16 +424,16 @@ void SmoothOLED::update_slider_physics() {
     _slider_val += (_target_slider_val - _slider_val) * 0.3f;
 }
 
-void SmoothOLED::draw_slider_menu() {
+void SmoothOLED::draw_slider_menu(int offset_x) {
     _u8g2->setDrawColor(1);
     
     // Vẽ tiêu đề
     _u8g2->setFont(u8g2_font_6x10_tf);
     int str_width = _u8g2->getStrWidth(_slider_title);
-    _u8g2->drawStr(64 - (str_width / 2), 18, _slider_title);
+    _u8g2->drawStr(64 - (str_width / 2) + offset_x, 18, _slider_title);
 
     // Vẽ khung ngoài
-    _u8g2->drawRFrame(14, 28, 100, 14, 3);
+    _u8g2->drawRFrame(14 + offset_x, 28, 100, 14, 3);
 
     // Tính toán độ dài thanh bar
     float ratio = _slider_val / (float)_slider_max;
@@ -438,9 +444,9 @@ void SmoothOLED::draw_slider_menu() {
     if (fill_w > 0) {
         // Fix lỗi thư viện U8g2 vẽ tia dài khi width nhỏ hơn 2*radius
         if (fill_w < 5) {
-            _u8g2->drawBox(16, 30, fill_w, 10);
+            _u8g2->drawBox(16 + offset_x, 30, fill_w, 10);
         } else {
-            _u8g2->drawRBox(16, 30, fill_w, 10, 2);
+            _u8g2->drawRBox(16 + offset_x, 30, fill_w, 10, 2);
         }
     }
 
@@ -449,7 +455,7 @@ void SmoothOLED::draw_slider_menu() {
     int percent = (int)((_target_slider_val / (float)_slider_max) * 100.0f + 0.5f);
     snprintf(val_str, sizeof(val_str), "%d%%", percent);
     int val_w = _u8g2->getStrWidth(val_str);
-    _u8g2->drawStr(64 - (val_w / 2), 56, val_str);
+    _u8g2->drawStr(64 - (val_w / 2) + offset_x, 56, val_str);
 }
 
 // =================================================================================
@@ -529,14 +535,19 @@ void SmoothOLED::update() {
             draw_carousel_menu(background_offset_x);
         } else if (_app_state == STATE_POPUP) {
             update_list_physics();
-            draw_carousel_menu(background_offset_x); // Vẽ nền Main Menu phía sau
+            // Tự động render lại màn hình nền dựa trên _prev_app_state
+            if (_prev_app_state == STATE_CAROUSEL) {
+                draw_carousel_menu(background_offset_x);
+            } else if (_prev_app_state == STATE_SLIDER) {
+                draw_slider_menu(background_offset_x);
+            }
             // Nếu có Side List đè lên thì không vẽ box Popup nữa để tránh lỗi UI
             if (_overlay_state == OVERLAY_NONE) {
                 draw_popup_menu();
             }
         } else if (_app_state == STATE_SLIDER) {
             update_slider_physics();
-            draw_slider_menu();
+            draw_slider_menu(background_offset_x);
         }
 
         // 3. Draw Overlay

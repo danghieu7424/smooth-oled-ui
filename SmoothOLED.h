@@ -65,6 +65,7 @@ private:
     AppState _app_state;
     OverlayState _overlay_state;
     AnimPhase _overlay_anim;
+    AppState _prev_app_state;
     uint32_t _last_switch;
     uint32_t _last_tick;
     bool _auto_demo;
@@ -135,7 +136,7 @@ private:
     void draw_side_list_menu();
 
     void update_slider_physics();
-    void draw_slider_menu();
+    void draw_slider_menu(int offset_x = 0);
 };
 
 #endif
