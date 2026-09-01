@@ -161,8 +161,38 @@ char text_input_title_buf[64];
 // Hàm rút gọn Key để lưu NVS (giới hạn 15 ký tự)
 String getNvsKey(const char* ssid) {
     String key = String(ssid);
+    key.replace(" ", "_"); // Tránh lỗi phím trắng trên NVS
     if (key.length() > 15) return key.substring(0, 15);
     return key;
+}
+
+// Bộ đệm RAM để nhớ mật khẩu ngay lập tức (Chống lỗi NVS ghi chậm hoặc hỏng)
+struct WiFiCache {
+    String ssid;
+    String pwd;
+};
+WiFiCache wifi_cache[10];
+int wifi_cache_count = 0;
+
+void save_pwd_cache(String ssid, String pwd) {
+    for (int i = 0; i < wifi_cache_count; i++) {
+        if (wifi_cache[i].ssid == ssid) {
+            wifi_cache[i].pwd = pwd;
+            return;
+        }
+    }
+    if (wifi_cache_count < 10) {
+        wifi_cache[wifi_cache_count].ssid = ssid;
+        wifi_cache[wifi_cache_count].pwd = pwd;
+        wifi_cache_count++;
+    }
+}
+
+String get_pwd_cache(String ssid) {
+    for (int i = 0; i < wifi_cache_count; i++) {
+        if (wifi_cache[i].ssid == ssid) return wifi_cache[i].pwd;
+    }
+    return "";
 }
 
 void on_wifi_selected(int idx) {
@@ -174,10 +204,14 @@ void on_wifi_selected(int idx) {
           return;
       }
 
-      // Lấy mật khẩu đã lưu từ Preferences. Dùng chuỗi mồi "___NOT_SAVED___" để phân biệt với pass rỗng.
-      String saved_pwd = prefs.getString(getNvsKey(wifi_raw_ssid[idx]).c_str(), "___NOT_SAVED___");
+      // Lấy mật khẩu từ RAM Cache trước (chắc chắn nhất)
+      String saved_pwd = get_pwd_cache(wifi_raw_ssid[idx]);
+      if (saved_pwd == "") {
+          // Nếu RAM chưa có, lấy từ Flash NVS
+          saved_pwd = prefs.getString(getNvsKey(wifi_raw_ssid[idx]).c_str(), "");
+      }
       
-      if (saved_pwd != "___NOT_SAVED___") {
+      if (saved_pwd.length() > 0) {
           // Nếu đã có mật khẩu lưu trữ, kết nối thẳng luôn
           on_wifi_password_submit(saved_pwd.c_str());
       } else {
@@ -400,6 +434,8 @@ void loop() {
           
           // Lưu mật khẩu vào NVS để nhớ cho lần sau
           prefs.putString(getNvsKey(connecting_ssid.c_str()).c_str(), connecting_pwd);
+          save_pwd_cache(connecting_ssid, connecting_pwd); // Lưu vào RAM luôn cho chắc
+          
           // Lưu Last SSID để auto-connect khi boot
           prefs.putString("last_ssid", connecting_ssid);
           
