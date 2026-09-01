@@ -333,7 +333,11 @@ void loop() {
           else if (rssi >= -50) quality = 100;
           else quality = 2 * (rssi + 100);
           
-          snprintf(wifi_ssid[i], 32, "%s [%d%%]", ssid.c_str(), quality);
+          if (WiFi.status() == WL_CONNECTED && ssid == WiFi.SSID()) {
+              snprintf(wifi_ssid[i], 32, "* %s [%d%%]", ssid.c_str(), quality);
+          } else {
+              snprintf(wifi_ssid[i], 32, "%s [%d%%]", ssid.c_str(), quality);
+          }
           wifi_ssid_ptrs[i] = wifi_ssid[i];
         }
       }
@@ -360,6 +364,20 @@ void loop() {
           // Hiển thị thông báo thành công
           static const char* success_items[] = {"Connected!", connecting_ssid.c_str()};
           ui.setPopupListItems(success_items, 2);
+          ui.openPopup();
+          
+          // Đánh dấu mạng đã kết nối trên danh sách hiện tại
+          for (int i = 0; i < wifi_count; i++) {
+              if (String(wifi_raw_ssid[i]) == connecting_ssid) {
+                  char temp[32];
+                  // Nếu chưa có dấu * thì thêm vào
+                  if (wifi_ssid[i][0] != '*') {
+                      snprintf(temp, 32, "* %s", wifi_ssid[i]);
+                      strncpy(wifi_ssid[i], temp, 31);
+                      wifi_ssid[i][31] = '\0';
+                  }
+              }
+          }
           
       } else if (millis() - wifi_connect_start > 10000) {
           // Timeout sau 10 giây
@@ -370,6 +388,7 @@ void loop() {
           // Hiển thị thông báo thất bại
           static const char* fail_items[] = {"Failed!", "Wrong Pass / Timeout"};
           ui.setPopupListItems(fail_items, 2);
+          ui.openPopup();
       }
   }
 

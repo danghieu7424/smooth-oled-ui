@@ -193,7 +193,7 @@ void SmoothOLED::right() {
 }
 
 void SmoothOLED::openPopup() {
-    if (_overlay_state == OVERLAY_NONE && (_app_state == STATE_CAROUSEL || _app_state == STATE_SLIDER)) {
+    if (_overlay_state == OVERLAY_NONE && (_app_state == STATE_CAROUSEL || _app_state == STATE_SLIDER || _app_state == STATE_FULL_LIST)) {
         _prev_app_state = _app_state;
         _app_state = STATE_POPUP;
         _current_list_selection = 0;
@@ -305,11 +305,13 @@ void SmoothOLED::select() {
     } else if (_app_state == STATE_CAROUSEL) {
         _target_cursor_w = MENU_BOX_W + 10;
     } else if (_app_state == STATE_TEXT_INPUT) {
-        // Luôn Submit khi nhấn Enter (Xác nhận pass)
+        // Đóng Text Input và khôi phục màn hình cũ TRƯỚC KHI gọi Callback
+        // Nhờ vậy Callback có thể mở Popup đè lên màn hình cũ.
+        _app_state = _prev_app_state;
+        
         if (_text_on_submit) {
             _text_on_submit(_text_buffer);
         }
-        _app_state = _prev_app_state;
     } else if (_app_state == STATE_FULL_LIST) {
         if (_list_on_select) _list_on_select(_list_selected_index);
     }
