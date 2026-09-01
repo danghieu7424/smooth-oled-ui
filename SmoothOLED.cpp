@@ -66,6 +66,9 @@ void SmoothOLED::setCarouselItems(const MenuItem* items, int count, const char* 
     _carousel_items = items;
     _carousel_count = count;
     _carousel_title = title;
+    _current_index = 0;
+    _target_cursor_w = 0;
+    _cursor_w = 0;
 }
 
 void SmoothOLED::setPopupListItems(const char** items, int count) {
@@ -149,13 +152,14 @@ void SmoothOLED::openSideList() {
     }
 }
 
-void SmoothOLED::openSlider(const char* title, int current_val, int max_val) {
+void SmoothOLED::openSlider(const char* title, int current_val, int max_val, SliderCallback on_change) {
     if (_overlay_state == OVERLAY_NONE) {
         _app_state = STATE_SLIDER;
         _slider_title = title;
         _slider_max = max_val;
         _slider_val = (float)current_val;
         _target_slider_val = (float)current_val;
+        _slider_on_change = on_change;
         _last_switch = millis();
     }
 }
@@ -420,7 +424,14 @@ void SmoothOLED::draw_side_list_menu() {
 // =================================================================================
 
 void SmoothOLED::update_slider_physics() {
+    int old_val = (int)(_slider_val + 0.5f);
     _slider_val += (_target_slider_val - _slider_val) * 0.3f;
+    int new_val = (int)(_slider_val + 0.5f);
+    
+    // Gọi callback khi giá trị hiển thị bị thay đổi trong quá trình trượt
+    if (_slider_on_change && old_val != new_val) {
+        _slider_on_change(new_val);
+    }
 }
 
 void SmoothOLED::draw_slider_menu(int offset_x) {

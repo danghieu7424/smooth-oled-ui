@@ -6,9 +6,13 @@
 #include <U8g2lib.h>
 #include <Wire.h>
 
+typedef void (*MenuCallback)();
+typedef void (*SliderCallback)(int);
+
 struct MenuItem {
     const char* title;
     const unsigned char* icon;
+    MenuCallback on_enter;
 };
 
 enum AppState {
@@ -36,7 +40,7 @@ public:
     void update(); // Gọi liên tục trong loop()
 
     // Cài đặt dữ liệu các màn hình
-    void setCarouselItems(const MenuItem* items, int count, const char* title = "< MAIN MENU >");
+    void setCarouselItems(const MenuItem* items, int count, const char* title = "");
     void setPopupListItems(const char** items, int count);
     void setSidePopupItems(const char** items, int count);
 
@@ -49,7 +53,7 @@ public:
     void down();
     void openPopup();
     void openSideList();
-    void openSlider(const char* title, int current_val, int max_val);
+    void openSlider(const char* title, int current_val, int max_val, SliderCallback on_change = nullptr);
     void closeOverlay();
     void select();
 
@@ -58,6 +62,7 @@ public:
     bool isOverlayOpen() const { return _overlay_state != OVERLAY_NONE; }
     AppState getAppState() const { return _app_state; }
     int getSliderValue() const { return (int)(_target_slider_val + 0.5f); }
+    const MenuItem* getCurrentMenuItem() const { return (_carousel_items != nullptr) ? &_carousel_items[_current_index] : nullptr; }
 
 private:
     U8G2* _u8g2;
@@ -97,7 +102,7 @@ private:
     const int MENU_BOX_Y = 16;
     const int MENU_BOX_W = 64;
     const int MENU_BOX_H = 41;
-    const int ITEM_START_Y = 27;
+    const int ITEM_START_Y = 24;
     const int LINE_HEIGHT = 12;
 
     // --- Biến Marquee ---
@@ -124,6 +129,7 @@ private:
     float _target_slider_val;
     int _slider_max;
     const char* _slider_title;
+    SliderCallback _slider_on_change;
 
     void flush_display();
 

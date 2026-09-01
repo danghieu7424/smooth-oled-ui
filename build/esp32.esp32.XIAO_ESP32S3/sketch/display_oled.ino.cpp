@@ -59,16 +59,21 @@ static const unsigned char icon_wifi[] U8X8_PROGMEM = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
+// --- KHAI BÁO CÁC HÀM XỬ LÝ SỰ KIỆN (CALLBACKS) ---
+void open_settings_menu();
+void open_brightness_slider();
+void on_brightness_change(int val);
+
 const MenuItem menu_items[] = {
-    {"Home", icon_home},
-    {"Settings", icon_settings},
-    {"About", icon_about}
+    {"Home", icon_home, nullptr},
+    {"Settings", icon_settings, open_settings_menu},
+    {"About", icon_about, nullptr}
 };
 const int TOTAL_MAIN_ITEMS = 3;
 
 const MenuItem settings_items[] = {
-    {"WiFi", icon_wifi},
-    {"Brightness", icon_brightness}
+    {"WiFi", icon_wifi, nullptr},
+    {"Brightness", icon_brightness, open_brightness_slider}
 };
 const int TOTAL_SETTINGS_ITEMS = 2;
 
@@ -96,16 +101,33 @@ const int TOTAL_SIDE_ITEMS = 7;
 // [SETUP & LOOP]
 // =======================================================================
 
-// Quản lý trạng thái Menu đa cấp
-enum MenuLevel { LEVEL_MAIN, LEVEL_SETTINGS, LEVEL_BRIGHTNESS };
+// Quản lý trạng thái Menu
+enum MenuLevel { LEVEL_MAIN, LEVEL_SETTINGS };
 MenuLevel current_level = LEVEL_MAIN;
 int current_brightness = 20; // Độ sáng mặc định ban đầu
 
-#line 103 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+// --- CÀI ĐẶT CÁC HÀM XỬ LÝ SỰ KIỆN ---
+
+#line 125 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup();
-#line 126 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 148 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void loop();
-#line 103 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 110 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+void open_settings_menu() {
+  current_level = LEVEL_SETTINGS;
+  ui.setCarouselItems(settings_items, TOTAL_SETTINGS_ITEMS, "< SETTINGS >");
+}
+
+void open_brightness_slider() {
+  // Khi mở thanh gạt, ta đăng ký hàm `on_brightness_change` làm Callback!
+  ui.openSlider("Brightness", current_brightness, 255, on_brightness_change);
+}
+
+void on_brightness_change(int val) {
+  current_brightness = val;
+  u8g2.setContrast(current_brightness); // Lệnh phần cứng đổi độ sáng OLED trực tiếp
+}
+
 void setup() {
   Serial.begin(921600);
   
@@ -142,9 +164,8 @@ void loop() {
         ui.closeOverlay(); // Đóng Side List
       } else if (ui.getAppState() == STATE_POPUP) {
         ui.closeOverlay(); // Đóng Popup List
-      } else if (ui.getAppState() == STATE_SLIDER && current_level == LEVEL_BRIGHTNESS) {
-        current_level = LEVEL_SETTINGS; // Lùi về Level Settings
-        ui.closeOverlay(); // Đóng Slider
+      } else if (ui.getAppState() == STATE_SLIDER) {
+        ui.closeOverlay(); // Đóng Slider, trả về Level trước đó
       } else if (ui.getAppState() == STATE_CAROUSEL && current_level == LEVEL_SETTINGS) {
         current_level = LEVEL_MAIN; // Lùi về Main Menu
         ui.setCarouselItems(menu_items, TOTAL_MAIN_ITEMS, "< MAIN MENU >");
@@ -152,28 +173,14 @@ void loop() {
     }
     else if (c == 'E') { // Phím Enter
       ui.select();
-      if (!ui.isOverlayOpen() && current_level == LEVEL_MAIN) {
-        // Nếu đang ở Main Menu, kiểm tra mục nào đang được chọn
-        if (ui.getCarouselIndex() == 1) { // 1 là vị trí của "Settings"
-          current_level = LEVEL_SETTINGS;
-          ui.setCarouselItems(settings_items, TOTAL_SETTINGS_ITEMS, "< SETTINGS >");
-        }
-      } else if (!ui.isOverlayOpen() && current_level == LEVEL_SETTINGS) {
-        // Đang ở Settings, nếu chọn mục số 1 là "Brightness"
-        if (ui.getCarouselIndex() == 1) { 
-          current_level = LEVEL_BRIGHTNESS;
-          ui.openSlider("Brightness", current_brightness, 255);
-        }
+      
+      // Khởi chạy hàm Callback (on_enter) của mục Menu đang được chọn
+      if (!ui.isOverlayOpen() && ui.getAppState() == STATE_CAROUSEL) {
+          const MenuItem* active_item = ui.getCurrentMenuItem();
+          if (active_item && active_item->on_enter) {
+              active_item->on_enter();
+          }
       }
-    }
-  }
-
-  // Nếu đang hiển thị Slider, lấy giá trị và cập nhật độ sáng phần cứng liên tục
-  if (current_level == LEVEL_BRIGHTNESS && ui.getAppState() == STATE_SLIDER) {
-    int new_brightness = ui.getSliderValue();
-    if (new_brightness != current_brightness) {
-      current_brightness = new_brightness;
-      u8g2.setContrast(current_brightness); // Lệnh phần cứng đổi độ sáng OLED
     }
   }
 
