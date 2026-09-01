@@ -100,8 +100,8 @@ void SmoothOLED::up() {
         if (_current_index > 0) _current_index--;
         else _current_index = _carousel_count - 1;
     } else if (_app_state == STATE_SLIDER) {
-        _target_slider_val += (float)_slider_max * 0.05f;
-        if (_target_slider_val > _slider_max) _target_slider_val = (float)_slider_max;
+        _target_slider_val -= (float)_slider_max * 0.05f; // Mũi tên trái -> Giảm
+        if (_target_slider_val < 0) _target_slider_val = 0;
     }
 }
 
@@ -116,8 +116,8 @@ void SmoothOLED::down() {
         if (_current_index < _carousel_count - 1) _current_index++;
         else _current_index = 0;
     } else if (_app_state == STATE_SLIDER) {
-        _target_slider_val -= (float)_slider_max * 0.05f;
-        if (_target_slider_val < 0) _target_slider_val = 0;
+        _target_slider_val += (float)_slider_max * 0.05f; // Mũi tên phải -> Tăng
+        if (_target_slider_val > _slider_max) _target_slider_val = (float)_slider_max;
     }
 }
 
@@ -435,7 +435,12 @@ void SmoothOLED::draw_slider_menu() {
     int fill_w = (int)(ratio * 96.0f);
     
     if (fill_w > 0) {
-        _u8g2->drawRBox(16, 30, fill_w, 10, 2);
+        // Fix lỗi thư viện U8g2 vẽ tia dài khi width nhỏ hơn 2*radius
+        if (fill_w < 5) {
+            _u8g2->drawBox(16, 30, fill_w, 10);
+        } else {
+            _u8g2->drawRBox(16, 30, fill_w, 10, 2);
+        }
     }
 
     // Hiển thị phần trăm (%) thay vì số thô
