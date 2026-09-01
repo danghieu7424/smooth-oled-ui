@@ -106,19 +106,13 @@ const int TOTAL_POPUP_ITEMS = 4;
 void on_reset();
 #line 108 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void on_power_off();
-#line 165 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void save_wifi_db(String ssid, String pwd);
-#line 185 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-String get_wifi_pwd(String ssid);
-#line 203 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-String get_last_ssid();
-#line 219 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 172 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void save_pwd_cache(String ssid, String pwd);
-#line 233 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 186 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 String get_pwd_cache(String ssid);
-#line 306 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 261 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup();
-#line 345 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 300 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void loop();
 #line 104 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void on_reset() {
@@ -181,53 +175,6 @@ void on_brightness_change(int val) {
 
 char text_input_title_buf[64];
 
-// Lưu Wi-Fi vào một phân vùng NVS (Namespace) độc lập 'wifi' để không bao giờ bị lỗi
-void save_wifi_db(String ssid, String pwd) {
-    Preferences wifi_prefs;
-    wifi_prefs.begin("wifi", false);
-    
-    // Key NVS tối đa 15 ký tự, ta cắt bớt SSID làm Key
-    String key = ssid;
-    if (key.length() > 15) {
-        key = key.substring(0, 15);
-    }
-    
-    // Thay thế các khoảng trắng hoặc ký tự lạ để tránh lỗi Key
-    for (int i = 0; i < key.length(); i++) {
-        if (key[i] == ' ') key[i] = '_';
-    }
-    
-    wifi_prefs.putString(key.c_str(), pwd);
-    wifi_prefs.putString("last", ssid); // Lưu Last SSID vào chung vùng wifi
-    wifi_prefs.end();
-}
-
-String get_wifi_pwd(String ssid) {
-    Preferences wifi_prefs;
-    wifi_prefs.begin("wifi", true);
-    
-    String key = ssid;
-    if (key.length() > 15) {
-        key = key.substring(0, 15);
-    }
-    for (int i = 0; i < key.length(); i++) {
-        if (key[i] == ' ') key[i] = '_';
-    }
-    
-    String pwd = wifi_prefs.getString(key.c_str(), "");
-    wifi_prefs.end();
-    
-    return pwd;
-}
-
-String get_last_ssid() {
-    Preferences wifi_prefs;
-    wifi_prefs.begin("wifi", true);
-    String ssid = wifi_prefs.getString("last", "");
-    wifi_prefs.end();
-    return ssid;
-}
-
 // Bộ đệm RAM để nhớ mật khẩu ngay lập tức (Chống lỗi NVS ghi chậm hoặc hỏng)
 struct WiFiCache {
     String ssid;
@@ -269,8 +216,10 @@ void on_wifi_selected(int idx) {
       // Lấy mật khẩu từ RAM Cache trước (chắc chắn nhất)
       String saved_pwd = get_pwd_cache(wifi_raw_ssid[idx]);
       if (saved_pwd == "") {
-          // Nếu RAM chưa có, lấy từ Database NVS
-          saved_pwd = get_wifi_pwd(String(wifi_raw_ssid[idx]));
+          // Nếu RAM chưa có, kiểm tra xem có phải mạng kết nối gần nhất không
+          if (String(wifi_raw_ssid[idx]) == prefs.getString("last_ssid", "")) {
+              saved_pwd = prefs.getString("last_pwd", "");
+          }
       }
       
       if (saved_pwd.length() > 0) {
@@ -337,9 +286,9 @@ void setup() {
   u8g2.setContrast(current_brightness); // Áp dụng độ sáng đã lưu
 
   // Tự động kết nối lại Wi-Fi cũ (nếu có)
-  String last_ssid = get_last_ssid();
+  String last_ssid = prefs.getString("last_ssid", "");
   if (last_ssid != "") {
-      String last_pwd = get_wifi_pwd(last_ssid);
+      String last_pwd = prefs.getString("last_pwd", "");
       WiFi.mode(WIFI_STA);
       WiFi.disconnect(true); // Xóa state cũ bị kẹt sau khi Soft Reset
       delay(100);
@@ -497,8 +446,9 @@ void loop() {
       if (WiFi.status() == WL_CONNECTED) {
           is_connecting_wifi = false;
           
-          // Lưu mật khẩu vào NVS để nhớ cho lần sau (đã gộp chung Last SSID vào hàm này)
-          save_wifi_db(connecting_ssid, connecting_pwd);
+          // Lưu mạng vừa kết nối làm mạng mặc định
+          prefs.putString("last_ssid", connecting_ssid);
+          prefs.putString("last_pwd", connecting_pwd);
           save_pwd_cache(connecting_ssid, connecting_pwd); // Lưu vào RAM luôn cho chắc
           
           Serial.printf("\n[WiFi] Connected successfully to %s\n", connecting_ssid.c_str());
