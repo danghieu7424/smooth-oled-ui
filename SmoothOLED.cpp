@@ -114,6 +114,9 @@ void SmoothOLED::up() {
         } else {
             _text_buffer[_cursor_pos] = '\0'; // Ký tự [OK]
         }
+    } else if (_app_state == STATE_FULL_LIST) {
+        if (_list_selected_index > 0) _list_selected_index--;
+        else _list_selected_index = _list_count - 1;
     }
 }
 
@@ -138,6 +141,9 @@ void SmoothOLED::down() {
         } else {
             _text_buffer[_cursor_pos] = '\0'; // Ký tự [OK]
         }
+    } else if (_app_state == STATE_FULL_LIST) {
+        if (_list_selected_index < _list_count - 1) _list_selected_index++;
+        else _list_selected_index = 0;
     }
 }
 
@@ -195,10 +201,24 @@ void SmoothOLED::openTextInput(const char* title, TextCallback on_submit) {
     }
 }
 
+void SmoothOLED::openFullList(const char* title, const char** items, int count, ListCallback on_select) {
+    if (_overlay_state == OVERLAY_NONE && (_app_state == STATE_CAROUSEL || _app_state == STATE_POPUP)) {
+        _prev_app_state = _app_state;
+        _app_state = STATE_FULL_LIST;
+        _list_title = title;
+        _list_items = items;
+        _list_count = count;
+        _list_selected_index = 0;
+        _list_camera_y = 0;
+        _list_on_select = on_select;
+        _last_switch = millis();
+    }
+}
+
 void SmoothOLED::closeOverlay() {
     if (_overlay_state == OVERLAY_SIDE_POPUP) {
         _overlay_anim = PHASE_CLOSING;
-    } else if (_app_state == STATE_POPUP || _app_state == STATE_SLIDER || _app_state == STATE_TEXT_INPUT) {
+    } else if (_app_state == STATE_POPUP || _app_state == STATE_SLIDER || _app_state == STATE_TEXT_INPUT || _app_state == STATE_FULL_LIST) {
         _app_state = _prev_app_state; // Trả về màn hình gốc
     }
 }
@@ -243,6 +263,8 @@ void SmoothOLED::select() {
                 _text_buffer[_cursor_pos + 1] = '\0';
             }
         }
+    } else if (_app_state == STATE_FULL_LIST) {
+        if (_list_on_select) _list_on_select(_list_selected_index);
     }
 }
 
@@ -572,6 +594,39 @@ void SmoothOLED::draw_text_input_menu(int offset_x) {
     }
 }
 
+void SmoothOLED::draw_full_list_menu(int offset_x) {
+    // Tiêu đề
+    _u8g2->setFont(u8g2_font_6x10_tf);
+    _u8g2->setDrawColor(1);
+    
+    int title_w = _u8g2->getStrWidth(_list_title);
+    _u8g2->drawStr(64 - title_w/2 + offset_x, 10, _list_title);
+    _u8g2->drawLine(0 + offset_x, 13, 128 + offset_x, 13);
+    
+    // Physics cho camera cuộn
+    float target_y = _list_selected_index * 12;
+    _list_camera_y += (target_y - _list_camera_y) * 0.3f;
+    
+    int start_y = 24 - (int)_list_camera_y;
+    
+    // Vẽ danh sách
+    for (int i = 0; i < _list_count; i++) {
+        int y = start_y + i * 12;
+        if (y > 10 && y < 70) {
+            if (i == _list_selected_index) {
+                // Highlight box
+                _u8g2->setDrawColor(1);
+                _u8g2->drawBox(4 + offset_x, y - 9, 120, 12);
+                _u8g2->setDrawColor(0);
+            } else {
+                _u8g2->setDrawColor(1);
+            }
+            _u8g2->drawStr(8 + offset_x, y, _list_items[i]);
+        }
+    }
+    _u8g2->setDrawColor(1);
+}
+
 // =================================================================================
 // GAME LOOP (Cập nhật 60FPS)
 // =================================================================================
@@ -670,9 +725,15 @@ void SmoothOLED::update() {
                 // Tình huống: Popup đè lên Carousel, TextInput đè lên Popup
                 draw_carousel_menu(background_offset_x); 
                 draw_popup_menu();
+            } else if (_prev_app_state == STATE_FULL_LIST) {
+                draw_full_list_menu(background_offset_x);
             }
             if (_overlay_state == OVERLAY_NONE) {
                 draw_text_input_menu();
+            }
+        } else if (_app_state == STATE_FULL_LIST) {
+            if (_overlay_state == OVERLAY_NONE) {
+                draw_full_list_menu(background_offset_x);
             }
         }
 

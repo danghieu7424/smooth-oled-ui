@@ -127,13 +127,13 @@ int saved_brightness = 20; // Độ sáng đã lưu trong Flash
 #define MAX_WIFI_NETWORKS 15
 char wifi_ssid[MAX_WIFI_NETWORKS][32];
 char wifi_raw_ssid[MAX_WIFI_NETWORKS][32];
-MenuItem wifi_menu_items[MAX_WIFI_NETWORKS];
+const char* wifi_ssid_ptrs[MAX_WIFI_NETWORKS];
 int wifi_count = 0;
 bool is_scanning_wifi = false;
 
 // --- CÀI ĐẶT CÁC HÀM XỬ LÝ SỰ KIỆN ---
 
-void on_wifi_selected();
+void on_wifi_selected(int idx);
 
 void open_settings_menu() {
   current_level = LEVEL_SETTINGS;
@@ -150,8 +150,7 @@ void on_brightness_change(int val) {
   u8g2.setContrast(current_brightness); // Lệnh phần cứng đổi độ sáng OLED trực tiếp
 }
 
-void on_wifi_selected() {
-  int idx = ui.getCarouselIndex();
+void on_wifi_selected(int idx) {
   // Chặn mở mật khẩu nếu đang Scanning, không có mạng, hoặc lỗi
   if (idx >= 0 && idx < wifi_count && strncmp(wifi_ssid[0], "Scanning", 8) != 0 && strncmp(wifi_ssid[0], "No networks", 10) != 0 && strncmp(wifi_ssid[0], "Scan Failed", 11) != 0) {
       char title[32];
@@ -170,12 +169,12 @@ void on_enter_wifi() {
   // Khởi tạo UI hiển thị tạm thời "Scanning..."
   wifi_count = 1;
   strncpy(wifi_ssid[0], "Scanning...", 31);
-  wifi_menu_items[0] = {wifi_ssid[0], icon_wifi, nullptr};
-  ui.setCarouselItems(wifi_menu_items, wifi_count, "< WIFI NETWORKS >");
+  wifi_ssid_ptrs[0] = wifi_ssid[0];
+  ui.openFullList("WIFI NETWORKS", wifi_ssid_ptrs, wifi_count, on_wifi_selected);
 }
 
 void on_wifi_password_submit(const char* pwd) {
-  int idx = ui.getCarouselIndex();
+  int idx = ui.getFullListSelectedIndex();
   if (idx >= 0 && idx < wifi_count) {
       String ssid = wifi_raw_ssid[idx];
       Serial.printf("\n[WiFi] Connecting to %s with password: %s\n", ssid.c_str(), pwd);
@@ -227,10 +226,15 @@ void loop() {
         ui.closeOverlay(); // Đóng Side List
       } else if (ui.getAppState() == STATE_TEXT_INPUT) {
         if (!ui.backspace()) {
-           // Nếu backspace trả về false (nghĩa là đã xóa hết chữ và bấm tiếp), nó sẽ tự đóng và lùi về Popup
+           // Nếu backspace trả về false (nghĩa là đã xóa hết chữ và bấm tiếp), nó sẽ tự đóng và lùi về Popup/FullList
         }
       } else if (ui.getAppState() == STATE_POPUP) {
         ui.closeOverlay(); // Đóng Popup List
+      } else if (ui.getAppState() == STATE_FULL_LIST) {
+        if (current_level == LEVEL_WIFI) {
+            current_level = LEVEL_SETTINGS; // Lùi về Settings
+        }
+        ui.closeOverlay();
       } else if (ui.getAppState() == STATE_SLIDER) {
         // [Cập nhật]: Hủy bỏ, khôi phục độ sáng cũ từ Flash
         current_brightness = saved_brightness;
@@ -239,9 +243,6 @@ void loop() {
       } else if (ui.getAppState() == STATE_CAROUSEL && current_level == LEVEL_SETTINGS) {
         current_level = LEVEL_MAIN; // Lùi về Main Menu
         ui.setCarouselItems(menu_items, TOTAL_MAIN_ITEMS, "< MAIN MENU >");
-      } else if (ui.getAppState() == STATE_CAROUSEL && current_level == LEVEL_WIFI) {
-        current_level = LEVEL_SETTINGS; // Lùi về Settings
-        ui.setCarouselItems(settings_items, TOTAL_SETTINGS_ITEMS, "< SETTINGS >");
       }
     }
     else if (c == 'E') { // Phím Enter
@@ -269,7 +270,7 @@ void loop() {
           wifi_count = (n > MAX_WIFI_NETWORKS) ? MAX_WIFI_NETWORKS : n;
           if (wifi_count == 0) {
               strncpy(wifi_ssid[0], "No networks", 31);
-              wifi_menu_items[0] = {wifi_ssid[0], icon_wifi, nullptr};
+              wifi_ssid_ptrs[0] = wifi_ssid[0];
               wifi_count = 1;
           } else {
               for (int i = 0; i < wifi_count; i++) {
@@ -278,20 +279,20 @@ void loop() {
                   wifi_raw_ssid[i][31] = '\0';
                   // Định dạng tên + cường độ hiển thị trên OLED
                   snprintf(wifi_ssid[i], 31, "%s [%d]", wifi_raw_ssid[i], WiFi.RSSI(i));
-                  wifi_menu_items[i] = {wifi_ssid[i], icon_wifi, on_wifi_selected};
+                  wifi_ssid_ptrs[i] = wifi_ssid[i];
               }
           }
-          if (current_level == LEVEL_WIFI) {
-              ui.setCarouselItems(wifi_menu_items, wifi_count, "< WIFI NETWORKS >");
+          if (current_level == LEVEL_WIFI && ui.getAppState() == STATE_FULL_LIST) {
+              ui.setFullListCount(wifi_count);
           }
           WiFi.scanDelete(); // Xóa bộ đệm
       } else if (n == WIFI_SCAN_FAILED) {
           is_scanning_wifi = false;
           strncpy(wifi_ssid[0], "Scan Failed", 31);
-          wifi_menu_items[0] = {wifi_ssid[0], icon_wifi, nullptr};
+          wifi_ssid_ptrs[0] = wifi_ssid[0];
           wifi_count = 1;
-          if (current_level == LEVEL_WIFI) {
-              ui.setCarouselItems(wifi_menu_items, wifi_count, "< WIFI NETWORKS >");
+          if (current_level == LEVEL_WIFI && ui.getAppState() == STATE_FULL_LIST) {
+              ui.setFullListCount(wifi_count);
           }
       }
   }
