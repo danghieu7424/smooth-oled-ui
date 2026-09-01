@@ -1001,7 +1001,6 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
         int h = is_small ? 19 : 34;
         int t = is_small ? 3 : 6;
         int r = is_small ? 1 : 3; // Bo 3px góc ngoài
-        int r_in = 1; // Bo 1px góc trong
         int half_h = (h - t) / 2;
         
         const uint8_t segs[10] = {
@@ -1010,8 +1009,7 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
         };
         uint8_t s = segs[val];
         
-        // 1. Vẽ các thanh bằng nét trắng
-        _u8g2->setDrawColor(1);
+        // Vẽ các thanh bằng nét trắng
         if (s & 0x01) _u8g2->drawRBox(x, y, w, t, r);
         if (s & 0x02) _u8g2->drawRBox(x + w - t, y, t, half_h + t, r);
         if (s & 0x04) _u8g2->drawRBox(x + w - t, y + half_h, t, half_h + t, r);
@@ -1019,14 +1017,6 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
         if (s & 0x10) _u8g2->drawRBox(x, y + half_h, t, half_h + t, r);
         if (s & 0x20) _u8g2->drawRBox(x, y, t, half_h + t, r);
         if (s & 0x40) _u8g2->drawRBox(x, y + half_h, w, t, r);
-
-        // 2. Đục lỗ màu đen để tạo bo góc 1px cho phần góc vuông bên trong
-        _u8g2->setDrawColor(0);
-        // Lỗ trên
-        _u8g2->drawRBox(x + t, y + t, w - 2*t, half_h - t, r_in);
-        // Lỗ dưới
-        _u8g2->drawRBox(x + t, y + half_h + t, w - 2*t, half_h - t, r_in);
-        _u8g2->setDrawColor(1); // Reset màu trắng
     };
 
     auto drawDigit = [&](ClockDigit& d, int x, bool is_small) {
@@ -1036,11 +1026,12 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
         if (d.current_val == d.next_val) {
             draw7Seg(offset_x + x, y, d.current_val, is_small);
         } else {
-            int offset = (int)(d.anim_y * h);
+            int slide_dist = h + 1; // Khoảng cách trượt là chiều cao chữ số + 1px gap
+            int offset = (int)(d.anim_y * slide_dist);
             // Old digit sliding UP
             draw7Seg(offset_x + x, y - offset, d.current_val, is_small);
-            // New digit sliding UP from bottom
-            draw7Seg(offset_x + x, y + h - offset, d.next_val, is_small);
+            // New digit sliding UP from bottom (cách số cũ 1px)
+            draw7Seg(offset_x + x, y + slide_dist - offset, d.next_val, is_small);
         }
     };
 
