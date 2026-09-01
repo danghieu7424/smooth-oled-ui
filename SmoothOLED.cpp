@@ -559,15 +559,23 @@ void SmoothOLED::draw_slider_menu(int offset_x) {
 }
 
 void SmoothOLED::draw_text_input_menu(int offset_x) {
-    _u8g2->setDrawColor(1);
+    // Xóa nền khu vực Popup để đè lên danh sách bên dưới
+    _u8g2->setDrawColor(0);
+    _u8g2->drawBox(2 + offset_x, 2, 124, 44);
     
+    _u8g2->setDrawColor(1);
+    _u8g2->drawRFrame(2 + offset_x, 2, 124, 44, 3); // Khung viền bo góc
+
     // Vẽ tiêu đề
     _u8g2->setFont(u8g2_font_6x10_tf);
     int str_width = _u8g2->getStrWidth(_text_input_title);
-    _u8g2->drawStr(64 - (str_width / 2) + offset_x, 12, _text_input_title);
+    _u8g2->drawStr(64 - (str_width / 2) + offset_x, 13, _text_input_title);
+    
+    // Gạch ngang phân cách tiêu đề
+    _u8g2->drawLine(2 + offset_x, 16, 126 + offset_x, 16);
 
     // Vẽ khung nhập liệu
-    _u8g2->drawRFrame(4 + offset_x, 24, 120, 16, 2);
+    _u8g2->drawRFrame(6 + offset_x, 24, 116, 16, 2);
 
     // Hiển thị text đã nhập (hoặc đang nhập)
     _u8g2->setCursor(8 + offset_x, 35);
