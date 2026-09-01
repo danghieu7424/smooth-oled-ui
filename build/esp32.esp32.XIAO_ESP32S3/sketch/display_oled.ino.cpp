@@ -106,9 +106,9 @@ const int TOTAL_POPUP_ITEMS = 4;
 void on_restart();
 #line 108 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void on_power_off();
-#line 218 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 225 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup();
-#line 262 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 269 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void loop();
 #line 104 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void on_restart() {
@@ -180,9 +180,16 @@ void on_wifi_selected(int idx) {
           return;
       }
 
-      snprintf(text_input_title_buf, sizeof(text_input_title_buf), "PWD: %s", wifi_raw_ssid[idx]);
-      // Giao diện như cũ: mở hộp thoại yêu cầu nhập mật khẩu
-      ui.openTextInput(text_input_title_buf, on_wifi_password_submit, "");
+      // KIỂM TRA: Nếu mạng này TRÙNG với mạng đã lưu trong Flash
+      if (String(wifi_raw_ssid[idx]) == prefs.getString("wifi_ssid", "")) {
+          // Tự động lấy mật khẩu từ Flash và kết nối luôn, không bắt nhập lại!
+          String saved_pwd = prefs.getString("wifi_pwd", "");
+          on_wifi_password_submit(saved_pwd.c_str());
+      } else {
+          // Mạng mới hoàn toàn -> Mở ô nhập Pass trống
+          snprintf(text_input_title_buf, sizeof(text_input_title_buf), "PWD: %s", wifi_raw_ssid[idx]);
+          ui.openTextInput(text_input_title_buf, on_wifi_password_submit, "");
+      }
   }
 }
 
@@ -360,6 +367,34 @@ void loop() {
     }
   }
 
+  // --- THEO DÕI TRẠNG THÁI WIFI NGẦM ĐỂ CẬP NHẬT DẤU * ---
+  static wl_status_t last_wifi_status = WL_DISCONNECTED;
+  wl_status_t current_status = WiFi.status();
+  if (current_status != last_wifi_status) {
+      last_wifi_status = current_status;
+      if (current_status == WL_CONNECTED) {
+          String connected_ssid = WiFi.SSID();
+          for (int i = 0; i < wifi_count; i++) {
+              if (String(wifi_raw_ssid[i]) == connected_ssid) {
+                  if (wifi_ssid[i][0] != '*') {
+                      char temp[32];
+                      snprintf(temp, 32, "* %s", wifi_ssid[i]);
+                      strncpy(wifi_ssid[i], temp, 31);
+                      wifi_ssid[i][31] = '\0';
+                  }
+              }
+          }
+      } else {
+          for (int i = 0; i < wifi_count; i++) {
+              if (wifi_ssid[i][0] == '*') {
+                  String temp = String(wifi_ssid[i]).substring(2);
+                  strncpy(wifi_ssid[i], temp.c_str(), 31);
+                  wifi_ssid[i][31] = '\0';
+              }
+          }
+      }
+  }
+
   // --- KIỂM TRA TRẠNG THÁI QUÉT WIFI ASYNC ---
   if (is_scanning_wifi) {
     int16_t scan_result = WiFi.scanComplete();
@@ -417,18 +452,7 @@ void loop() {
           // Hiển thị thông báo thành công
           ui.openModal("Connected!", connecting_ssid.c_str());
           
-          // Đánh dấu mạng đã kết nối trên danh sách hiện tại
-          for (int i = 0; i < wifi_count; i++) {
-              if (String(wifi_raw_ssid[i]) == connecting_ssid) {
-                  char temp[32];
-                  // Nếu chưa có dấu * thì thêm vào
-                  if (wifi_ssid[i][0] != '*') {
-                      snprintf(temp, 32, "* %s", wifi_ssid[i]);
-                      strncpy(wifi_ssid[i], temp, 31);
-                      wifi_ssid[i][31] = '\0';
-                  }
-              }
-          }
+          // Dấu * sẽ được logic theo dõi ngầm ở trên tự động thêm vào!
           
       } else if (millis() - wifi_connect_start > 10000) {
           // Timeout sau 10 giây
