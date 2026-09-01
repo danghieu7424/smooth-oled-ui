@@ -46,7 +46,7 @@ public:
     // Cài đặt dữ liệu các màn hình
     void setCarouselItems(const MenuItem* items, int count, const char* title = "");
     void setPopupListItems(const char** items, int count);
-    void setSidePopupItems(const char** items, int count);
+    void setSidePopupItems(const MenuItem* items, int count);
 
     // Tính năng Demo và Simulator
     void enableAutoDemo(bool enable);
@@ -127,7 +127,7 @@ private:
     int _last_popup_idx;
 
     // --- Biến Side Popup ---
-    const char** _side_items;
+    const MenuItem* _side_items;
     int _side_count;
     int _side_selected_idx;
     float _side_parent_x;

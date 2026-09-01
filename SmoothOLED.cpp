@@ -90,7 +90,7 @@ void SmoothOLED::setPopupListItems(const char** items, int count) {
     _popup_count = count;
 }
 
-void SmoothOLED::setSidePopupItems(const char** items, int count) {
+void SmoothOLED::setSidePopupItems(const MenuItem* items, int count) {
     _side_items = items;
     _side_count = count;
 }
@@ -316,6 +316,9 @@ bool SmoothOLED::backspace() {
 void SmoothOLED::select() {
     if (_overlay_state == OVERLAY_SIDE_POPUP) {
         _overlay_anim = PHASE_CLOSING;
+        if (_side_items[_side_selected_idx].on_enter) {
+            _side_items[_side_selected_idx].on_enter();
+        }
     } else if (_app_state == STATE_CAROUSEL) {
         _target_cursor_w = MENU_BOX_W + 10;
     } else if (_app_state == STATE_TEXT_INPUT) {
@@ -585,10 +588,10 @@ void SmoothOLED::draw_side_list_menu() {
                 _u8g2->drawRBox(text_x - 2, item_y - 8, (int)_side_cursor_w, 10, 2);
                 
                 _u8g2->setDrawColor(0);
-                _u8g2->drawStr(text_x, item_y, _side_items[i]);
+                _u8g2->drawStr(text_x, item_y, _side_items[i].title);
             } else {
                 _u8g2->setDrawColor(1);
-                _u8g2->drawStr(text_x, item_y, _side_items[i]);
+                _u8g2->drawStr(text_x, item_y, _side_items[i].title);
             }
         }
     }

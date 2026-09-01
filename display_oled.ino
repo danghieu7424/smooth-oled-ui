@@ -101,16 +101,19 @@ const char* popup_items[] = {
 };
 const int TOTAL_POPUP_ITEMS = 4;
 
-const char* side_items[] = {
-    "Normal",
-    "CodeRain",
-    "TerminalSim",
-    "SimClock",
-    "Cube3D",
-    "Snow",
-    "Galaxy"
+void on_reset() {
+    ESP.restart();
+}
+
+void on_power_off() {
+    esp_deep_sleep_start();
+}
+
+const MenuItem side_items[] = {
+    {"Reset", nullptr, on_reset},
+    {"PowerOff", nullptr, on_power_off}
 };
-const int TOTAL_SIDE_ITEMS = 7;
+const int TOTAL_SIDE_ITEMS = 2;
 
 
 // =======================================================================
@@ -158,21 +161,34 @@ void on_brightness_change(int val) {
 
 char text_input_title_buf[64];
 
-// Hàm rút gọn Key để lưu NVS (giới hạn 15 ký tự, dùng mảng tĩnh chống lỗi bộ nhớ)
-char nvs_key_buf[16];
-const char* getNvsKey(const char* ssid) {
-    strncpy(nvs_key_buf, ssid, 15);
-    nvs_key_buf[15] = '\0';
-    for (int i = 0; i < 15; i++) {
-        if (nvs_key_buf[i] == ' ' || nvs_key_buf[i] == '\0') {
-            nvs_key_buf[i] = '_';
-            if (ssid[i] == '\0') {
-                nvs_key_buf[i] = '\0'; // Giữ nguyên kết thúc chuỗi
-                break;
-            }
+// Hàm Database lưu trữ toàn bộ mật khẩu WiFi vào một chuỗi duy nhất để chống lỗi phân mảnh bộ nhớ NVS
+void save_wifi_db(String ssid, String pwd) {
+    String db = prefs.getString("wifi_db", "");
+    String entry = ssid + "\t" + pwd + "\n";
+    int idx = db.indexOf(ssid + "\t");
+    if (idx >= 0) {
+        int end_idx = db.indexOf('\n', idx);
+        if (end_idx >= 0) {
+            db = db.substring(0, idx) + entry + db.substring(end_idx + 1);
+            prefs.putString("wifi_db", db);
+            return;
         }
     }
-    return nvs_key_buf;
+    db += entry;
+    prefs.putString("wifi_db", db);
+}
+
+String get_wifi_pwd(String ssid) {
+    String db = prefs.getString("wifi_db", "");
+    int idx = db.indexOf(ssid + "\t");
+    if (idx >= 0) {
+        idx += ssid.length() + 1;
+        int end_idx = db.indexOf('\n', idx);
+        if (end_idx >= 0) {
+            return db.substring(idx, end_idx);
+        }
+    }
+    return "";
 }
 
 // Bộ đệm RAM để nhớ mật khẩu ngay lập tức (Chống lỗi NVS ghi chậm hoặc hỏng)
@@ -216,8 +232,8 @@ void on_wifi_selected(int idx) {
       // Lấy mật khẩu từ RAM Cache trước (chắc chắn nhất)
       String saved_pwd = get_pwd_cache(wifi_raw_ssid[idx]);
       if (saved_pwd == "") {
-          // Nếu RAM chưa có, lấy từ Flash NVS
-          saved_pwd = prefs.getString(getNvsKey(wifi_raw_ssid[idx]), "");
+          // Nếu RAM chưa có, lấy từ Database NVS
+          saved_pwd = get_wifi_pwd(String(wifi_raw_ssid[idx]));
       }
       
       if (saved_pwd.length() > 0) {
@@ -286,7 +302,7 @@ void setup() {
   // Tự động kết nối lại Wi-Fi cũ (nếu có)
   String last_ssid = prefs.getString("last_ssid", "");
   if (last_ssid != "") {
-      String last_pwd = prefs.getString(getNvsKey(last_ssid.c_str()), "");
+      String last_pwd = get_wifi_pwd(last_ssid);
       WiFi.mode(WIFI_STA);
       WiFi.begin(last_ssid.c_str(), last_pwd.c_str());
   }
@@ -442,7 +458,7 @@ void loop() {
           is_connecting_wifi = false;
           
           // Lưu mật khẩu vào NVS để nhớ cho lần sau
-          prefs.putString(getNvsKey(connecting_ssid.c_str()), connecting_pwd);
+          save_wifi_db(connecting_ssid, connecting_pwd);
           save_pwd_cache(connecting_ssid, connecting_pwd); // Lưu vào RAM luôn cho chắc
           
           // Lưu Last SSID để auto-connect khi boot
