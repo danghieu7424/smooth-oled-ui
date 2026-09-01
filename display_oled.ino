@@ -3,7 +3,12 @@
 #include <Wire.h>
 #include <Preferences.h>
 #include <WiFi.h>
+#include <nvs_flash.h>
 #include "SmoothOLED.h"
+
+// Biến lưu trong bộ nhớ RTC (Bất tử khi bấm Reset/Restart)
+RTC_DATA_ATTR char rtc_last_ssid[33] = {0};
+RTC_DATA_ATTR char rtc_last_pwd[65] = {0};
 
 // Khởi tạo Preferences lưu trữ vào Flash
 Preferences prefs;
@@ -161,6 +166,35 @@ void on_brightness_change(int val) {
 
 char text_input_title_buf[64];
 
+// Cơ chế lưu kép cực kỳ an toàn
+void save_wifi_credentials(String ssid, String pwd) {
+    // 1. Lưu vào RTC Memory (Chống lỗi khi Reset / Restart)
+    strncpy(rtc_last_ssid, ssid.c_str(), 32);
+    strncpy(rtc_last_pwd, pwd.c_str(), 64);
+    
+    // 2. Lưu vào NVS Flash (Chống lỗi khi rút điện)
+    size_t written = prefs.putString("last_ssid", ssid);
+    prefs.putString("last_pwd", pwd);
+    
+    // Nếu NVS bị hỏng/đầy khiến không ghi được, ép buộc Format để sửa lỗi phần cứng ESP32
+    if (written == 0) {
+        nvs_flash_erase();
+        nvs_flash_init();
+        prefs.putString("last_ssid", ssid);
+        prefs.putString("last_pwd", pwd);
+    }
+}
+
+String get_saved_ssid() {
+    if (strlen(rtc_last_ssid) > 0) return String(rtc_last_ssid);
+    return prefs.getString("last_ssid", "");
+}
+
+String get_saved_pwd() {
+    if (strlen(rtc_last_pwd) > 0) return String(rtc_last_pwd);
+    return prefs.getString("last_pwd", "");
+}
+
 // Bộ đệm RAM để nhớ mật khẩu ngay lập tức (Chống lỗi)
 struct WiFiCache {
     String ssid;
@@ -202,19 +236,9 @@ void on_wifi_selected(int idx) {
       // Lấy mật khẩu từ RAM Cache trước (chắc chắn nhất)
       String saved_pwd = get_pwd_cache(wifi_raw_ssid[idx]);
       if (saved_pwd == "") {
-          // Nếu RAM chưa có, kiểm tra xem hệ điều hành ESP32 có đang nhớ mạng này ngầm không
-          if (String(wifi_raw_ssid[idx]) == WiFi.SSID()) {
-              // ESP32 đã lưu ngầm mạng này! Kích hoạt kết nối tự động bằng cấu hình ngầm
-              ui.openModal("Connecting...", wifi_raw_ssid[idx]);
-              WiFi.disconnect(false); // Ngắt kết nối nhưng KHÔNG xóa pass ngầm
-              delay(100);
-              WiFi.begin(); // Không truyền tham số -> Tự động dùng pass hệ thống
-              
-              connecting_ssid = wifi_raw_ssid[idx];
-              connecting_pwd = ""; // Đã lưu ngầm nên không cần biết pass thật
-              is_connecting_wifi = true;
-              wifi_connect_start = millis();
-              return;
+          // Nếu RAM chưa có, kiểm tra RTC hoặc NVS
+          if (String(wifi_raw_ssid[idx]) == get_saved_ssid()) {
+              saved_pwd = get_saved_pwd();
           }
       }
       
@@ -281,10 +305,18 @@ void setup() {
   u8g2.begin();
   u8g2.setContrast(current_brightness); // Áp dụng độ sáng đã lưu
 
-  // Khởi động WiFi và TỰ ĐỘNG kết nối dựa trên bộ nhớ ngầm của hệ điều hành ESP32
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(); // Không truyền tham số -> ESP32 tự lấy SSID và Pass đã lưu trong NVS của nó!
-  WiFi.setAutoReconnect(true); // Tự động kết nối lại nếu rớt mạng
+  // Khởi động WiFi và TỰ ĐỘNG kết nối lại dựa vào bộ nhớ kép
+  String last_ssid = get_saved_ssid();
+  if (last_ssid.length() > 0) {
+      String last_pwd = get_saved_pwd();
+      WiFi.mode(WIFI_STA);
+      WiFi.disconnect(true); // Xóa state lơ lửng của phần cứng
+      delay(100);
+      WiFi.begin(last_ssid.c_str(), last_pwd.c_str());
+      WiFi.setAutoReconnect(true); // Tự động kết nối lại nếu rớt mạng
+  } else {
+      WiFi.mode(WIFI_STA);
+  }
 
   // 1. Gán mảng dữ liệu vào thư viện UI
   ui.setCarouselItems(menu_items, TOTAL_MAIN_ITEMS, "< MAIN MENU >");
@@ -436,7 +468,8 @@ void loop() {
       if (WiFi.status() == WL_CONNECTED) {
           is_connecting_wifi = false;
           
-          // Hệ điều hành ESP32 đã tự động lưu ngầm vào nvs.net80211, ta chỉ cần lưu vào RAM
+          // Lưu mạng vừa kết nối vào bộ nhớ kép
+          save_wifi_credentials(connecting_ssid, connecting_pwd);
           save_pwd_cache(connecting_ssid, connecting_pwd); 
           
           Serial.printf("\n[WiFi] Connected successfully to %s\n", connecting_ssid.c_str());
