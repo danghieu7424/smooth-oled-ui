@@ -160,7 +160,7 @@ const int TOTAL_SIDE_ITEMS = 2;
 enum MenuLevel { LEVEL_MAIN, LEVEL_SETTINGS, LEVEL_WIFI };
 MenuLevel current_level = LEVEL_MAIN;
 int current_brightness = 20; // Độ sáng hiện tại
-int saved_brightness = 20; // Độ sáng đã lưu trong Flash
+
 
 // Quản lý WiFi
 #define MAX_WIFI_NETWORKS 15
