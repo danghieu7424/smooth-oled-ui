@@ -59,7 +59,7 @@ public:
     void openPopup();
     void openSideList();
     void openSlider(const char* title, int current_val, int max_val, SliderCallback on_change = nullptr);
-    void openTextInput(const char* title, TextCallback on_submit);
+    void openTextInput(const char* title, TextCallback on_submit, const char* initial_text = nullptr);
     void openFullList(const char* title, const char** items, int count, ListCallback on_select = nullptr);
     void closeOverlay();
     bool backspace();

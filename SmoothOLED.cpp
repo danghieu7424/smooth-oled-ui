@@ -58,6 +58,18 @@ void SmoothOLED::begin() {
     _last_switch = millis();
 }
 
+// Bảng ký tự xếp hạng ưu tiên (chữ thường -> số -> chữ hoa -> ký tự đặc biệt)
+const char CHAR_MAP[] = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+-=[]{}|;':\",./<>? ";
+const int CHAR_MAP_LEN = sizeof(CHAR_MAP) - 1;
+
+int getCharMapIndex(char c) {
+    if (c == '\0') return 0;
+    for (int i = 0; i < CHAR_MAP_LEN; i++) {
+        if (CHAR_MAP[i] == c) return i;
+    }
+    return 0; // Mặc định là 'a'
+}
+
 // =================================================================================
 // DATA SETUP
 // =================================================================================
@@ -108,9 +120,8 @@ void SmoothOLED::up() {
         if (_target_slider_val < 0.0f) _target_slider_val = 0.0f;
     } else if (_app_state == STATE_TEXT_INPUT) {
         _current_char_idx++;
-        // Giới hạn ký tự ASCII hiển thị được từ 32 (Space) đến 126 (~)
-        if (_current_char_idx > 126) _current_char_idx = 32;
-        _text_buffer[_cursor_pos] = (char)_current_char_idx;
+        if (_current_char_idx >= CHAR_MAP_LEN) _current_char_idx = 0;
+        _text_buffer[_cursor_pos] = CHAR_MAP[_current_char_idx];
         _last_tick = millis();
     } else if (_app_state == STATE_FULL_LIST) {
         if (_list_selected_index > 0) _list_selected_index--;
@@ -133,9 +144,8 @@ void SmoothOLED::down() {
         if (_target_slider_val > _slider_max) _target_slider_val = _slider_max;
     } else if (_app_state == STATE_TEXT_INPUT) {
         _current_char_idx--;
-        // Giới hạn ký tự ASCII hiển thị được từ 32 (Space) đến 126 (~)
-        if (_current_char_idx < 32) _current_char_idx = 126;
-        _text_buffer[_cursor_pos] = (char)_current_char_idx;
+        if (_current_char_idx < 0) _current_char_idx = CHAR_MAP_LEN - 1;
+        _text_buffer[_cursor_pos] = CHAR_MAP[_current_char_idx];
         _last_tick = millis();
     } else if (_app_state == STATE_FULL_LIST) {
         if (_list_selected_index < _list_count - 1) _list_selected_index++;
@@ -147,8 +157,7 @@ void SmoothOLED::left() {
     if (_app_state == STATE_TEXT_INPUT) {
         if (_cursor_pos > 0) {
             _cursor_pos--;
-            _current_char_idx = (int)_text_buffer[_cursor_pos];
-            if (_current_char_idx == 0) _current_char_idx = 97; // Safe fallback
+            _current_char_idx = getCharMapIndex(_text_buffer[_cursor_pos]);
         }
         _last_tick = millis();
     } else {
@@ -162,12 +171,12 @@ void SmoothOLED::right() {
             // Nếu đã ở cuối cùng thì tự động thêm ký tự mới
             if (_text_buffer[_cursor_pos + 1] == '\0') {
                 _cursor_pos++;
-                _current_char_idx = 97; // 'a'
-                _text_buffer[_cursor_pos] = 'a';
+                _current_char_idx = 0; // 'a'
+                _text_buffer[_cursor_pos] = CHAR_MAP[0];
                 _text_buffer[_cursor_pos + 1] = '\0';
             } else {
                 _cursor_pos++;
-                _current_char_idx = (int)_text_buffer[_cursor_pos];
+                _current_char_idx = getCharMapIndex(_text_buffer[_cursor_pos]);
             }
         }
         _last_tick = millis();
@@ -216,16 +225,25 @@ void SmoothOLED::openSlider(const char* title, int current_val, int max_val, Sli
     }
 }
 
-void SmoothOLED::openTextInput(const char* title, TextCallback on_submit) {
+void SmoothOLED::openTextInput(const char* title, TextCallback on_submit, const char* initial_text) {
     if (_overlay_state == OVERLAY_NONE && (_app_state == STATE_CAROUSEL || _app_state == STATE_POPUP || _app_state == STATE_FULL_LIST)) {
         _prev_app_state = _app_state;
         _app_state = STATE_TEXT_INPUT;
         _text_input_title = title;
         _text_on_submit = on_submit;
         memset(_text_buffer, 0, sizeof(_text_buffer));
-        _cursor_pos = 0;
-        _current_char_idx = 97; // Bắt đầu ở chữ 'a' (ASCII 97)
-        _text_buffer[0] = (char)_current_char_idx;
+        
+        if (initial_text && strlen(initial_text) > 0) {
+            strncpy(_text_buffer, initial_text, sizeof(_text_buffer) - 2);
+            _cursor_pos = strlen(_text_buffer); // Trỏ vào ký tự null sau chuỗi
+            _text_buffer[_cursor_pos] = CHAR_MAP[0]; // Ký tự mặc định tiếp theo
+            _text_buffer[_cursor_pos + 1] = '\0';
+            _current_char_idx = 0;
+        } else {
+            _cursor_pos = 0;
+            _current_char_idx = 0;
+            _text_buffer[0] = CHAR_MAP[0];
+        }
         _last_switch = millis();
     }
 }
@@ -261,8 +279,7 @@ bool SmoothOLED::backspace() {
                 if (_text_buffer[i] == '\0') break;
             }
             _cursor_pos--;
-            _current_char_idx = (int)_text_buffer[_cursor_pos];
-            if (_current_char_idx == 0) _current_char_idx = 97;
+            _current_char_idx = getCharMapIndex(_text_buffer[_cursor_pos]);
             return true;
         } else {
             // Hủy nhập liệu

@@ -131,6 +131,12 @@ const char* wifi_ssid_ptrs[MAX_WIFI_NETWORKS];
 int wifi_count = 0;
 bool is_scanning_wifi = false;
 
+// Trạng thái kết nối WiFi
+bool is_connecting_wifi = false;
+uint32_t wifi_connect_start = 0;
+String connecting_ssid = "";
+String connecting_pwd = "";
+
 // --- CÀI ĐẶT CÁC HÀM XỬ LÝ SỰ KIỆN ---
 
 void on_wifi_selected(int idx);
@@ -156,7 +162,12 @@ void on_wifi_selected(int idx) {
   // Chặn mở mật khẩu nếu đang Scanning, không có mạng, hoặc lỗi
   if (idx >= 0 && idx < wifi_count && strncmp(wifi_ssid[0], "Scanning", 8) != 0 && strncmp(wifi_ssid[0], "No networks", 10) != 0 && strncmp(wifi_ssid[0], "Scan Failed", 11) != 0) {
       snprintf(text_input_title_buf, sizeof(text_input_title_buf), "PWD: %s", wifi_raw_ssid[idx]);
-      ui.openTextInput(text_input_title_buf, on_wifi_password_submit);
+      
+      // Lấy mật khẩu đã lưu từ Preferences
+      String saved_pwd = prefs.getString(wifi_raw_ssid[idx], "");
+      
+      // Mở Popup Text Input và điền sẵn mật khẩu cũ (nếu có)
+      ui.openTextInput(text_input_title_buf, on_wifi_password_submit, saved_pwd.c_str());
   }
 }
 
@@ -182,9 +193,23 @@ void on_enter_wifi() {
 void on_wifi_password_submit(const char* pwd) {
   int idx = ui.getFullListSelectedIndex();
   if (idx >= 0 && idx < wifi_count) {
-      String ssid = wifi_raw_ssid[idx];
-      Serial.printf("\n[WiFi] Connecting to %s with password: %s\n", ssid.c_str(), pwd);
-      WiFi.begin(ssid.c_str(), pwd);
+      connecting_ssid = wifi_raw_ssid[idx];
+      connecting_pwd = pwd;
+      
+      Serial.printf("\n[WiFi] Connecting to %s with password: %s\n", connecting_ssid.c_str(), pwd);
+      
+      // Ngắt kết nối cũ (nếu có)
+      WiFi.disconnect();
+      delay(100);
+      WiFi.begin(connecting_ssid.c_str(), pwd);
+      
+      is_connecting_wifi = true;
+      wifi_connect_start = millis();
+      
+      // Hiển thị trạng thái Connecting... lên màn hình
+      static const char* connecting_items[] = {"Connecting...", connecting_ssid.c_str()};
+      ui.setPopupListItems(connecting_items, 2);
+      ui.openPopup();
   }
 }
 
@@ -275,36 +300,64 @@ void loop() {
 
   // --- KIỂM TRA TRẠNG THÁI QUÉT WIFI ASYNC ---
   if (is_scanning_wifi) {
-      int n = WiFi.scanComplete();
-      if (n >= 0) {
-          is_scanning_wifi = false;
-          wifi_count = (n > MAX_WIFI_NETWORKS) ? MAX_WIFI_NETWORKS : n;
-          if (wifi_count == 0) {
-              strncpy(wifi_ssid[0], "No networks", 31);
-              wifi_ssid_ptrs[0] = wifi_ssid[0];
-              wifi_count = 1;
-          } else {
-              for (int i = 0; i < wifi_count; i++) {
-                  // Lưu tên SSID thật vào raw
-                  strncpy(wifi_raw_ssid[i], WiFi.SSID(i).c_str(), 31);
-                  wifi_raw_ssid[i][31] = '\0';
-                  // Định dạng tên + cường độ hiển thị trên OLED
-                  snprintf(wifi_ssid[i], 31, "%s [%d]", wifi_raw_ssid[i], WiFi.RSSI(i));
-                  wifi_ssid_ptrs[i] = wifi_ssid[i];
-              }
-          }
-          if (current_level == LEVEL_WIFI && ui.getAppState() == STATE_FULL_LIST) {
-              ui.setFullListCount(wifi_count);
-          }
-          WiFi.scanDelete(); // Xóa bộ đệm
-      } else if (n == WIFI_SCAN_FAILED) {
-          is_scanning_wifi = false;
-          strncpy(wifi_ssid[0], "Scan Failed", 31);
-          wifi_ssid_ptrs[0] = wifi_ssid[0];
-          wifi_count = 1;
-          if (current_level == LEVEL_WIFI && ui.getAppState() == STATE_FULL_LIST) {
-              ui.setFullListCount(wifi_count);
-          }
+    int16_t scan_result = WiFi.scanComplete();
+    if (scan_result >= 0) {
+      is_scanning_wifi = false;
+      wifi_count = 0;
+      if (scan_result == 0) {
+        wifi_count = 1;
+        strncpy(wifi_ssid[0], "No networks", 31);
+        wifi_ssid_ptrs[0] = wifi_ssid[0];
+      } else {
+        wifi_count = (scan_result > MAX_WIFI_NETWORKS) ? MAX_WIFI_NETWORKS : scan_result;
+        for (int i = 0; i < wifi_count; i++) {
+          String ssid = WiFi.SSID(i);
+          strncpy(wifi_raw_ssid[i], ssid.c_str(), 31);
+          wifi_raw_ssid[i][31] = '\0';
+          
+          long rssi = WiFi.RSSI(i);
+          int quality = 0;
+          if (rssi <= -100) quality = 0;
+          else if (rssi >= -50) quality = 100;
+          else quality = 2 * (rssi + 100);
+          
+          snprintf(wifi_ssid[i], 32, "%s [%d%%]", ssid.c_str(), quality);
+          wifi_ssid_ptrs[i] = wifi_ssid[i];
+        }
+      }
+      ui.setFullListCount(wifi_count);
+      WiFi.scanDelete();
+    } else if (scan_result == WIFI_SCAN_FAILED) {
+      is_scanning_wifi = false;
+      wifi_count = 1;
+      strncpy(wifi_ssid[0], "Scan Failed", 31);
+      wifi_ssid_ptrs[0] = wifi_ssid[0];
+      ui.setFullListCount(wifi_count);
+    }
+  }
+
+  // --- XỬ LÝ KẾT NỐI WIFI (NON-BLOCKING) ---
+  if (is_connecting_wifi) {
+      if (WiFi.status() == WL_CONNECTED) {
+          is_connecting_wifi = false;
+          
+          // Lưu mật khẩu vào NVS để nhớ cho lần sau
+          prefs.putString(connecting_ssid.c_str(), connecting_pwd);
+          Serial.printf("\n[WiFi] Connected successfully to %s\n", connecting_ssid.c_str());
+          
+          // Hiển thị thông báo thành công
+          static const char* success_items[] = {"Connected!", connecting_ssid.c_str()};
+          ui.setPopupListItems(success_items, 2);
+          
+      } else if (millis() - wifi_connect_start > 10000) {
+          // Timeout sau 10 giây
+          is_connecting_wifi = false;
+          WiFi.disconnect();
+          Serial.println("\n[WiFi] Connection timeout or failed");
+          
+          // Hiển thị thông báo thất bại
+          static const char* fail_items[] = {"Failed!", "Wrong Pass / Timeout"};
+          ui.setPopupListItems(fail_items, 2);
       }
   }
 
