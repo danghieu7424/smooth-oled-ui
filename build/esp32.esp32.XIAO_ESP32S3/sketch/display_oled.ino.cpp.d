@@ -186,7 +186,6 @@ D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\sketch\dis
  C:\Users\dangh\Documents\Arduino\libraries\U8g2\src/clib/u8x8.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\Wire\src/Wire.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/esp32-hal.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\Preferences\src/Preferences.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\WiFi\src/WiFi.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/IPv6Address.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\WiFi\src/WiFiType.h \
