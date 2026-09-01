@@ -8,7 +8,7 @@
 
 // Khởi tạo Preferences lưu trữ vào Flash (chỉ cho độ sáng)
 Preferences prefs;
-int saved_brightness = 20;
+
 
 // Cấu trúc lưu WiFi bằng EEPROM thô (chống mọi lỗi NVS)
 struct WiFiState {
