@@ -64,6 +64,7 @@ public:
     void closeOverlay();
     bool backspace();
     void select();
+    void inputChar(char c);
 
     // --- State API ---
     int getCarouselIndex() const { return _current_index; }

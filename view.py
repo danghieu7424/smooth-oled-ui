@@ -38,15 +38,23 @@ def send_char(c):
         except:
             pass
 
-keyboard.on_press_key('left', lambda _: send_char('L'))
-keyboard.on_press_key('up', lambda _: send_char('U'))
-keyboard.on_press_key('right', lambda _: send_char('R'))
-keyboard.on_press_key('down', lambda _: send_char('D'))
-keyboard.on_press_key('home', lambda _: send_char('S'))
-keyboard.on_press_key('end', lambda _: send_char('P'))
-keyboard.on_press_key('esc', lambda _: send_char('C'))
-keyboard.on_press_key('backspace', lambda _: send_char('B'))
-keyboard.on_press_key('enter', lambda _: send_char('E'))
+def on_key(event):
+    if event.event_type == 'down':
+        name = event.name
+        if name == 'left': send_char('\x1BL')
+        elif name == 'up': send_char('\x1BU')
+        elif name == 'right': send_char('\x1BR')
+        elif name == 'down': send_char('\x1BD')
+        elif name == 'home': send_char('\x1BS')
+        elif name == 'end': send_char('\x1BP')
+        elif name == 'esc': send_char('\x1BC')
+        elif name == 'backspace': send_char('\x1BB')
+        elif name == 'enter': send_char('\x1BE')
+        elif name == 'space': send_char(' ')
+        elif len(name) == 1 and name.isprintable():
+            send_char(name)
+
+keyboard.hook(on_key)
 # ---------------------------------------------
 
 def read_exact(ser, size):

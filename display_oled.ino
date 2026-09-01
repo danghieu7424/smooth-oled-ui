@@ -245,56 +245,68 @@ void loop() {
   // Lắng nghe lệnh từ cổng Serial (gửi từ Python Script)
   if (Serial.available() > 0) {
     char c = Serial.read();
-    if (c == 'U') ui.up();        // Mũi tên Lên
-    else if (c == 'D') ui.down(); // Mũi tên Xuống
-    else if (c == 'L') ui.left(); // Mũi tên Trái
-    else if (c == 'R') ui.right();// Mũi tên Phải
-    else if (c == 'P') {
-      ui.setPopupListItems(popup_items, TOTAL_POPUP_ITEMS);
-      ui.openPopup(); // Phím End
-    }
-    else if (c == 'S') ui.openSideList(); // Phím Home
-    else if (c == 'C') { // Phím Esc
-      if (ui.isOverlayOpen()) {
-        ui.closeOverlay(); // Đóng Side List
-      } else if (ui.getAppState() == STATE_TEXT_INPUT) {
-        ui.closeOverlay(); // Esc -> Thoát thẳng nhập Pass
-      } else if (ui.getAppState() == STATE_POPUP) {
-        ui.closeOverlay(); // Đóng Popup List
-      } else if (ui.getAppState() == STATE_FULL_LIST) {
-        if (current_level == LEVEL_WIFI) {
-            current_level = LEVEL_SETTINGS; // Lùi về Settings
+    
+    if (c == '\x1B') {
+        // Lệnh điều hướng
+        uint32_t t = millis();
+        while (!Serial.available() && millis() - t < 50) { delay(1); }
+        if (Serial.available()) {
+            char cmd = Serial.read();
+            if (cmd == 'U') ui.up();        // Mũi tên Lên
+            else if (cmd == 'D') ui.down(); // Mũi tên Xuống
+            else if (cmd == 'L') ui.left(); // Mũi tên Trái
+            else if (cmd == 'R') ui.right();// Mũi tên Phải
+            else if (cmd == 'P') {
+              ui.setPopupListItems(popup_items, TOTAL_POPUP_ITEMS);
+              ui.openPopup(); // Phím End
+            }
+            else if (cmd == 'S') ui.openSideList(); // Phím Home
+            else if (cmd == 'C') { // Phím Esc
+              if (ui.isOverlayOpen()) {
+                ui.closeOverlay(); // Đóng Side List
+              } else if (ui.getAppState() == STATE_TEXT_INPUT) {
+                ui.closeOverlay(); // Esc -> Thoát thẳng nhập Pass
+              } else if (ui.getAppState() == STATE_POPUP) {
+                ui.closeOverlay(); // Đóng Popup List
+              } else if (ui.getAppState() == STATE_FULL_LIST) {
+                if (current_level == LEVEL_WIFI) {
+                    current_level = LEVEL_SETTINGS; // Lùi về Settings
+                }
+                ui.closeOverlay();
+              } else if (ui.getAppState() == STATE_SLIDER) {
+                // [Cập nhật]: Hủy bỏ, khôi phục độ sáng cũ từ Flash
+                current_brightness = saved_brightness;
+                u8g2.setContrast(current_brightness);
+                ui.closeOverlay(); // Đóng Slider, trả về Level trước đó
+              } else if (ui.getAppState() == STATE_CAROUSEL && current_level == LEVEL_SETTINGS) {
+                current_level = LEVEL_MAIN; // Lùi về Main Menu
+                ui.setCarouselItems(menu_items, TOTAL_MAIN_ITEMS, "< MAIN MENU >");
+              }
+            }
+            else if (cmd == 'B') { // Phím Backspace
+              if (ui.getAppState() == STATE_TEXT_INPUT) {
+                ui.backspace();
+              }
+            }
+            else if (cmd == 'E') { // Phím Enter
+              ui.select();
+              
+              if (ui.getAppState() == STATE_SLIDER) {
+                  // [Cập nhật]: Lưu độ sáng vào Flash
+                  prefs.putInt("brightness", current_brightness);
+                  saved_brightness = current_brightness;
+                  ui.closeOverlay(); // Đóng Slider, xác nhận lưu
+              } else if (!ui.isOverlayOpen() && ui.getAppState() == STATE_CAROUSEL) {
+                  const MenuItem* active_item = ui.getCurrentMenuItem();
+                  if (active_item && active_item->on_enter) {
+                      active_item->on_enter();
+                  }
+              }
+            }
         }
-        ui.closeOverlay();
-      } else if (ui.getAppState() == STATE_SLIDER) {
-        // [Cập nhật]: Hủy bỏ, khôi phục độ sáng cũ từ Flash
-        current_brightness = saved_brightness;
-        u8g2.setContrast(current_brightness);
-        ui.closeOverlay(); // Đóng Slider, trả về Level trước đó
-      } else if (ui.getAppState() == STATE_CAROUSEL && current_level == LEVEL_SETTINGS) {
-        current_level = LEVEL_MAIN; // Lùi về Main Menu
-        ui.setCarouselItems(menu_items, TOTAL_MAIN_ITEMS, "< MAIN MENU >");
-      }
-    }
-    else if (c == 'B') { // Phím Backspace
-      if (ui.getAppState() == STATE_TEXT_INPUT) {
-        ui.backspace();
-      }
-    }
-    else if (c == 'E') { // Phím Enter
-      ui.select();
-      
-      if (ui.getAppState() == STATE_SLIDER) {
-          // [Cập nhật]: Lưu độ sáng vào Flash
-          prefs.putInt("brightness", current_brightness);
-          saved_brightness = current_brightness;
-          ui.closeOverlay(); // Đóng Slider, xác nhận lưu
-      } else if (!ui.isOverlayOpen() && ui.getAppState() == STATE_CAROUSEL) {
-          const MenuItem* active_item = ui.getCurrentMenuItem();
-          if (active_item && active_item->on_enter) {
-              active_item->on_enter();
-          }
-      }
+    } else {
+        // Ký tự gõ trực tiếp từ bàn phím
+        ui.inputChar(c);
     }
   }
 

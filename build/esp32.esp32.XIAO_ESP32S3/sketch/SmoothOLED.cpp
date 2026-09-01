@@ -307,6 +307,25 @@ void SmoothOLED::select() {
     }
 }
 
+void SmoothOLED::inputChar(char c) {
+    if (_app_state == STATE_TEXT_INPUT) {
+        if (c >= 32 && c <= 126 && _cursor_pos < sizeof(_text_buffer) - 2) {
+            _text_buffer[_cursor_pos] = c;
+            
+            // Tự động nhảy sang phải
+            _cursor_pos++;
+            if (_text_buffer[_cursor_pos] == '\0') {
+                _text_buffer[_cursor_pos] = CHAR_MAP[0];
+                _text_buffer[_cursor_pos + 1] = '\0';
+                _current_char_idx = 0;
+            } else {
+                _current_char_idx = getCharMapIndex(_text_buffer[_cursor_pos]);
+            }
+            _last_tick = millis();
+        }
+    }
+}
+
 void SmoothOLED::flush_display() {
     _u8g2->sendBuffer();
 
@@ -626,11 +645,10 @@ void SmoothOLED::draw_text_input_menu(int offset_x) {
     temp[_cursor_pos] = '\0';
     int cursor_x = 8 + _u8g2->getStrWidth(temp);
 
-    // Vẽ gạch dưới con trỏ
-    _u8g2->drawLine(cursor_x + offset_x, 37, cursor_x + 6 + offset_x, 37);
-    // Mũi tên gợi ý chỉnh ký tự
+    // Vẽ gạch dưới con trỏ đậm (thêm _ bên dưới chữ để xác định rõ hơn)
+    _u8g2->drawBox(cursor_x + offset_x, 37, 6, 2);
+    // Mũi tên gợi ý chỉnh ký tự bên trên
     _u8g2->drawTriangle(cursor_x + 3 + offset_x, 20, cursor_x + offset_x, 23, cursor_x + 6 + offset_x, 23);
-    _u8g2->drawTriangle(cursor_x + 3 + offset_x, 41, cursor_x + offset_x, 38, cursor_x + 6 + offset_x, 38);
 }
 
 void SmoothOLED::draw_full_list_menu(int offset_x) {
