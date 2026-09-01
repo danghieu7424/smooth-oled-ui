@@ -1,6 +1,8 @@
 #line 1 "D:\\all_projects\\rust\\rust\\display_oled\\SmoothOLED.cpp"
 #include "SmoothOLED.h"
 
+static bool s_advance_on_next_char = false;
+
 SmoothOLED::SmoothOLED(U8G2* u8g2, Stream* serial) {
     _u8g2 = u8g2;
     _serial = serial;
@@ -123,6 +125,7 @@ void SmoothOLED::up() {
         _current_char_idx++;
         if (_current_char_idx >= CHAR_MAP_LEN) _current_char_idx = 0;
         _text_buffer[_cursor_pos] = CHAR_MAP[_current_char_idx];
+        s_advance_on_next_char = false;
         _last_tick = millis();
     } else if (_app_state == STATE_FULL_LIST) {
         if (_list_selected_index > 0) _list_selected_index--;
@@ -147,6 +150,7 @@ void SmoothOLED::down() {
         _current_char_idx--;
         if (_current_char_idx < 0) _current_char_idx = CHAR_MAP_LEN - 1;
         _text_buffer[_cursor_pos] = CHAR_MAP[_current_char_idx];
+        s_advance_on_next_char = false;
         _last_tick = millis();
     } else if (_app_state == STATE_FULL_LIST) {
         if (_list_selected_index < _list_count - 1) _list_selected_index++;
@@ -160,6 +164,7 @@ void SmoothOLED::left() {
             _cursor_pos--;
             _current_char_idx = getCharMapIndex(_text_buffer[_cursor_pos]);
         }
+        s_advance_on_next_char = false;
         _last_tick = millis();
     } else {
         up(); // Delegate
@@ -180,6 +185,7 @@ void SmoothOLED::right() {
                 _current_char_idx = getCharMapIndex(_text_buffer[_cursor_pos]);
             }
         }
+        s_advance_on_next_char = false;
         _last_tick = millis();
     } else {
         down(); // Delegate
@@ -245,6 +251,7 @@ void SmoothOLED::openTextInput(const char* title, TextCallback on_submit, const 
             _current_char_idx = 0;
             _text_buffer[0] = CHAR_MAP[0];
         }
+        s_advance_on_next_char = false;
         _last_switch = millis();
     }
 }
@@ -281,6 +288,7 @@ bool SmoothOLED::backspace() {
             }
             _cursor_pos--;
             _current_char_idx = getCharMapIndex(_text_buffer[_cursor_pos]);
+            s_advance_on_next_char = false;
             return true;
         } else {
             // Hủy nhập liệu
@@ -310,17 +318,19 @@ void SmoothOLED::select() {
 void SmoothOLED::inputChar(char c) {
     if (_app_state == STATE_TEXT_INPUT) {
         if (c >= 32 && c <= 126 && _cursor_pos < sizeof(_text_buffer) - 2) {
-            _text_buffer[_cursor_pos] = c;
-            
-            // Tự động nhảy sang phải
-            _cursor_pos++;
-            if (_text_buffer[_cursor_pos] == '\0') {
-                _text_buffer[_cursor_pos] = CHAR_MAP[0];
-                _text_buffer[_cursor_pos + 1] = '\0';
-                _current_char_idx = 0;
-            } else {
-                _current_char_idx = getCharMapIndex(_text_buffer[_cursor_pos]);
+            // Nếu đã gõ xong 1 ký tự và tiếp tục gõ, ta đẩy con trỏ sang phải
+            if (s_advance_on_next_char) {
+                _cursor_pos++;
+                if (_text_buffer[_cursor_pos] == '\0') {
+                    _text_buffer[_cursor_pos + 1] = '\0'; // Đảm bảo chuỗi luôn kết thúc
+                }
             }
+            
+            _text_buffer[_cursor_pos] = c;
+            _current_char_idx = getCharMapIndex(c);
+            
+            // Đánh dấu để lần gõ phím máy tính tiếp theo sẽ đẩy con trỏ
+            s_advance_on_next_char = true;
             _last_tick = millis();
         }
     }
