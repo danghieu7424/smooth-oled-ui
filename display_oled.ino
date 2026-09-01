@@ -207,9 +207,7 @@ void on_wifi_password_submit(const char* pwd) {
       wifi_connect_start = millis();
       
       // Hiển thị trạng thái Connecting... lên màn hình
-      static const char* connecting_items[] = {"Connecting...", connecting_ssid.c_str()};
-      ui.setPopupListItems(connecting_items, 2);
-      ui.openPopup();
+      ui.openModal("Connecting...", connecting_ssid.c_str());
   }
 }
 
@@ -266,8 +264,8 @@ void loop() {
                 ui.closeOverlay(); // Đóng Side List
               } else if (ui.getAppState() == STATE_TEXT_INPUT) {
                 ui.closeOverlay(); // Esc -> Thoát thẳng nhập Pass
-              } else if (ui.getAppState() == STATE_POPUP) {
-                ui.closeOverlay(); // Đóng Popup List
+              } else if (ui.getAppState() == STATE_POPUP || ui.getAppState() == STATE_MODAL) {
+                ui.closeOverlay(); // Đóng Popup/Modal
               } else if (ui.getAppState() == STATE_FULL_LIST) {
                 if (current_level == LEVEL_WIFI) {
                     current_level = LEVEL_SETTINGS; // Lùi về Settings
@@ -362,9 +360,7 @@ void loop() {
           Serial.printf("\n[WiFi] Connected successfully to %s\n", connecting_ssid.c_str());
           
           // Hiển thị thông báo thành công
-          static const char* success_items[] = {"Connected!", connecting_ssid.c_str()};
-          ui.setPopupListItems(success_items, 2);
-          ui.openPopup();
+          ui.openModal("Connected!", connecting_ssid.c_str());
           
           // Đánh dấu mạng đã kết nối trên danh sách hiện tại
           for (int i = 0; i < wifi_count; i++) {
@@ -386,9 +382,7 @@ void loop() {
           Serial.println("\n[WiFi] Connection timeout or failed");
           
           // Hiển thị thông báo thất bại
-          static const char* fail_items[] = {"Failed!", "Wrong Pass / Timeout"};
-          ui.setPopupListItems(fail_items, 2);
-          ui.openPopup();
+          ui.openModal("Failed!", "Wrong Pass / Timeout");
       }
   }
 

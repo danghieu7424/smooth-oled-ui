@@ -205,6 +205,17 @@ void SmoothOLED::openPopup() {
     }
 }
 
+void SmoothOLED::openModal(const char* title, const char* text) {
+    if (_overlay_state == OVERLAY_NONE) {
+        if (_app_state != STATE_MODAL) {
+            _prev_app_state = _app_state;
+        }
+        _app_state = STATE_MODAL;
+        _modal_title = title;
+        _modal_text = text;
+    }
+}
+
 void SmoothOLED::openSideList() {
     if (_overlay_state == OVERLAY_NONE && (_app_state == STATE_CAROUSEL || _app_state == STATE_POPUP || _app_state == STATE_SLIDER)) {
         if (_app_state == STATE_POPUP) {
@@ -273,7 +284,7 @@ void SmoothOLED::openFullList(const char* title, const char** items, int count, 
 void SmoothOLED::closeOverlay() {
     if (_overlay_state == OVERLAY_SIDE_POPUP) {
         _overlay_anim = PHASE_CLOSING;
-    } else if (_app_state == STATE_POPUP || _app_state == STATE_SLIDER || _app_state == STATE_TEXT_INPUT || _app_state == STATE_FULL_LIST) {
+    } else if (_app_state == STATE_POPUP || _app_state == STATE_MODAL || _app_state == STATE_SLIDER || _app_state == STATE_TEXT_INPUT || _app_state == STATE_FULL_LIST) {
         _app_state = _prev_app_state; // Trả về màn hình gốc
     }
 }
@@ -314,6 +325,9 @@ void SmoothOLED::select() {
         }
     } else if (_app_state == STATE_FULL_LIST) {
         if (_list_on_select) _list_on_select(_list_selected_index);
+    } else if (_app_state == STATE_MODAL) {
+        // Đóng Modal (Tương tự phím OK)
+        _app_state = _prev_app_state;
     }
 }
 
@@ -468,18 +482,9 @@ void SmoothOLED::draw_popup_menu() {
 
     _u8g2->drawRFrame(MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H, 2);
     
-    // Vẽ vạch ngang phân cách nút bấm ở đáy
-    int button_bar_y = MENU_BOX_Y + MENU_BOX_H - 12;
-    _u8g2->drawLine(MENU_BOX_X, button_bar_y, MENU_BOX_X + MENU_BOX_W, button_bar_y);
-    
-    // Vẽ nút bấm ảo (Hint)
-    _u8g2->setFont(u8g2_font_5x7_tf);
-    _u8g2->drawStr(MENU_BOX_X + 6, button_bar_y + 9, "[ESC] Cancel");
-    _u8g2->drawStr(MENU_BOX_X + MENU_BOX_W - 50, button_bar_y + 9, "[ENT] OK");
-
     _u8g2->setFont(u8g2_font_6x10_tf);
     
-    _u8g2->setClipWindow(MENU_BOX_X + 2, MENU_BOX_Y + 2, MENU_BOX_X + MENU_BOX_W - 3, button_bar_y - 1);
+    _u8g2->setClipWindow(MENU_BOX_X + 2, MENU_BOX_Y + 2, MENU_BOX_X + MENU_BOX_W - 3, MENU_BOX_Y + MENU_BOX_H - 3);
     
     int cam_y_int = (int)(_list_cam_y + 0.5f);
 
@@ -711,6 +716,42 @@ void SmoothOLED::draw_full_list_menu(int offset_x) {
 }
 
 // =================================================================================
+// MODAL DIALOG ATOM
+// =================================================================================
+
+void SmoothOLED::draw_modal_dialog() {
+    _u8g2->setDrawColor(0);
+    _u8g2->drawRBox(MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H, 2);
+    _u8g2->setDrawColor(1);
+    _u8g2->drawRFrame(MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H, 2);
+
+    int button_bar_y = MENU_BOX_Y + MENU_BOX_H - 18;
+    _u8g2->drawLine(MENU_BOX_X, button_bar_y, MENU_BOX_X + MENU_BOX_W, button_bar_y);
+    _u8g2->drawLine(MENU_BOX_X + MENU_BOX_W / 2, button_bar_y, MENU_BOX_X + MENU_BOX_W / 2, MENU_BOX_Y + MENU_BOX_H);
+
+    _u8g2->setFont(u8g2_font_5x7_tf);
+    
+    // Left button
+    _u8g2->drawStr(MENU_BOX_X + 11, button_bar_y + 8, "cancel");
+    _u8g2->drawStr(MENU_BOX_X + 14, button_bar_y + 16, "[ESC]");
+
+    // Right button
+    _u8g2->drawStr(MENU_BOX_X + MENU_BOX_W / 2 + 20, button_bar_y + 8, "ok");
+    _u8g2->drawStr(MENU_BOX_X + MENU_BOX_W / 2 + 13, button_bar_y + 16, "[ENT]");
+
+    // Content
+    _u8g2->setFont(u8g2_font_6x10_tf);
+    _u8g2->setDrawColor(1);
+    _u8g2->drawBox(MENU_BOX_X + 2, MENU_BOX_Y + 2, MENU_BOX_W - 4, 12);
+    
+    _u8g2->setDrawColor(0);
+    _u8g2->drawStr(MENU_BOX_X + 4, MENU_BOX_Y + 11, _modal_title);
+    
+    _u8g2->setDrawColor(1);
+    _u8g2->drawStr(MENU_BOX_X + 4, MENU_BOX_Y + 25, _modal_text);
+}
+
+// =================================================================================
 // GAME LOOP (Cập nhật 60FPS)
 // =================================================================================
 
@@ -817,6 +858,18 @@ void SmoothOLED::update() {
         } else if (_app_state == STATE_FULL_LIST) {
             if (_overlay_state == OVERLAY_NONE) {
                 draw_full_list_menu(background_offset_x);
+            }
+        } else if (_app_state == STATE_MODAL) {
+            if (_prev_app_state == STATE_CAROUSEL) {
+                draw_carousel_menu(background_offset_x);
+            } else if (_prev_app_state == STATE_POPUP) {
+                draw_carousel_menu(background_offset_x); 
+                draw_popup_menu();
+            } else if (_prev_app_state == STATE_FULL_LIST) {
+                draw_full_list_menu(background_offset_x);
+            }
+            if (_overlay_state == OVERLAY_NONE) {
+                draw_modal_dialog();
             }
         }
 

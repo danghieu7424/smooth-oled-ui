@@ -22,7 +22,8 @@ enum AppState {
     STATE_POPUP,
     STATE_SLIDER,
     STATE_TEXT_INPUT,
-    STATE_FULL_LIST
+    STATE_FULL_LIST,
+    STATE_MODAL
 };
 
 enum OverlayState {
@@ -58,6 +59,7 @@ public:
     void left();
     void right();
     void openPopup();
+    void openModal(const char* title, const char* text);
     void openSideList();
     void openSlider(const char* title, int current_val, int max_val, SliderCallback on_change = nullptr);
     void openTextInput(const char* title, TextCallback on_submit, const char* initial_text = nullptr);
