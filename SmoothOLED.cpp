@@ -226,8 +226,6 @@ void SmoothOLED::select() {
         _overlay_anim = PHASE_CLOSING;
     } else if (_app_state == STATE_CAROUSEL) {
         _target_cursor_w = MENU_BOX_W + 10;
-    } else if (_app_state == STATE_POPUP) {
-        _list_bounce_timer = 10;
     } else if (_app_state == STATE_TEXT_INPUT) {
         if (_current_char_idx == 127) {
             // Xác nhận (Submit)
