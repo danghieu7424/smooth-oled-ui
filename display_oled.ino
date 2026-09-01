@@ -161,34 +161,51 @@ void on_brightness_change(int val) {
 
 char text_input_title_buf[64];
 
-// Hàm Database lưu trữ toàn bộ mật khẩu WiFi vào một chuỗi duy nhất để chống lỗi phân mảnh bộ nhớ NVS
+// Lưu Wi-Fi vào một phân vùng NVS (Namespace) độc lập 'wifi' để không bao giờ bị lỗi
 void save_wifi_db(String ssid, String pwd) {
-    String db = prefs.getString("wifi_db", "");
-    String entry = ssid + "\t" + pwd + "\n";
-    int idx = db.indexOf(ssid + "\t");
-    if (idx >= 0) {
-        int end_idx = db.indexOf('\n', idx);
-        if (end_idx >= 0) {
-            db = db.substring(0, idx) + entry + db.substring(end_idx + 1);
-            prefs.putString("wifi_db", db);
-            return;
-        }
+    Preferences wifi_prefs;
+    wifi_prefs.begin("wifi", false);
+    
+    // Key NVS tối đa 15 ký tự, ta cắt bớt SSID làm Key
+    String key = ssid;
+    if (key.length() > 15) {
+        key = key.substring(0, 15);
     }
-    db += entry;
-    prefs.putString("wifi_db", db);
+    
+    // Thay thế các khoảng trắng hoặc ký tự lạ để tránh lỗi Key
+    for (int i = 0; i < key.length(); i++) {
+        if (key[i] == ' ') key[i] = '_';
+    }
+    
+    wifi_prefs.putString(key.c_str(), pwd);
+    wifi_prefs.putString("last", ssid); // Lưu Last SSID vào chung vùng wifi
+    wifi_prefs.end();
 }
 
 String get_wifi_pwd(String ssid) {
-    String db = prefs.getString("wifi_db", "");
-    int idx = db.indexOf(ssid + "\t");
-    if (idx >= 0) {
-        idx += ssid.length() + 1;
-        int end_idx = db.indexOf('\n', idx);
-        if (end_idx >= 0) {
-            return db.substring(idx, end_idx);
-        }
+    Preferences wifi_prefs;
+    wifi_prefs.begin("wifi", true);
+    
+    String key = ssid;
+    if (key.length() > 15) {
+        key = key.substring(0, 15);
     }
-    return "";
+    for (int i = 0; i < key.length(); i++) {
+        if (key[i] == ' ') key[i] = '_';
+    }
+    
+    String pwd = wifi_prefs.getString(key.c_str(), "");
+    wifi_prefs.end();
+    
+    return pwd;
+}
+
+String get_last_ssid() {
+    Preferences wifi_prefs;
+    wifi_prefs.begin("wifi", true);
+    String ssid = wifi_prefs.getString("last", "");
+    wifi_prefs.end();
+    return ssid;
 }
 
 // Bộ đệm RAM để nhớ mật khẩu ngay lập tức (Chống lỗi NVS ghi chậm hoặc hỏng)
@@ -300,7 +317,7 @@ void setup() {
   u8g2.setContrast(current_brightness); // Áp dụng độ sáng đã lưu
 
   // Tự động kết nối lại Wi-Fi cũ (nếu có)
-  String last_ssid = prefs.getString("last_ssid", "");
+  String last_ssid = get_last_ssid();
   if (last_ssid != "") {
       String last_pwd = get_wifi_pwd(last_ssid);
       WiFi.mode(WIFI_STA);
@@ -460,12 +477,9 @@ void loop() {
       if (WiFi.status() == WL_CONNECTED) {
           is_connecting_wifi = false;
           
-          // Lưu mật khẩu vào NVS để nhớ cho lần sau
+          // Lưu mật khẩu vào NVS để nhớ cho lần sau (đã gộp chung Last SSID vào hàm này)
           save_wifi_db(connecting_ssid, connecting_pwd);
           save_pwd_cache(connecting_ssid, connecting_pwd); // Lưu vào RAM luôn cho chắc
-          
-          // Lưu Last SSID để auto-connect khi boot
-          prefs.putString("last_ssid", connecting_ssid);
           
           Serial.printf("\n[WiFi] Connected successfully to %s\n", connecting_ssid.c_str());
           
