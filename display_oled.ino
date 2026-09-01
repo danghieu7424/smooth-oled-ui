@@ -1,7 +1,11 @@
 #include <Arduino.h>
 #include <U8g2lib.h>
 #include <Wire.h>
+#include <Preferences.h>
 #include "SmoothOLED.h"
+
+// Khởi tạo Preferences lưu trữ vào Flash
+Preferences prefs;
 
 // Khởi tạo màn hình
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
@@ -103,7 +107,8 @@ const int TOTAL_SIDE_ITEMS = 7;
 // Quản lý trạng thái Menu
 enum MenuLevel { LEVEL_MAIN, LEVEL_SETTINGS };
 MenuLevel current_level = LEVEL_MAIN;
-int current_brightness = 20; // Độ sáng mặc định ban đầu
+int current_brightness = 20; // Độ sáng hiện tại
+int saved_brightness = 20; // Độ sáng đã lưu trong Flash
 
 // --- CÀI ĐẶT CÁC HÀM XỬ LÝ SỰ KIỆN ---
 
@@ -125,10 +130,15 @@ void on_brightness_change(int val) {
 void setup() {
   Serial.begin(921600);
   
+  // Nạp cấu hình từ Flash
+  prefs.begin("oled-ui", false);
+  saved_brightness = prefs.getInt("brightness", 20); // Nếu chưa lưu, mặc định là 20
+  current_brightness = saved_brightness;
+
   Wire.begin(47, 48);
   Wire.setClock(400000); 
   u8g2.begin();
-  u8g2.setContrast(20);
+  u8g2.setContrast(current_brightness); // Áp dụng độ sáng đã lưu
 
   // 1. Gán mảng dữ liệu vào thư viện UI
   ui.setCarouselItems(menu_items, TOTAL_MAIN_ITEMS, "< MAIN MENU >");
@@ -159,6 +169,9 @@ void loop() {
       } else if (ui.getAppState() == STATE_POPUP) {
         ui.closeOverlay(); // Đóng Popup List
       } else if (ui.getAppState() == STATE_SLIDER) {
+        // [Cập nhật]: Hủy bỏ, khôi phục độ sáng cũ từ Flash
+        current_brightness = saved_brightness;
+        u8g2.setContrast(current_brightness);
         ui.closeOverlay(); // Đóng Slider, trả về Level trước đó
       } else if (ui.getAppState() == STATE_CAROUSEL && current_level == LEVEL_SETTINGS) {
         current_level = LEVEL_MAIN; // Lùi về Main Menu
@@ -168,8 +181,12 @@ void loop() {
     else if (c == 'E') { // Phím Enter
       ui.select();
       
-      // Khởi chạy hàm Callback (on_enter) của mục Menu đang được chọn
-      if (!ui.isOverlayOpen() && ui.getAppState() == STATE_CAROUSEL) {
+      if (ui.getAppState() == STATE_SLIDER) {
+          // [Cập nhật]: Lưu độ sáng vào Flash
+          prefs.putInt("brightness", current_brightness);
+          saved_brightness = current_brightness;
+          ui.closeOverlay(); // Đóng Slider, xác nhận lưu
+      } else if (!ui.isOverlayOpen() && ui.getAppState() == STATE_CAROUSEL) {
           const MenuItem* active_item = ui.getCurrentMenuItem();
           if (active_item && active_item->on_enter) {
               active_item->on_enter();
