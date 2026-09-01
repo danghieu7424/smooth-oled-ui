@@ -161,16 +161,21 @@ void on_wifi_selected(int idx) {
 
 void on_enter_wifi() {
   current_level = LEVEL_WIFI;
-  is_scanning_wifi = true;
-  WiFi.mode(WIFI_STA);
-  WiFi.disconnect();
-  WiFi.scanNetworks(true); // Quét bất đồng bộ (Async)
   
   // Khởi tạo UI hiển thị tạm thời "Scanning..."
   wifi_count = 1;
   strncpy(wifi_ssid[0], "Scanning...", 31);
   wifi_ssid_ptrs[0] = wifi_ssid[0];
   ui.openFullList("WIFI NETWORKS", wifi_ssid_ptrs, wifi_count, on_wifi_selected);
+
+  if (is_scanning_wifi) return; // Đang quét thì không kích hoạt lại
+  
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+  delay(100); // Chờ WiFi ngắt kết nối hoàn toàn và module ổn định (Fix lỗi báo false liên tục)
+  
+  WiFi.scanNetworks(true); // Quét bất đồng bộ (Async)
+  is_scanning_wifi = true;
 }
 
 void on_wifi_password_submit(const char* pwd) {
