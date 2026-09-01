@@ -132,16 +132,16 @@ void loop() {
     else if (c == 'P') ui.openPopup(); // Phím End (trước đây là Win)
     else if (c == 'S') ui.openSideList(); // Phím Home
     else if (c == 'C') { // Phím Esc
-      if (!ui.isOverlayOpen() && current_level == LEVEL_SETTINGS) {
-        // Nếu không có popup nào đang mở và đang ở màn hình Settings, thì Back về Main Menu
-        current_level = LEVEL_MAIN;
+      if (ui.isOverlayOpen()) {
+        ui.closeOverlay(); // Đóng Side List
+      } else if (ui.getAppState() == STATE_POPUP) {
+        ui.closeOverlay(); // Đóng Popup List
+      } else if (ui.getAppState() == STATE_SLIDER && current_level == LEVEL_BRIGHTNESS) {
+        current_level = LEVEL_SETTINGS; // Lùi về Level Settings
+        ui.closeOverlay(); // Đóng Slider
+      } else if (ui.getAppState() == STATE_CAROUSEL && current_level == LEVEL_SETTINGS) {
+        current_level = LEVEL_MAIN; // Lùi về Main Menu
         ui.setCarouselItems(menu_items, TOTAL_MAIN_ITEMS, "< MAIN MENU >");
-      } else if (!ui.isOverlayOpen() && current_level == LEVEL_BRIGHTNESS) {
-        // Nếu đang chỉnh Brightness, thì Back về Settings
-        current_level = LEVEL_SETTINGS;
-        ui.closeOverlay(); // Tự động đóng STATE_SLIDER về lại STATE_CAROUSEL
-      } else {
-        ui.closeOverlay();
       }
     }
     else if (c == 'E') { // Phím Enter

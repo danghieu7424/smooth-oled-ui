@@ -123,7 +123,7 @@ void SmoothOLED::down() {
 }
 
 void SmoothOLED::openPopup() {
-    if (_overlay_state == OVERLAY_NONE) {
+    if (_overlay_state == OVERLAY_NONE && _app_state == STATE_CAROUSEL) {
         _app_state = STATE_POPUP;
         _current_list_selection = 0;
         _list_cam_target_idx = 0;
@@ -135,7 +135,7 @@ void SmoothOLED::openPopup() {
 }
 
 void SmoothOLED::openSideList() {
-    if (_overlay_state == OVERLAY_NONE) {
+    if (_overlay_state == OVERLAY_NONE && (_app_state == STATE_CAROUSEL || _app_state == STATE_POPUP)) {
         _app_state = STATE_CAROUSEL; // Đóng popup nếu có
         _overlay_state = OVERLAY_SIDE_POPUP;
         _overlay_anim = PHASE_OPENING;
