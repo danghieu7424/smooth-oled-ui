@@ -8,6 +8,7 @@
 
 // Khởi tạo Preferences lưu trữ vào Flash
 Preferences prefs;
+Preferences prefs_wifi; // Phân vùng mới sạch sẽ để lưu Wi-Fi tránh lỗi corrupt
 
 // Khởi tạo màn hình
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
@@ -102,15 +103,15 @@ const char* popup_items[] = {
 };
 const int TOTAL_POPUP_ITEMS = 4;
 
-#line 104 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 105 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void on_restart();
-#line 108 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 109 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void on_power_off();
-#line 225 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 227 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup();
-#line 269 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 273 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void loop();
-#line 104 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 105 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void on_restart() {
     ESP.restart(); // Sửa lại lệnh chuẩn của ESP32
 }
@@ -181,15 +182,16 @@ void on_wifi_selected(int idx) {
       }
 
       // KIỂM TRA: Nếu mạng này TRÙNG với mạng đã lưu trong Flash
-      if (String(wifi_raw_ssid[idx]) == prefs.getString("wifi_ssid", "")) {
-          // Tự động lấy mật khẩu từ Flash và kết nối luôn, không bắt nhập lại!
-          String saved_pwd = prefs.getString("wifi_pwd", "");
-          on_wifi_password_submit(saved_pwd.c_str());
-      } else {
-          // Mạng mới hoàn toàn -> Mở ô nhập Pass trống
-          snprintf(text_input_title_buf, sizeof(text_input_title_buf), "PWD: %s", wifi_raw_ssid[idx]);
-          ui.openTextInput(text_input_title_buf, on_wifi_password_submit, "");
+      String saved_pwd = "";
+      if (String(wifi_raw_ssid[idx]) == prefs_wifi.getString("ssid", "")) {
+          // Đã có mật khẩu trong Flash -> Lấy ra để điền sẵn vào ô Input
+          saved_pwd = prefs_wifi.getString("pwd", "");
       }
+      
+      // Mở ô nhập Pass và ĐIỀN SẴN mật khẩu cũ (như thẻ input type="text" có value)
+      // Người dùng chỉ cần ấn Enter để kết nối, hoặc ấn xóa để sửa
+      snprintf(text_input_title_buf, sizeof(text_input_title_buf), "PWD: %s", wifi_raw_ssid[idx]);
+      ui.openTextInput(text_input_title_buf, on_wifi_password_submit, saved_pwd.c_str());
   }
 }
 
@@ -237,6 +239,8 @@ void setup() {
   
   // Nạp cấu hình từ Flash
   prefs.begin("oled-ui", false);
+  prefs_wifi.begin("wifi_data", false); // Không gian mới hoàn toàn chống lỗi
+  
   saved_brightness = prefs.getInt("brightness", 20); // Nếu chưa lưu, mặc định là 20
   current_brightness = saved_brightness;
 
@@ -246,11 +250,11 @@ void setup() {
   u8g2.setContrast(current_brightness); // Áp dụng độ sáng đã lưu
 
   // Khởi động lại: Xem trạng thái trước đó có đang kết nối không
-  bool wifi_on = prefs.getBool("wifi_on", false);
+  bool wifi_on = prefs_wifi.getBool("on", false);
   if (wifi_on) {
       // Nếu có thì bật wifi và kết nối lại ssid và password cũ
-      String last_ssid = prefs.getString("wifi_ssid", "");
-      String last_pwd = prefs.getString("wifi_pwd", "");
+      String last_ssid = prefs_wifi.getString("ssid", "");
+      String last_pwd = prefs_wifi.getString("pwd", "");
       WiFi.mode(WIFI_STA);
       WiFi.disconnect(true); // Xóa state lơ lửng của phần cứng
       delay(100);
@@ -310,7 +314,7 @@ void loop() {
                     // Nếu thoát ra mà không có kết nối nào, tắt Wi-Fi để tiết kiệm pin
                     if (WiFi.status() != WL_CONNECTED) {
                         WiFi.mode(WIFI_OFF);
-                        prefs.putBool("wifi_on", false);
+                        prefs_wifi.putBool("on", false);
                     }
                 }
                 ui.closeOverlay();
@@ -331,7 +335,7 @@ void loop() {
                   // Đang ở danh sách Wi-Fi (hoặc Modal), ấn Backspace để ngắt kết nối hiện tại
                   if (WiFi.status() == WL_CONNECTED) {
                       WiFi.disconnect();
-                      prefs.putBool("wifi_on", false); // Cập nhật trạng thái tắt kết nối vào flash
+                      prefs_wifi.putBool("on", false); // Cập nhật trạng thái tắt kết nối vào flash
                       
                       // Xóa dấu * khỏi danh sách ngay lập tức
                       for (int i = 0; i < wifi_count; i++) {
@@ -443,9 +447,9 @@ void loop() {
           is_connecting_wifi = false;
           
           // Mật khẩu đúng và kết nối thành công: Lưu trạng thái bật và SSID/PWD vào Flash
-          prefs.putBool("wifi_on", true);
-          prefs.putString("wifi_ssid", connecting_ssid);
-          prefs.putString("wifi_pwd", connecting_pwd);
+          prefs_wifi.putBool("on", true);
+          prefs_wifi.putString("ssid", connecting_ssid);
+          prefs_wifi.putString("pwd", connecting_pwd);
           
           Serial.printf("\n[WiFi] Connected successfully to %s\n", connecting_ssid.c_str());
           
