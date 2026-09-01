@@ -185,7 +185,7 @@ bool is_scanning_wifi = false;
 // Trạng thái kết nối WiFi
 bool is_connecting_wifi = false;
 uint32_t wifi_connect_start = 0;
-String connecting_ssid = "Ascpcs";
+String connecting_ssid = "Aspcs";
 String connecting_pwd = "742412624";
 
 // --- CÀI ĐẶT CÁC HÀM XỬ LÝ SỰ KIỆN ---
@@ -204,11 +204,13 @@ bool is_time_synced = false;
 
 void sync_time_with_api() {
     if (WiFi.status() == WL_CONNECTED) {
+        Serial.println("[API] Trying to sync time...");
         WiFiClientSecure *client = new WiFiClientSecure;
         client->setInsecure();
         HTTPClient http;
         if (http.begin(*client, "https://dh74.io.vn/api/time?tz=7")) {
             int httpCode = http.GET();
+            Serial.printf("[API] HTTP Code: %d\n", httpCode);
             if (httpCode == HTTP_CODE_OK) {
                 String payload = http.getString();
                 JsonDocument doc;
@@ -235,11 +237,20 @@ void sync_time_with_api() {
                     last_time_sync = millis();
                     last_second_tick = millis();
                     ui.updateClock(current_hour, current_minute, current_second, solar_date_str.c_str(), lunar_date_str.c_str());
+                    Serial.println("[API] Sync SUCCESS!");
+                } else {
+                    Serial.println("[API] JSON Parse Error!");
                 }
+            } else {
+                Serial.println("[API] HTTP Request Failed!");
             }
             http.end();
+        } else {
+            Serial.println("[API] HTTP Begin Failed!");
         }
         delete client;
+    } else {
+        Serial.println("[API] WiFi NOT connected!");
     }
 }
 
@@ -364,9 +375,11 @@ void setup() {
   
   if (state.on && strlen(state.ssid) > 0) {
       // Dùng cấu hình từ EEPROM
+      Serial.printf("[BOOT] Using EEPROM WiFi: SSID='%s'\n", state.ssid);
       WiFi.begin(state.ssid, state.pwd);
   } else {
       // Dùng cấu hình mặc định hardcode
+      Serial.printf("[BOOT] Using HARDCODED WiFi: SSID='%s'\n", connecting_ssid.c_str());
       WiFi.begin(connecting_ssid.c_str(), connecting_pwd.c_str());
   }
   WiFi.setAutoReconnect(true); // Tự động kết nối lại nếu rớt mạng
@@ -606,9 +619,12 @@ void loop() {
   } else {
       // Chưa đồng bộ được thời gian (do mới khởi động) -> Thử đồng bộ liên tục mỗi 2 giây nếu có mạng
       static uint32_t last_sync_try = 0;
-      if (WiFi.status() == WL_CONNECTED && millis() - last_sync_try > 2000) {
+      if (millis() - last_sync_try > 2000) {
           last_sync_try = millis();
-          sync_time_with_api();
+          Serial.printf("[WIFI] Status: %d\n", WiFi.status());
+          if (WiFi.status() == WL_CONNECTED) {
+              sync_time_with_api();
+          }
       }
   }
 
