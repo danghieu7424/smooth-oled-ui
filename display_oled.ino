@@ -3,6 +3,7 @@
 #include <Wire.h>
 #include <Preferences.h>
 #include <WiFi.h>
+#include <EEPROM.h>
 #include "SmoothOLED.h"
 
 // Khởi tạo Preferences lưu trữ vào Flash
@@ -105,15 +106,20 @@ void on_reset() {
     ESP.restart();
 }
 
+void on_reboot() {
+    ESP.restart(); // Sửa lại lệnh chuẩn của ESP32
+}
+
 void on_power_off() {
     esp_deep_sleep_start();
 }
 
 const MenuItem side_items[] = {
     {"Reset", nullptr, on_reset},
+    {"Reboot", nullptr, on_reboot},
     {"PowerOff", nullptr, on_power_off}
 };
-const int TOTAL_SIDE_ITEMS = 2;
+const int TOTAL_SIDE_ITEMS = 3;
 
 
 // =======================================================================
@@ -161,6 +167,47 @@ void on_brightness_change(int val) {
 
 char text_input_title_buf[64];
 
+// Đọc ghi RAW EEPROM để tránh 100% lỗi bộ nhớ ảo NVS
+void save_wifi_eeprom(String ssid, String pwd) {
+    EEPROM.begin(512);
+    // Xóa vùng nhớ cũ
+    for(int i=0; i<128; i++) EEPROM.write(i, 0);
+    
+    // Ghi SSID ở vị trí 0
+    for(int i=0; i<ssid.length(); i++) {
+        EEPROM.write(i, ssid[i]);
+    }
+    
+    // Ghi PWD ở vị trí 64
+    for(int i=0; i<pwd.length(); i++) {
+        EEPROM.write(64+i, pwd[i]);
+    }
+    
+    EEPROM.commit();
+}
+
+String get_ssid_eeprom() {
+    EEPROM.begin(512);
+    String s = "";
+    for(int i=0; i<64; i++) {
+        char c = EEPROM.read(i);
+        if(c == 0 || c == 255) break;
+        s += c;
+    }
+    return s;
+}
+
+String get_pwd_eeprom() {
+    EEPROM.begin(512);
+    String s = "";
+    for(int i=64; i<128; i++) {
+        char c = EEPROM.read(i);
+        if(c == 0 || c == 255) break;
+        s += c;
+    }
+    return s;
+}
+
 // Bộ đệm RAM để nhớ mật khẩu ngay lập tức (Chống lỗi NVS ghi chậm hoặc hỏng)
 struct WiFiCache {
     String ssid;
@@ -203,8 +250,8 @@ void on_wifi_selected(int idx) {
       String saved_pwd = get_pwd_cache(wifi_raw_ssid[idx]);
       if (saved_pwd == "") {
           // Nếu RAM chưa có, kiểm tra xem có phải mạng kết nối gần nhất không
-          if (String(wifi_raw_ssid[idx]) == prefs.getString("last_ssid", "")) {
-              saved_pwd = prefs.getString("last_pwd", "");
+          if (String(wifi_raw_ssid[idx]) == get_ssid_eeprom()) {
+              saved_pwd = get_pwd_eeprom();
           }
       }
       
@@ -272,9 +319,9 @@ void setup() {
   u8g2.setContrast(current_brightness); // Áp dụng độ sáng đã lưu
 
   // Tự động kết nối lại Wi-Fi cũ (nếu có)
-  String last_ssid = prefs.getString("last_ssid", "");
-  if (last_ssid != "") {
-      String last_pwd = prefs.getString("last_pwd", "");
+  String last_ssid = get_ssid_eeprom();
+  if (last_ssid.length() > 0) {
+      String last_pwd = get_pwd_eeprom();
       WiFi.mode(WIFI_STA);
       WiFi.disconnect(true); // Xóa state cũ bị kẹt sau khi Soft Reset
       delay(100);
@@ -432,10 +479,12 @@ void loop() {
       if (WiFi.status() == WL_CONNECTED) {
           is_connecting_wifi = false;
           
-          // Lưu mạng vừa kết nối làm mạng mặc định
-          prefs.putString("last_ssid", connecting_ssid);
-          prefs.putString("last_pwd", connecting_pwd);
+          // Lưu mạng vừa kết nối vào EEPROM (không dùng Preferences nữa)
+          save_wifi_eeprom(connecting_ssid, connecting_pwd);
           save_pwd_cache(connecting_ssid, connecting_pwd); // Lưu vào RAM luôn cho chắc
+          
+          // Lưu Last SSID để auto-connect khi boot
+          prefs.putString("last_ssid", connecting_ssid);
           
           Serial.printf("\n[WiFi] Connected successfully to %s\n", connecting_ssid.c_str());
           
