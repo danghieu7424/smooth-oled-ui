@@ -30,14 +30,19 @@ void save_system_state(bool on, int brightness, String ssid, String pwd) {
 SystemState load_system_state() {
     SystemState state;
     EEPROM.get(0, state);
-    // Kiểm tra nếu bộ nhớ rác (chưa từng được ghi)
-    if (state.ssid[0] == (char)255 || state.ssid[0] < 32 || state.ssid[0] > 126) {
+    
+    // Nếu EEPROM hoàn toàn trống (chưa từng ghi), ESP32 sẽ trả về toàn 255 (0xFF)
+    if (state.ssid[0] == (char)255) {
         state.on = false;
         state.ssid[0] = '\0';
         state.pwd[0] = '\0';
-        state.brightness = 20;
+    } else {
+        // Ép kết thúc chuỗi an toàn
+        state.ssid[31] = '\0';
+        state.pwd[63] = '\0';
     }
-    // Đảm bảo brightness không bị rác (trường hợp mới nâng cấp struct)
+    
+    // Đảm bảo brightness luôn nằm trong khoảng hợp lệ
     if (state.brightness < 0 || state.brightness > 255) {
         state.brightness = 20;
     }
