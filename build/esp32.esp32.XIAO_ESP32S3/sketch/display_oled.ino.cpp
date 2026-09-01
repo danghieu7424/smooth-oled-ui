@@ -144,9 +144,9 @@ void on_wifi_selected(int idx);
 
 #line 162 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 String getNvsKey(const char* ssid);
-#line 226 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 230 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup();
-#line 262 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 266 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void loop();
 #line 144 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void open_settings_menu() {
@@ -182,13 +182,17 @@ void on_wifi_selected(int idx) {
           return;
       }
 
-      snprintf(text_input_title_buf, sizeof(text_input_title_buf), "PWD: %s", wifi_raw_ssid[idx]);
+      // Lấy mật khẩu đã lưu từ Preferences. Dùng chuỗi mồi "___NOT_SAVED___" để phân biệt với pass rỗng.
+      String saved_pwd = prefs.getString(getNvsKey(wifi_raw_ssid[idx]).c_str(), "___NOT_SAVED___");
       
-      // Lấy mật khẩu đã lưu từ Preferences
-      String saved_pwd = prefs.getString(getNvsKey(wifi_raw_ssid[idx]).c_str(), "");
-      
-      // Mở Popup Text Input và điền sẵn mật khẩu cũ (nếu có)
-      ui.openTextInput(text_input_title_buf, on_wifi_password_submit, saved_pwd.c_str());
+      if (saved_pwd != "___NOT_SAVED___") {
+          // Nếu đã có mật khẩu lưu trữ, kết nối thẳng luôn
+          on_wifi_password_submit(saved_pwd.c_str());
+      } else {
+          snprintf(text_input_title_buf, sizeof(text_input_title_buf), "PWD: %s", wifi_raw_ssid[idx]);
+          // Chưa có mật khẩu, mở hộp thoại yêu cầu nhập
+          ui.openTextInput(text_input_title_buf, on_wifi_password_submit, "");
+      }
   }
 }
 
