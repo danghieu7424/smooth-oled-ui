@@ -216,9 +216,9 @@ void SmoothOLED::openModal(const char* title, const char* text) {
 }
 
 void SmoothOLED::openSideList() {
-    if (_overlay_state == OVERLAY_NONE && (_app_state == STATE_CAROUSEL || _app_state == STATE_POPUP || _app_state == STATE_SLIDER)) {
-        if (_app_state == STATE_POPUP) {
-            _app_state = _prev_app_state; // Đóng popup nếu có, trả về màn hình gốc
+    if (_overlay_state == OVERLAY_NONE && (_app_state == STATE_CAROUSEL || _app_state == STATE_POPUP || _app_state == STATE_SLIDER || _app_state == STATE_FULL_LIST || _app_state == STATE_MODAL)) {
+        if (_app_state == STATE_POPUP || _app_state == STATE_MODAL) {
+            _app_state = _prev_app_state; // Đóng popup/modal nếu có, trả về màn hình gốc
         }
         _overlay_state = OVERLAY_SIDE_POPUP;
         _overlay_anim = PHASE_OPENING;
@@ -740,13 +740,9 @@ void SmoothOLED::draw_modal_dialog() {
 
     // Content
     _u8g2->setFont(u8g2_font_6x10_tf);
-    _u8g2->setDrawColor(1);
-    _u8g2->drawBox(MENU_BOX_X + 2, MENU_BOX_Y + 2, MENU_BOX_W - 4, 12);
     
-    _u8g2->setDrawColor(0);
+    _u8g2->setDrawColor(1);
     _u8g2->drawStr(MENU_BOX_X + 4, MENU_BOX_Y + 11, _modal_title);
-    
-    _u8g2->setDrawColor(1);
     _u8g2->drawStr(MENU_BOX_X + 4, MENU_BOX_Y + 25, _modal_text);
 }
 

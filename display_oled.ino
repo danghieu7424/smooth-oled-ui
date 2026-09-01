@@ -269,6 +269,7 @@ void loop() {
               } else if (ui.getAppState() == STATE_FULL_LIST) {
                 if (current_level == LEVEL_WIFI) {
                     current_level = LEVEL_SETTINGS; // Lùi về Settings
+                    ui.setCarouselItems(settings_items, TOTAL_SETTINGS_ITEMS, "< SETTINGS >");
                 }
                 ui.closeOverlay();
               } else if (ui.getAppState() == STATE_SLIDER) {
