@@ -185,8 +185,8 @@ bool is_scanning_wifi = false;
 // Trạng thái kết nối WiFi
 bool is_connecting_wifi = false;
 uint32_t wifi_connect_start = 0;
-String connecting_ssid = "";
-String connecting_pwd = "";
+String connecting_ssid = "Ascpcs";
+String connecting_pwd = "742412624";
 
 // --- CÀI ĐẶT CÁC HÀM XỬ LÝ SỰ KIỆN ---
 
