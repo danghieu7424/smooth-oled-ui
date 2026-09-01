@@ -112,11 +112,11 @@ private:
     int _list_cam_target_idx;
     float _list_cam_y;
     const float LIST_LERP_FACTOR = 0.22f;
-    const int MENU_BOX_X = 32;
-    const int MENU_BOX_Y = 16;
-    const int MENU_BOX_W = 64;
-    const int MENU_BOX_H = 41;
-    const int ITEM_START_Y = 24;
+    const int MENU_BOX_X = 14;
+    const int MENU_BOX_Y = 8;
+    const int MENU_BOX_W = 100;
+    const int MENU_BOX_H = 48;
+    const int ITEM_START_Y = 18;
     const int LINE_HEIGHT = 12;
 
     // --- Biến Marquee ---

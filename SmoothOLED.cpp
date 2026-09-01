@@ -462,14 +462,23 @@ void SmoothOLED::update_list_physics() {
 void SmoothOLED::draw_popup_menu() {
     // Xóa nền đen để che đi phần Main Menu bên dưới
     _u8g2->setDrawColor(0);
-    _u8g2->drawBox(MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H);
+    _u8g2->drawRBox(MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H, 2);
     _u8g2->setDrawColor(1);
 
-    _u8g2->drawFrame(MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H);
+    _u8g2->drawRFrame(MENU_BOX_X, MENU_BOX_Y, MENU_BOX_W, MENU_BOX_H, 2);
+    
+    // Vẽ vạch ngang phân cách nút bấm ở đáy
+    int button_bar_y = MENU_BOX_Y + MENU_BOX_H - 12;
+    _u8g2->drawLine(MENU_BOX_X, button_bar_y, MENU_BOX_X + MENU_BOX_W, button_bar_y);
+    
+    // Vẽ nút bấm ảo (Hint)
+    _u8g2->setFont(u8g2_font_5x7_tf);
+    _u8g2->drawStr(MENU_BOX_X + 6, button_bar_y + 9, "[ESC] Cancel");
+    _u8g2->drawStr(MENU_BOX_X + MENU_BOX_W - 50, button_bar_y + 9, "[ENT] OK");
 
     _u8g2->setFont(u8g2_font_6x10_tf);
     
-    _u8g2->setClipWindow(MENU_BOX_X + 2, MENU_BOX_Y + 2, MENU_BOX_X + MENU_BOX_W - 3, MENU_BOX_Y + MENU_BOX_H - 3);
+    _u8g2->setClipWindow(MENU_BOX_X + 2, MENU_BOX_Y + 2, MENU_BOX_X + MENU_BOX_W - 3, button_bar_y - 1);
     
     int cam_y_int = (int)(_list_cam_y + 0.5f);
 
