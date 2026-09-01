@@ -2,6 +2,7 @@
 #include <U8g2lib.h>
 #include <Wire.h>
 #include <Preferences.h>
+#include <WiFi.h>
 #include "SmoothOLED.h"
 
 // Khởi tạo Preferences lưu trữ vào Flash
@@ -66,6 +67,8 @@ static const unsigned char icon_wifi[] U8X8_PROGMEM = {
 void open_settings_menu();
 void open_brightness_slider();
 void on_brightness_change(int val);
+void on_enter_wifi();
+void on_wifi_password_submit(const char* pwd);
 
 const MenuItem menu_items[] = {
     {"Home", icon_home, nullptr},
@@ -75,7 +78,7 @@ const MenuItem menu_items[] = {
 const int TOTAL_MAIN_ITEMS = 3;
 
 const MenuItem settings_items[] = {
-    {"WiFi", icon_wifi, nullptr},
+    {"WiFi", icon_wifi, on_enter_wifi},
     {"Brightness", icon_brightness, open_brightness_slider}
 };
 const int TOTAL_SETTINGS_ITEMS = 2;
@@ -105,10 +108,18 @@ const int TOTAL_SIDE_ITEMS = 7;
 // =======================================================================
 
 // Quản lý trạng thái Menu
-enum MenuLevel { LEVEL_MAIN, LEVEL_SETTINGS };
+enum MenuLevel { LEVEL_MAIN, LEVEL_SETTINGS, LEVEL_WIFI };
 MenuLevel current_level = LEVEL_MAIN;
 int current_brightness = 20; // Độ sáng hiện tại
 int saved_brightness = 20; // Độ sáng đã lưu trong Flash
+
+// Quản lý WiFi
+#define MAX_WIFI_NETWORKS 15
+char wifi_ssid[MAX_WIFI_NETWORKS][32];
+char wifi_raw_ssid[MAX_WIFI_NETWORKS][32];
+const char* wifi_ssid_ptrs[MAX_WIFI_NETWORKS];
+int wifi_count = 0;
+bool is_scanning_wifi = false;
 
 // --- CÀI ĐẶT CÁC HÀM XỬ LÝ SỰ KIỆN ---
 
@@ -125,6 +136,30 @@ void open_brightness_slider() {
 void on_brightness_change(int val) {
   current_brightness = val;
   u8g2.setContrast(current_brightness); // Lệnh phần cứng đổi độ sáng OLED trực tiếp
+}
+
+void on_enter_wifi() {
+  current_level = LEVEL_WIFI;
+  is_scanning_wifi = true;
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+  WiFi.scanNetworks(true); // Quét bất đồng bộ (Async)
+  
+  // Khởi tạo UI hiển thị tạm thời "Scanning..."
+  wifi_count = 1;
+  strncpy(wifi_ssid[0], "Scanning...", 31);
+  wifi_ssid_ptrs[0] = wifi_ssid[0];
+  ui.setPopupListItems(wifi_ssid_ptrs, wifi_count);
+  ui.openPopup();
+}
+
+void on_wifi_password_submit(const char* pwd) {
+  int idx = ui.getPopupSelectedIndex();
+  if (idx >= 0 && idx < wifi_count) {
+      String ssid = wifi_raw_ssid[idx];
+      Serial.printf("\n[WiFi] Connecting to %s with password: %s\n", ssid.c_str(), pwd);
+      WiFi.begin(ssid.c_str(), pwd);
+  }
 }
 
 void setup() {
@@ -161,11 +196,18 @@ void loop() {
     char c = Serial.read();
     if (c == 'U') ui.up();        // Mũi tên lên / Trái
     else if (c == 'D') ui.down(); // Mũi tên xuống / Phải
-    else if (c == 'P') ui.openPopup(); // Phím End (trước đây là Win)
+    else if (c == 'P') {
+      ui.setPopupListItems(popup_items, TOTAL_POPUP_ITEMS);
+      ui.openPopup(); // Phím End
+    }
     else if (c == 'S') ui.openSideList(); // Phím Home
     else if (c == 'C') { // Phím Esc
       if (ui.isOverlayOpen()) {
         ui.closeOverlay(); // Đóng Side List
+      } else if (ui.getAppState() == STATE_TEXT_INPUT) {
+        if (!ui.backspace()) {
+           // Nếu backspace trả về false (nghĩa là đã xóa hết chữ và bấm tiếp), nó sẽ tự đóng và lùi về Popup
+        }
       } else if (ui.getAppState() == STATE_POPUP) {
         ui.closeOverlay(); // Đóng Popup List
       } else if (ui.getAppState() == STATE_SLIDER) {
@@ -186,6 +228,16 @@ void loop() {
           prefs.putInt("brightness", current_brightness);
           saved_brightness = current_brightness;
           ui.closeOverlay(); // Đóng Slider, xác nhận lưu
+      } else if (!ui.isOverlayOpen() && ui.getAppState() == STATE_POPUP) {
+          if (current_level == LEVEL_WIFI) {
+              // Bấm vào 1 mạng WiFi -> Mở bàn phím nhập mật khẩu
+              int idx = ui.getPopupSelectedIndex();
+              if (idx >= 0 && idx < wifi_count && strncmp(wifi_ssid[0], "Scanning", 8) != 0 && strncmp(wifi_ssid[0], "No networks", 10) != 0) {
+                  char title[32];
+                  snprintf(title, sizeof(title), "PWD: %s", wifi_raw_ssid[idx]);
+                  ui.openTextInput(title, on_wifi_password_submit);
+              }
+          }
       } else if (!ui.isOverlayOpen() && ui.getAppState() == STATE_CAROUSEL) {
           const MenuItem* active_item = ui.getCurrentMenuItem();
           if (active_item && active_item->on_enter) {
@@ -193,6 +245,35 @@ void loop() {
           }
       }
     }
+  }
+
+  // --- KIỂM TRA TRẠNG THÁI QUÉT WIFI ASYNC ---
+  if (is_scanning_wifi) {
+      int n = WiFi.scanComplete();
+      if (n >= 0) {
+          is_scanning_wifi = false;
+          wifi_count = (n > MAX_WIFI_NETWORKS) ? MAX_WIFI_NETWORKS : n;
+          if (wifi_count == 0) {
+              strncpy(wifi_ssid[0], "No networks", 31);
+              wifi_count = 1;
+          } else {
+              for (int i = 0; i < wifi_count; i++) {
+                  // Lưu tên SSID thật vào raw
+                  strncpy(wifi_raw_ssid[i], WiFi.SSID(i).c_str(), 31);
+                  wifi_raw_ssid[i][31] = '\0';
+                  // Định dạng tên + cường độ hiển thị trên OLED
+                  snprintf(wifi_ssid[i], 31, "%s [%d]", wifi_raw_ssid[i], WiFi.RSSI(i));
+                  wifi_ssid_ptrs[i] = wifi_ssid[i];
+              }
+          }
+          ui.setPopupListItems(wifi_ssid_ptrs, wifi_count);
+          WiFi.scanDelete(); // Xóa bộ đệm
+      } else if (n == WIFI_SCAN_FAILED) {
+          is_scanning_wifi = false;
+          strncpy(wifi_ssid[0], "Scan Failed", 31);
+          wifi_count = 1;
+          ui.setPopupListItems(wifi_ssid_ptrs, wifi_count);
+      }
   }
 
   // Cập nhật UI (60FPS)

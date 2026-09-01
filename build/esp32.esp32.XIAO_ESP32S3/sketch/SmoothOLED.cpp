@@ -105,24 +105,40 @@ void SmoothOLED::up() {
         if (_current_index > 0) _current_index--;
         else _current_index = _carousel_count - 1;
     } else if (_app_state == STATE_SLIDER) {
-        _target_slider_val -= (float)_slider_max * 0.05f; // Mũi tên trái -> Giảm
-        if (_target_slider_val < 0) _target_slider_val = 0;
+        _target_slider_val -= 5.0f;
+        if (_target_slider_val < 0.0f) _target_slider_val = 0.0f;
+    } else if (_app_state == STATE_TEXT_INPUT) {
+        _current_char_idx--;
+        if (_current_char_idx < 32) _current_char_idx = 127;
+        if (_current_char_idx < 127) {
+            _text_buffer[_cursor_pos] = (char)_current_char_idx;
+        } else {
+            _text_buffer[_cursor_pos] = '\0'; // Ký tự [OK]
+        }
     }
 }
 
 void SmoothOLED::down() {
     if (_overlay_state == OVERLAY_SIDE_POPUP) {
-        if (_side_selected_idx < _side_count - 1) _side_selected_idx++;
-        else _side_selected_idx = 0;
-    } else if (_app_state == STATE_POPUP && _overlay_state == OVERLAY_NONE) {
-        if (_current_list_selection < _popup_count - 1) _current_list_selection++;
-        else _current_list_selection = 0;
-    } else if (_app_state == STATE_CAROUSEL && _overlay_state == OVERLAY_NONE) {
-        if (_current_index < _carousel_count - 1) _current_index++;
-        else _current_index = 0;
+        _side_selected_idx++;
+        if (_side_selected_idx >= _side_count) _side_selected_idx = 0;
+    } else if (_app_state == STATE_CAROUSEL) {
+        _current_index++;
+        if (_current_index >= _carousel_count) _current_index = 0;
+    } else if (_app_state == STATE_POPUP) {
+        _current_list_selection++;
+        if (_current_list_selection >= _popup_count) _current_list_selection = 0;
     } else if (_app_state == STATE_SLIDER) {
-        _target_slider_val += (float)_slider_max * 0.05f; // Mũi tên phải -> Tăng
-        if (_target_slider_val > _slider_max) _target_slider_val = (float)_slider_max;
+        _target_slider_val += 5.0f;
+        if (_target_slider_val > _slider_max) _target_slider_val = _slider_max;
+    } else if (_app_state == STATE_TEXT_INPUT) {
+        _current_char_idx++;
+        if (_current_char_idx > 127) _current_char_idx = 32;
+        if (_current_char_idx < 127) {
+            _text_buffer[_cursor_pos] = (char)_current_char_idx;
+        } else {
+            _text_buffer[_cursor_pos] = '\0'; // Ký tự [OK]
+        }
     }
 }
 
@@ -154,7 +170,8 @@ void SmoothOLED::openSideList() {
 }
 
 void SmoothOLED::openSlider(const char* title, int current_val, int max_val, SliderCallback on_change) {
-    if (_overlay_state == OVERLAY_NONE) {
+    if (_overlay_state == OVERLAY_NONE && (_app_state == STATE_CAROUSEL || _app_state == STATE_POPUP)) {
+        _prev_app_state = _app_state;
         _app_state = STATE_SLIDER;
         _slider_title = title;
         _slider_max = max_val;
@@ -165,18 +182,71 @@ void SmoothOLED::openSlider(const char* title, int current_val, int max_val, Sli
     }
 }
 
-void SmoothOLED::closeOverlay() {
-    if (_overlay_state == OVERLAY_SIDE_POPUP) {
-        _overlay_anim = PHASE_CLOSING;
-    } else if (_app_state == STATE_POPUP) {
-        _app_state = _prev_app_state; // Trả về Carousel hoặc Slider
-    } else if (_app_state == STATE_SLIDER) {
-        _app_state = STATE_CAROUSEL;
+void SmoothOLED::openTextInput(const char* title, TextCallback on_submit) {
+    if (_overlay_state == OVERLAY_NONE && (_app_state == STATE_CAROUSEL || _app_state == STATE_POPUP)) {
+        _prev_app_state = _app_state;
+        _app_state = STATE_TEXT_INPUT;
+        _text_input_title = title;
+        _text_on_submit = on_submit;
+        memset(_text_buffer, 0, sizeof(_text_buffer));
+        _cursor_pos = 0;
+        _current_char_idx = 97; // Bắt đầu ở chữ 'a' (ASCII 97)
+        _text_buffer[0] = (char)_current_char_idx;
+        _last_switch = millis();
     }
 }
 
+void SmoothOLED::closeOverlay() {
+    if (_overlay_state == OVERLAY_SIDE_POPUP) {
+        _overlay_anim = PHASE_CLOSING;
+    } else if (_app_state == STATE_POPUP || _app_state == STATE_SLIDER || _app_state == STATE_TEXT_INPUT) {
+        _app_state = _prev_app_state; // Trả về màn hình gốc
+    }
+}
+
+bool SmoothOLED::backspace() {
+    if (_app_state == STATE_TEXT_INPUT) {
+        if (_cursor_pos > 0) {
+            _text_buffer[_cursor_pos] = '\0'; // Xóa ký tự hiện tại
+            _cursor_pos--; // Lùi con trỏ
+            // Đọc lại ký tự trước đó để tiếp tục cuộn
+            _current_char_idx = (int)_text_buffer[_cursor_pos];
+            if (_current_char_idx == 0) _current_char_idx = 127; 
+            return true;
+        } else {
+            // Hủy nhập liệu
+            _app_state = _prev_app_state;
+            return false; 
+        }
+    }
+    return false;
+}
+
 void SmoothOLED::select() {
-    // Để dự phòng cho tính năng Action sau này
+    if (_overlay_state == OVERLAY_SIDE_POPUP) {
+        _overlay_anim = PHASE_CLOSING;
+    } else if (_app_state == STATE_CAROUSEL) {
+        _target_cursor_w = MENU_BOX_W + 10;
+    } else if (_app_state == STATE_POPUP) {
+        _list_bounce_timer = 10;
+    } else if (_app_state == STATE_TEXT_INPUT) {
+        if (_current_char_idx == 127) {
+            // Xác nhận (Submit)
+            if (_text_on_submit) {
+                _text_buffer[_cursor_pos] = '\0';
+                _text_on_submit(_text_buffer);
+            }
+            _app_state = _prev_app_state;
+        } else {
+            // Next char
+            if (_cursor_pos < sizeof(_text_buffer) - 2) {
+                _cursor_pos++;
+                _current_char_idx = 97; // 'a'
+                _text_buffer[_cursor_pos] = 'a';
+                _text_buffer[_cursor_pos + 1] = '\0';
+            }
+        }
+    }
 }
 
 void SmoothOLED::flush_display() {
@@ -469,8 +539,44 @@ void SmoothOLED::draw_slider_menu(int offset_x) {
     _u8g2->drawStr(64 - (val_w / 2) + offset_x, 56, val_str);
 }
 
+void SmoothOLED::draw_text_input_menu(int offset_x) {
+    _u8g2->setDrawColor(1);
+    
+    // Vẽ tiêu đề
+    _u8g2->setFont(u8g2_font_6x10_tf);
+    int str_width = _u8g2->getStrWidth(_text_input_title);
+    _u8g2->drawStr(64 - (str_width / 2) + offset_x, 12, _text_input_title);
+
+    // Vẽ khung nhập liệu
+    _u8g2->drawRFrame(4 + offset_x, 24, 120, 16, 2);
+
+    // Hiển thị text đã nhập (hoặc đang nhập)
+    _u8g2->setCursor(8 + offset_x, 35);
+    _u8g2->print(_text_buffer);
+
+    // Tính vị trí con trỏ hiện tại trên màn hình
+    char temp[64];
+    strncpy(temp, _text_buffer, _cursor_pos);
+    temp[_cursor_pos] = '\0';
+    int cursor_x = 8 + _u8g2->getStrWidth(temp);
+
+    if (_current_char_idx == 127) {
+        // Trạng thái nút [OK]
+        _u8g2->drawBox(cursor_x + offset_x, 26, 16, 12);
+        _u8g2->setDrawColor(0);
+        _u8g2->drawStr(cursor_x + 2 + offset_x, 35, "OK");
+        _u8g2->setDrawColor(1);
+    } else {
+        // Vẽ gạch dưới con trỏ
+        _u8g2->drawLine(cursor_x + offset_x, 37, cursor_x + 6 + offset_x, 37);
+        // Mũi tên gợi ý
+        _u8g2->drawTriangle(cursor_x + 3 + offset_x, 20, cursor_x + offset_x, 23, cursor_x + 6 + offset_x, 23);
+        _u8g2->drawTriangle(cursor_x + 3 + offset_x, 41, cursor_x + offset_x, 38, cursor_x + 6 + offset_x, 38);
+    }
+}
+
 // =================================================================================
-// MAIN LOOP & STATE MACHINE
+// GAME LOOP (Cập nhật 60FPS)
 // =================================================================================
 
 void SmoothOLED::update() {
@@ -559,6 +665,18 @@ void SmoothOLED::update() {
         } else if (_app_state == STATE_SLIDER) {
             update_slider_physics();
             draw_slider_menu(background_offset_x);
+        } else if (_app_state == STATE_TEXT_INPUT) {
+            // Tự động render lại màn hình nền dựa trên _prev_app_state
+            if (_prev_app_state == STATE_CAROUSEL) {
+                draw_carousel_menu(background_offset_x);
+            } else if (_prev_app_state == STATE_POPUP) {
+                // Tình huống: Popup đè lên Carousel, TextInput đè lên Popup
+                draw_carousel_menu(background_offset_x); 
+                draw_popup_menu();
+            }
+            if (_overlay_state == OVERLAY_NONE) {
+                draw_text_input_menu();
+            }
         }
 
         // 3. Draw Overlay

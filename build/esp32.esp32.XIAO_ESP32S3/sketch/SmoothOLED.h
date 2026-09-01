@@ -8,6 +8,7 @@
 
 typedef void (*MenuCallback)();
 typedef void (*SliderCallback)(int);
+typedef void (*TextCallback)(const char*);
 
 struct MenuItem {
     const char* title;
@@ -18,7 +19,8 @@ struct MenuItem {
 enum AppState {
     STATE_CAROUSEL,
     STATE_POPUP,
-    STATE_SLIDER
+    STATE_SLIDER,
+    STATE_TEXT_INPUT
 };
 
 enum OverlayState {
@@ -54,7 +56,9 @@ public:
     void openPopup();
     void openSideList();
     void openSlider(const char* title, int current_val, int max_val, SliderCallback on_change = nullptr);
+    void openTextInput(const char* title, TextCallback on_submit);
     void closeOverlay();
+    bool backspace();
     void select();
 
     // --- State API ---
@@ -63,6 +67,8 @@ public:
     AppState getAppState() const { return _app_state; }
     int getSliderValue() const { return (int)(_target_slider_val + 0.5f); }
     const MenuItem* getCurrentMenuItem() const { return (_carousel_items != nullptr) ? &_carousel_items[_current_index] : nullptr; }
+    int getPopupSelectedIndex() const { return _current_list_selection; }
+    const char* getPopupSelectedItem() const { return (_popup_items != nullptr) ? _popup_items[_current_list_selection] : nullptr; }
 
 private:
     U8G2* _u8g2;
@@ -131,6 +137,13 @@ private:
     const char* _slider_title;
     SliderCallback _slider_on_change;
 
+    // --- Biến Text Input ---
+    char _text_buffer[64];
+    int _cursor_pos;
+    int _current_char_idx;
+    const char* _text_input_title;
+    TextCallback _text_on_submit;
+
     void flush_display();
 
     void update_physics();
@@ -144,6 +157,8 @@ private:
 
     void update_slider_physics();
     void draw_slider_menu(int offset_x = 0);
+    
+    void draw_text_input_menu(int offset_x = 0);
 };
 
 #endif
