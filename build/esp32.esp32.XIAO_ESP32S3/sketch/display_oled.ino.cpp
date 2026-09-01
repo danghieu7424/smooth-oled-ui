@@ -4,6 +4,7 @@
 #include <Wire.h>
 #include <WiFi.h>
 #include <EEPROM.h>
+#include <nvs_flash.h>
 #include "SmoothOLED.h"
 
 int saved_brightness = 20;
@@ -16,19 +17,19 @@ struct SystemState {
     int brightness;
 };
 
-#line 18 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 19 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void save_system_state(bool on, int brightness, String ssid, String pwd);
-#line 30 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 31 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 SystemState load_system_state();
-#line 145 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 146 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void on_restart();
-#line 149 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 150 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void on_power_off();
-#line 269 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 270 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup();
-#line 312 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 320 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void loop();
-#line 18 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 19 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void save_system_state(bool on, int brightness, String ssid, String pwd) {
     SystemState state;
     state.on = on;
@@ -282,6 +283,13 @@ void on_wifi_password_submit(const char* pwd) {
 
 void setup() {
   Serial.begin(921600);
+  
+  // Tự động khôi phục phân vùng NVS bị hỏng (Lý do cốt lõi khiến Flash không lưu được)
+  esp_err_t err = nvs_flash_init();
+  if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+      nvs_flash_erase();
+      nvs_flash_init();
+  }
   
   // Nạp cấu hình từ Flash
   EEPROM.begin(512); // Khởi tạo vùng nhớ EEPROM thô để lưu WiFi và Brightness

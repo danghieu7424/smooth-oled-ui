@@ -3,6 +3,7 @@
 #include <Wire.h>
 #include <WiFi.h>
 #include <EEPROM.h>
+#include <nvs_flash.h>
 #include "SmoothOLED.h"
 
 int saved_brightness = 20;
@@ -268,6 +269,13 @@ void on_wifi_password_submit(const char* pwd) {
 
 void setup() {
   Serial.begin(921600);
+  
+  // Tự động khôi phục phân vùng NVS bị hỏng (Lý do cốt lõi khiến Flash không lưu được)
+  esp_err_t err = nvs_flash_init();
+  if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+      nvs_flash_erase();
+      nvs_flash_init();
+  }
   
   // Nạp cấu hình từ Flash
   EEPROM.begin(512); // Khởi tạo vùng nhớ EEPROM thô để lưu WiFi và Brightness
