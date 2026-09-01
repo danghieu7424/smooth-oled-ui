@@ -3,11 +3,42 @@
 #include <Wire.h>
 #include <Preferences.h>
 #include <WiFi.h>
+#include <EEPROM.h>
 #include "SmoothOLED.h"
 
-// Khởi tạo Preferences lưu trữ vào Flash
+// Khởi tạo Preferences lưu trữ vào Flash (chỉ cho độ sáng)
 Preferences prefs;
-Preferences prefs_wifi; // Phân vùng mới sạch sẽ để lưu Wi-Fi tránh lỗi corrupt
+int saved_brightness = 20;
+
+// Cấu trúc lưu WiFi bằng EEPROM thô (chống mọi lỗi NVS)
+struct WiFiState {
+    bool on;
+    char ssid[32];
+    char pwd[64];
+};
+
+void save_wifi_state(bool on, String ssid, String pwd) {
+    WiFiState state;
+    state.on = on;
+    strncpy(state.ssid, ssid.c_str(), 31);
+    state.ssid[31] = '\0';
+    strncpy(state.pwd, pwd.c_str(), 63);
+    state.pwd[63] = '\0';
+    EEPROM.put(0, state);
+    EEPROM.commit();
+}
+
+WiFiState load_wifi_state() {
+    WiFiState state;
+    EEPROM.get(0, state);
+    // Kiểm tra nếu bộ nhớ rác (chưa từng được ghi)
+    if (state.ssid[0] == (char)255 || state.ssid[0] < 32 || state.ssid[0] > 126) {
+        state.on = false;
+        state.ssid[0] = '\0';
+        state.pwd[0] = '\0';
+    }
+    return state;
+}
 
 // Khởi tạo màn hình
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
@@ -173,9 +204,11 @@ void on_wifi_selected(int idx) {
 
       // KIỂM TRA: Nếu mạng này TRÙNG với mạng đã lưu trong Flash
       String saved_pwd = "";
-      if (String(wifi_raw_ssid[idx]) == prefs_wifi.getString("ssid", "")) {
+      WiFiState state = load_wifi_state();
+      
+      if (String(wifi_raw_ssid[idx]) == String(state.ssid)) {
           // Đã có mật khẩu trong Flash -> Lấy ra để điền sẵn vào ô Input
-          saved_pwd = prefs_wifi.getString("pwd", "");
+          saved_pwd = String(state.pwd);
       }
       
       // Mở ô nhập Pass và ĐIỀN SẴN mật khẩu cũ (như thẻ input type="text" có value)
@@ -229,7 +262,7 @@ void setup() {
   
   // Nạp cấu hình từ Flash
   prefs.begin("oled-ui", false);
-  prefs_wifi.begin("wifi_data", false); // Không gian mới hoàn toàn chống lỗi
+  EEPROM.begin(512); // Khởi tạo vùng nhớ EEPROM thô để lưu WiFi
   
   saved_brightness = prefs.getInt("brightness", 20); // Nếu chưa lưu, mặc định là 20
   current_brightness = saved_brightness;
@@ -240,15 +273,13 @@ void setup() {
   u8g2.setContrast(current_brightness); // Áp dụng độ sáng đã lưu
 
   // Khởi động lại: Xem trạng thái trước đó có đang kết nối không
-  bool wifi_on = prefs_wifi.getBool("on", false);
-  if (wifi_on) {
+  WiFiState state = load_wifi_state();
+  if (state.on) {
       // Nếu có thì bật wifi và kết nối lại ssid và password cũ
-      String last_ssid = prefs_wifi.getString("ssid", "");
-      String last_pwd = prefs_wifi.getString("pwd", "");
       WiFi.mode(WIFI_STA);
       WiFi.disconnect(true); // Xóa state lơ lửng của phần cứng
       delay(100);
-      WiFi.begin(last_ssid.c_str(), last_pwd.c_str());
+      WiFi.begin(state.ssid, state.pwd);
       WiFi.setAutoReconnect(true); // Tự động kết nối lại nếu rớt mạng
   } else {
       // Nếu không thì không bật
@@ -304,7 +335,8 @@ void loop() {
                     // Nếu thoát ra mà không có kết nối nào, tắt Wi-Fi để tiết kiệm pin
                     if (WiFi.status() != WL_CONNECTED) {
                         WiFi.mode(WIFI_OFF);
-                        prefs_wifi.putBool("on", false);
+                        WiFiState state = load_wifi_state();
+                        save_wifi_state(false, state.ssid, state.pwd); // Chỉ cập nhật cờ on thành false
                     }
                 }
                 ui.closeOverlay();
@@ -325,7 +357,8 @@ void loop() {
                   // Đang ở danh sách Wi-Fi (hoặc Modal), ấn Backspace để ngắt kết nối hiện tại
                   if (WiFi.status() == WL_CONNECTED) {
                       WiFi.disconnect();
-                      prefs_wifi.putBool("on", false); // Cập nhật trạng thái tắt kết nối vào flash
+                      WiFiState state = load_wifi_state();
+                      save_wifi_state(false, state.ssid, state.pwd); // Cập nhật trạng thái tắt kết nối vào Flash
                       
                       // Xóa dấu * khỏi danh sách ngay lập tức
                       for (int i = 0; i < wifi_count; i++) {
@@ -436,10 +469,8 @@ void loop() {
       if (WiFi.status() == WL_CONNECTED) {
           is_connecting_wifi = false;
           
-          // Mật khẩu đúng và kết nối thành công: Lưu trạng thái bật và SSID/PWD vào Flash
-          prefs_wifi.putBool("on", true);
-          prefs_wifi.putString("ssid", connecting_ssid);
-          prefs_wifi.putString("pwd", connecting_pwd);
+          // Mật khẩu đúng và kết nối thành công: Lưu trạng thái bật và SSID/PWD vào Flash EEPROM
+          save_wifi_state(true, connecting_ssid, connecting_pwd);
           
           Serial.printf("\n[WiFi] Connected successfully to %s\n", connecting_ssid.c_str());
           
