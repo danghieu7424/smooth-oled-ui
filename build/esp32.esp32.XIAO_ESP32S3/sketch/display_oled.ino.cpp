@@ -142,15 +142,15 @@ String connecting_pwd = "";
 
 void on_wifi_selected(int idx);
 
-#line 161 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 163 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 const char * getNvsKey(const char* ssid);
-#line 184 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 186 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void save_pwd_cache(String ssid, String pwd);
-#line 198 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 200 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 String get_pwd_cache(String ssid);
-#line 271 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 273 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup();
-#line 307 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 309 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void loop();
 #line 144 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void open_settings_menu() {
@@ -167,6 +167,8 @@ void on_brightness_change(int val) {
   current_brightness = val;
   u8g2.setContrast(current_brightness); // Lệnh phần cứng đổi độ sáng OLED trực tiếp
 }
+
+char text_input_title_buf[64];
 
 // Hàm rút gọn Key để lưu NVS (giới hạn 15 ký tự, dùng mảng tĩnh chống lỗi bộ nhớ)
 char nvs_key_buf[16];

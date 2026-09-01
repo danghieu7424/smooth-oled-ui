@@ -156,6 +156,8 @@ void on_brightness_change(int val) {
   u8g2.setContrast(current_brightness); // Lệnh phần cứng đổi độ sáng OLED trực tiếp
 }
 
+char text_input_title_buf[64];
+
 // Hàm rút gọn Key để lưu NVS (giới hạn 15 ký tự, dùng mảng tĩnh chống lỗi bộ nhớ)
 char nvs_key_buf[16];
 const char* getNvsKey(const char* ssid) {
