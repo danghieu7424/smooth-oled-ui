@@ -62,6 +62,15 @@ static const unsigned char icon_wifi[] U8X8_PROGMEM = {
   0x00, 0x18, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x18, 0x00, 
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
+// [MỚI] Icon esp now - Vẽ trên khung 24x24 px
+static const unsigned char icon_esp_now[] U8X8_PROGMEM = {
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x02, 0x60, 0x00, 0x06, 
+  0x30, 0x00, 0x0c, 0x10, 0x42, 0x08, 0x18, 0x81, 0x18, 0x18, 0x99, 0x18, 
+  0x18, 0x99, 0x18, 0x18, 0x81, 0x18, 0x10, 0x42, 0x08, 0x30, 0x18, 0x0c, 
+  0x60, 0x18, 0x06, 0x40, 0x18, 0x02, 0x00, 0x18, 0x00, 0x00, 0x18, 0x00, 
+  0x00, 0x18, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x3c, 0x00, 0x00, 0x3c, 0x00, 
+  0x00, 0x7e, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 
 // --- KHAI BÁO CÁC HÀM XỬ LÝ SỰ KIỆN (CALLBACKS) ---
 void open_settings_menu();
@@ -79,9 +88,10 @@ const int TOTAL_MAIN_ITEMS = 3;
 
 const MenuItem settings_items[] = {
     {"WiFi", icon_wifi, on_enter_wifi},
+    {"ESP NOW", icon_esp_now, nullptr},
     {"Brightness", icon_brightness, open_brightness_slider}
 };
-const int TOTAL_SETTINGS_ITEMS = 2;
+const int TOTAL_SETTINGS_ITEMS = 3;
 
 const char* popup_items[] = {
     "ScreenOff",
@@ -117,11 +127,13 @@ int saved_brightness = 20; // Độ sáng đã lưu trong Flash
 #define MAX_WIFI_NETWORKS 15
 char wifi_ssid[MAX_WIFI_NETWORKS][32];
 char wifi_raw_ssid[MAX_WIFI_NETWORKS][32];
-const char* wifi_ssid_ptrs[MAX_WIFI_NETWORKS];
+MenuItem wifi_menu_items[MAX_WIFI_NETWORKS];
 int wifi_count = 0;
 bool is_scanning_wifi = false;
 
 // --- CÀI ĐẶT CÁC HÀM XỬ LÝ SỰ KIỆN ---
+
+void on_wifi_selected();
 
 void open_settings_menu() {
   current_level = LEVEL_SETTINGS;
@@ -138,6 +150,16 @@ void on_brightness_change(int val) {
   u8g2.setContrast(current_brightness); // Lệnh phần cứng đổi độ sáng OLED trực tiếp
 }
 
+void on_wifi_selected() {
+  int idx = ui.getCarouselIndex();
+  // Chặn mở mật khẩu nếu đang Scanning, không có mạng, hoặc lỗi
+  if (idx >= 0 && idx < wifi_count && strncmp(wifi_ssid[0], "Scanning", 8) != 0 && strncmp(wifi_ssid[0], "No networks", 10) != 0 && strncmp(wifi_ssid[0], "Scan Failed", 11) != 0) {
+      char title[32];
+      snprintf(title, sizeof(title), "PWD: %s", wifi_raw_ssid[idx]);
+      ui.openTextInput(title, on_wifi_password_submit);
+  }
+}
+
 void on_enter_wifi() {
   current_level = LEVEL_WIFI;
   is_scanning_wifi = true;
@@ -148,13 +170,12 @@ void on_enter_wifi() {
   // Khởi tạo UI hiển thị tạm thời "Scanning..."
   wifi_count = 1;
   strncpy(wifi_ssid[0], "Scanning...", 31);
-  wifi_ssid_ptrs[0] = wifi_ssid[0];
-  ui.setPopupListItems(wifi_ssid_ptrs, wifi_count);
-  ui.openPopup();
+  wifi_menu_items[0] = {wifi_ssid[0], icon_wifi, nullptr};
+  ui.setCarouselItems(wifi_menu_items, wifi_count, "< WIFI NETWORKS >");
 }
 
 void on_wifi_password_submit(const char* pwd) {
-  int idx = ui.getPopupSelectedIndex();
+  int idx = ui.getCarouselIndex();
   if (idx >= 0 && idx < wifi_count) {
       String ssid = wifi_raw_ssid[idx];
       Serial.printf("\n[WiFi] Connecting to %s with password: %s\n", ssid.c_str(), pwd);
@@ -218,6 +239,9 @@ void loop() {
       } else if (ui.getAppState() == STATE_CAROUSEL && current_level == LEVEL_SETTINGS) {
         current_level = LEVEL_MAIN; // Lùi về Main Menu
         ui.setCarouselItems(menu_items, TOTAL_MAIN_ITEMS, "< MAIN MENU >");
+      } else if (ui.getAppState() == STATE_CAROUSEL && current_level == LEVEL_WIFI) {
+        current_level = LEVEL_SETTINGS; // Lùi về Settings
+        ui.setCarouselItems(settings_items, TOTAL_SETTINGS_ITEMS, "< SETTINGS >");
       }
     }
     else if (c == 'E') { // Phím Enter
@@ -228,16 +252,6 @@ void loop() {
           prefs.putInt("brightness", current_brightness);
           saved_brightness = current_brightness;
           ui.closeOverlay(); // Đóng Slider, xác nhận lưu
-      } else if (!ui.isOverlayOpen() && ui.getAppState() == STATE_POPUP) {
-          if (current_level == LEVEL_WIFI) {
-              // Bấm vào 1 mạng WiFi -> Mở bàn phím nhập mật khẩu
-              int idx = ui.getPopupSelectedIndex();
-              if (idx >= 0 && idx < wifi_count && strncmp(wifi_ssid[0], "Scanning", 8) != 0 && strncmp(wifi_ssid[0], "No networks", 10) != 0) {
-                  char title[32];
-                  snprintf(title, sizeof(title), "PWD: %s", wifi_raw_ssid[idx]);
-                  ui.openTextInput(title, on_wifi_password_submit);
-              }
-          }
       } else if (!ui.isOverlayOpen() && ui.getAppState() == STATE_CAROUSEL) {
           const MenuItem* active_item = ui.getCurrentMenuItem();
           if (active_item && active_item->on_enter) {
@@ -255,6 +269,7 @@ void loop() {
           wifi_count = (n > MAX_WIFI_NETWORKS) ? MAX_WIFI_NETWORKS : n;
           if (wifi_count == 0) {
               strncpy(wifi_ssid[0], "No networks", 31);
+              wifi_menu_items[0] = {wifi_ssid[0], icon_wifi, nullptr};
               wifi_count = 1;
           } else {
               for (int i = 0; i < wifi_count; i++) {
@@ -263,16 +278,21 @@ void loop() {
                   wifi_raw_ssid[i][31] = '\0';
                   // Định dạng tên + cường độ hiển thị trên OLED
                   snprintf(wifi_ssid[i], 31, "%s [%d]", wifi_raw_ssid[i], WiFi.RSSI(i));
-                  wifi_ssid_ptrs[i] = wifi_ssid[i];
+                  wifi_menu_items[i] = {wifi_ssid[i], icon_wifi, on_wifi_selected};
               }
           }
-          ui.setPopupListItems(wifi_ssid_ptrs, wifi_count);
+          if (current_level == LEVEL_WIFI) {
+              ui.setCarouselItems(wifi_menu_items, wifi_count, "< WIFI NETWORKS >");
+          }
           WiFi.scanDelete(); // Xóa bộ đệm
       } else if (n == WIFI_SCAN_FAILED) {
           is_scanning_wifi = false;
           strncpy(wifi_ssid[0], "Scan Failed", 31);
+          wifi_menu_items[0] = {wifi_ssid[0], icon_wifi, nullptr};
           wifi_count = 1;
-          ui.setPopupListItems(wifi_ssid_ptrs, wifi_count);
+          if (current_level == LEVEL_WIFI) {
+              ui.setCarouselItems(wifi_menu_items, wifi_count, "< WIFI NETWORKS >");
+          }
       }
   }
 
