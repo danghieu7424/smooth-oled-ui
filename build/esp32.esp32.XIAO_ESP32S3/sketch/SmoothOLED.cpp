@@ -193,7 +193,7 @@ void SmoothOLED::right() {
 }
 
 void SmoothOLED::openPopup() {
-    if (_overlay_state == OVERLAY_NONE && (_app_state == STATE_CAROUSEL || _app_state == STATE_SLIDER || _app_state == STATE_FULL_LIST)) {
+    if (_overlay_state == OVERLAY_NONE && (_app_state == STATE_CAROUSEL || _app_state == STATE_SLIDER || _app_state == STATE_FULL_LIST || _app_state == STATE_CLOCK)) {
         _prev_app_state = _app_state;
         _app_state = STATE_POPUP;
         _current_list_selection = 0;
@@ -219,7 +219,7 @@ void SmoothOLED::openModal(const char* title, const char* text) {
 }
 
 void SmoothOLED::openSideList() {
-    if (_overlay_state == OVERLAY_NONE && (_app_state == STATE_CAROUSEL || _app_state == STATE_POPUP || _app_state == STATE_SLIDER || _app_state == STATE_FULL_LIST || _app_state == STATE_MODAL)) {
+    if (_overlay_state == OVERLAY_NONE && (_app_state == STATE_CAROUSEL || _app_state == STATE_POPUP || _app_state == STATE_SLIDER || _app_state == STATE_FULL_LIST || _app_state == STATE_MODAL || _app_state == STATE_CLOCK)) {
         if (_app_state == STATE_POPUP || _app_state == STATE_MODAL) {
             _app_state = _prev_app_state; // Đóng popup/modal nếu có, trả về màn hình gốc
         }
@@ -288,7 +288,7 @@ void SmoothOLED::closeOverlay() {
         _overlay_anim = PHASE_CLOSING;
     } else if (_app_state == STATE_FULL_LIST) {
         _app_state = STATE_CAROUSEL; // Trả về thẳng Carousel vì có thể prev_app_state bị ghi đè sau khi qua nhiều Modal
-    } else if (_app_state == STATE_POPUP || _app_state == STATE_MODAL || _app_state == STATE_SLIDER || _app_state == STATE_TEXT_INPUT) {
+    } else if (_app_state == STATE_POPUP || _app_state == STATE_MODAL || _app_state == STATE_SLIDER || _app_state == STATE_TEXT_INPUT || _app_state == STATE_CLOCK) {
         _app_state = _prev_app_state; // Trả về màn hình gốc
     }
 }
@@ -991,12 +991,16 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
     sw = _u8g2->getStrWidth(_clock_lunar);
     _u8g2->drawStr(offset_x + (128 - sw) / 2, 62, _clock_lunar);
 
-    auto drawDigit = [&](ClockDigit& d, int x) {
-        _u8g2->setFont(u8g2_font_freedoomr25_mn);
+    auto drawDigit = [&](ClockDigit& d, int x, bool is_small) {
+        if (is_small) {
+            _u8g2->setFont(u8g2_font_logisoso16_tn);
+        } else {
+            _u8g2->setFont(u8g2_font_freedoomr25_mn);
+        }
 
         char buf[2];
         buf[1] = '\0';
-        int h = 25;
+        int h = is_small ? 16 : 25;
         int y = 43; // Baseline
 
         if (d.current_val == d.next_val) {
@@ -1018,18 +1022,17 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
     // Clip window ensures digits don't overwrite the dates
     _u8g2->setClipWindow(offset_x, 13, offset_x + 128, 48);
 
-    drawDigit(_clock_h1, 2);
-    drawDigit(_clock_h2, 20);
+    drawDigit(_clock_h1, 12, false);
+    drawDigit(_clock_h2, 30, false);
 
     _u8g2->setFont(u8g2_font_freedoomr25_mn);
-    _u8g2->drawStr(offset_x + 39, 41, ":"); // ":" 1
+    _u8g2->drawStr(offset_x + 49, 41, ":"); // ":" 1
 
-    drawDigit(_clock_m1, 50);
-    drawDigit(_clock_m2, 68);
+    drawDigit(_clock_m1, 60, false);
+    drawDigit(_clock_m2, 78, false);
 
-    // Không có dấu ":" thứ hai, chỉ có khoảng trắng như hình 2
-    drawDigit(_clock_s1, 88);
-    drawDigit(_clock_s2, 106);
+    drawDigit(_clock_s1, 98, true);
+    drawDigit(_clock_s2, 108, true);
 
     _u8g2->setMaxClipWindow();
     _u8g2->setFont(u8g2_font_6x10_tf); // QUAN TRỌNG: Phải reset font để không làm hỏng Menu khác
