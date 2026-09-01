@@ -304,7 +304,10 @@ void setup() {
   if (last_ssid != "") {
       String last_pwd = get_wifi_pwd(last_ssid);
       WiFi.mode(WIFI_STA);
+      WiFi.disconnect(true); // Xóa state cũ bị kẹt sau khi Soft Reset
+      delay(100);
       WiFi.begin(last_ssid.c_str(), last_pwd.c_str());
+      WiFi.setAutoReconnect(true); // Tự động kết nối lại nếu rớt mạng
   }
 
   // 1. Gán mảng dữ liệu vào thư viện UI

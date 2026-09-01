@@ -116,7 +116,7 @@ void save_pwd_cache(String ssid, String pwd);
 String get_pwd_cache(String ssid);
 #line 289 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup();
-#line 325 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 328 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void loop();
 #line 104 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void on_reset() {
@@ -322,7 +322,10 @@ void setup() {
   if (last_ssid != "") {
       String last_pwd = get_wifi_pwd(last_ssid);
       WiFi.mode(WIFI_STA);
+      WiFi.disconnect(true); // Xóa state cũ bị kẹt sau khi Soft Reset
+      delay(100);
       WiFi.begin(last_ssid.c_str(), last_pwd.c_str());
+      WiFi.setAutoReconnect(true); // Tự động kết nối lại nếu rớt mạng
   }
 
   // 1. Gán mảng dữ liệu vào thư viện UI
