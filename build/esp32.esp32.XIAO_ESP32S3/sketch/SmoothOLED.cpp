@@ -356,8 +356,6 @@ void SmoothOLED::inputChar(char c) {
             s_advance_on_next_char = true;
             _slider_title = "Progress";
         }
-    } else if (_app_state == STATE_CLOCK) {
-        _app_state = _prev_app_state;
     }
 }
 
@@ -994,12 +992,12 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
     _u8g2->drawStr(offset_x + (128 - sw) / 2, 62, _clock_lunar);
 
     auto drawDigit = [&](ClockDigit& d, int x) {
-        _u8g2->setFont(u8g2_font_logisoso24_tn);
+        _u8g2->setFont(u8g2_font_freedoomr25_mn);
 
         char buf[2];
         buf[1] = '\0';
-        int h = 24;
-        int y = 42; // Baseline
+        int h = 25;
+        int y = 43; // Baseline
 
         if (d.current_val == d.next_val) {
             buf[0] = '0' + d.current_val;
@@ -1020,19 +1018,17 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
     // Clip window ensures digits don't overwrite the dates
     _u8g2->setClipWindow(offset_x, 13, offset_x + 128, 48);
 
-    drawDigit(_clock_h1, 6);
-    drawDigit(_clock_h2, 22);
+    drawDigit(_clock_h1, 2);
+    drawDigit(_clock_h2, 20);
 
-    _u8g2->setFont(u8g2_font_logisoso24_tn);
-    _u8g2->drawStr(offset_x + 38, 38, ":"); // ":" 1
+    _u8g2->setFont(u8g2_font_freedoomr25_mn);
+    _u8g2->drawStr(offset_x + 39, 41, ":"); // ":" 1
 
-    drawDigit(_clock_m1, 48);
-    drawDigit(_clock_m2, 64);
+    drawDigit(_clock_m1, 50);
+    drawDigit(_clock_m2, 68);
 
-    _u8g2->setFont(u8g2_font_logisoso24_tn);
-    _u8g2->drawStr(offset_x + 80, 38, ":"); // ":" 2
-
-    drawDigit(_clock_s1, 90);
+    // Không có dấu ":" thứ hai, chỉ có khoảng trắng như hình 2
+    drawDigit(_clock_s1, 88);
     drawDigit(_clock_s2, 106);
 
     _u8g2->setMaxClipWindow();
