@@ -283,7 +283,9 @@ void SmoothOLED::openFullList(const char* title, const char** items, int count, 
 void SmoothOLED::closeOverlay() {
     if (_overlay_state == OVERLAY_SIDE_POPUP) {
         _overlay_anim = PHASE_CLOSING;
-    } else if (_app_state == STATE_POPUP || _app_state == STATE_MODAL || _app_state == STATE_SLIDER || _app_state == STATE_TEXT_INPUT || _app_state == STATE_FULL_LIST) {
+    } else if (_app_state == STATE_FULL_LIST) {
+        _app_state = STATE_CAROUSEL; // Trả về thẳng Carousel vì có thể prev_app_state bị ghi đè sau khi qua nhiều Modal
+    } else if (_app_state == STATE_POPUP || _app_state == STATE_MODAL || _app_state == STATE_SLIDER || _app_state == STATE_TEXT_INPUT) {
         _app_state = _prev_app_state; // Trả về màn hình gốc
     }
 }
