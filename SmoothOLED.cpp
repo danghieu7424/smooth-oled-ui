@@ -997,9 +997,9 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
         if (val < 0 || val > 9) return;
         
         int w = is_small ? 12 : 20;
-        int h = is_small ? 20 : 34;
-        int t = is_small ? 2 : 4;
-        int r = is_small ? 1 : 2;
+        int h = is_small ? 19 : 34;
+        int t = is_small ? 3 : 6;
+        int r = is_small ? 1 : 3; // Bo 3px cho số lớn
         int half_h = (h - t) / 2;
         
         const uint8_t segs[10] = {
@@ -1018,8 +1018,8 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
     };
 
     auto drawDigit = [&](ClockDigit& d, int x, bool is_small) {
-        int h = is_small ? 20 : 34;
-        int y = is_small ? 28 : 14; // Canh đáy cho giây: 14 + 34 = 48. Giây: 28 + 20 = 48.
+        int h = is_small ? 19 : 34;
+        int y = is_small ? 29 : 14; 
 
         if (d.current_val == d.next_val) {
             draw7Seg(offset_x + x, y, d.current_val, is_small);
@@ -1035,18 +1035,18 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
     // Clip window ensures digits don't overwrite the dates
     _u8g2->setClipWindow(offset_x, 13, offset_x + 128, 49);
 
-    drawDigit(_clock_h1, 2, false);
-    drawDigit(_clock_h2, 24, false);
+    drawDigit(_clock_h1, 3, false);
+    drawDigit(_clock_h2, 25, false);
 
-    // Dấu hai chấm (colon)
-    _u8g2->drawRBox(offset_x + 48, 22, 4, 4, 1);
-    _u8g2->drawRBox(offset_x + 48, 34, 4, 4, 1);
+    // Dấu hai chấm (hình chữ nhật đứng, bo 1px)
+    _u8g2->drawRBox(offset_x + 47, 18, 4, 10, 1);
+    _u8g2->drawRBox(offset_x + 47, 34, 4, 10, 1);
 
-    drawDigit(_clock_m1, 56, false);
-    drawDigit(_clock_m2, 78, false);
+    drawDigit(_clock_m1, 53, false);
+    drawDigit(_clock_m2, 75, false);
 
-    drawDigit(_clock_s1, 102, true);
-    drawDigit(_clock_s2, 116, true);
+    drawDigit(_clock_s1, 99, true);
+    drawDigit(_clock_s2, 113, true);
 
     _u8g2->setMaxClipWindow();
     _u8g2->setFont(u8g2_font_6x10_tf); // Reset font
