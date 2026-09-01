@@ -97,14 +97,15 @@ const int TOTAL_SIDE_ITEMS = 7;
 // =======================================================================
 
 // Quản lý trạng thái Menu đa cấp
-enum MenuLevel { LEVEL_MAIN, LEVEL_SETTINGS };
+enum MenuLevel { LEVEL_MAIN, LEVEL_SETTINGS, LEVEL_BRIGHTNESS };
 MenuLevel current_level = LEVEL_MAIN;
+int current_brightness = 20; // Độ sáng mặc định ban đầu
 
-#line 102 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 103 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup();
-#line 125 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 126 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void loop();
-#line 102 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 103 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup() {
   Serial.begin(921600);
   
@@ -141,6 +142,10 @@ void loop() {
         // Nếu không có popup nào đang mở và đang ở màn hình Settings, thì Back về Main Menu
         current_level = LEVEL_MAIN;
         ui.setCarouselItems(menu_items, TOTAL_MAIN_ITEMS, "< MAIN MENU >");
+      } else if (!ui.isOverlayOpen() && current_level == LEVEL_BRIGHTNESS) {
+        // Nếu đang chỉnh Brightness, thì Back về Settings
+        current_level = LEVEL_SETTINGS;
+        ui.closeOverlay(); // Tự động đóng STATE_SLIDER về lại STATE_CAROUSEL
       } else {
         ui.closeOverlay();
       }
@@ -153,7 +158,22 @@ void loop() {
           current_level = LEVEL_SETTINGS;
           ui.setCarouselItems(settings_items, TOTAL_SETTINGS_ITEMS, "< SETTINGS >");
         }
+      } else if (!ui.isOverlayOpen() && current_level == LEVEL_SETTINGS) {
+        // Đang ở Settings, nếu chọn mục số 1 là "Brightness"
+        if (ui.getCarouselIndex() == 1) { 
+          current_level = LEVEL_BRIGHTNESS;
+          ui.openSlider("Brightness", current_brightness, 255);
+        }
       }
+    }
+  }
+
+  // Nếu đang hiển thị Slider, lấy giá trị và cập nhật độ sáng phần cứng liên tục
+  if (current_level == LEVEL_BRIGHTNESS && ui.getAppState() == STATE_SLIDER) {
+    int new_brightness = ui.getSliderValue();
+    if (new_brightness != current_brightness) {
+      current_brightness = new_brightness;
+      u8g2.setContrast(current_brightness); // Lệnh phần cứng đổi độ sáng OLED
     }
   }
 

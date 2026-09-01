@@ -42,9 +42,14 @@ SmoothOLED::SmoothOLED(U8G2* u8g2, Stream* serial) {
     _side_count = 0;
     _side_selected_idx = 0;
     _side_parent_x = 32.0f;
-    _side_arc_radius = 0.0f;
+    _side_slide_x = 128.0f;
     _side_list_cam_y = 0.0f;
-    _side_cursor_w = 40.0f;
+    _side_cursor_w = 0.0f;
+
+    _slider_val = 0.0f;
+    _target_slider_val = 0.0f;
+    _slider_max = 255;
+    _slider_title = "Progress";
 }
 
 void SmoothOLED::begin() {
@@ -95,6 +100,9 @@ void SmoothOLED::up() {
     } else if (_app_state == STATE_CAROUSEL && _overlay_state == OVERLAY_NONE) {
         if (_current_index > 0) _current_index--;
         else _current_index = _carousel_count - 1;
+    } else if (_app_state == STATE_SLIDER) {
+        _target_slider_val += (float)_slider_max * 0.05f;
+        if (_target_slider_val > _slider_max) _target_slider_val = (float)_slider_max;
     }
 }
 
@@ -108,6 +116,9 @@ void SmoothOLED::down() {
     } else if (_app_state == STATE_CAROUSEL && _overlay_state == OVERLAY_NONE) {
         if (_current_index < _carousel_count - 1) _current_index++;
         else _current_index = 0;
+    } else if (_app_state == STATE_SLIDER) {
+        _target_slider_val -= (float)_slider_max * 0.05f;
+        if (_target_slider_val < 0) _target_slider_val = 0;
     }
 }
 
@@ -135,10 +146,21 @@ void SmoothOLED::openSideList() {
     }
 }
 
+void SmoothOLED::openSlider(const char* title, int current_val, int max_val) {
+    if (_overlay_state == OVERLAY_NONE) {
+        _app_state = STATE_SLIDER;
+        _slider_title = title;
+        _slider_max = max_val;
+        _slider_val = (float)current_val;
+        _target_slider_val = (float)current_val;
+        _last_switch = millis();
+    }
+}
+
 void SmoothOLED::closeOverlay() {
-    if (_overlay_state == OVERLAY_SIDE_POPUP && _overlay_anim != PHASE_CLOSING) {
+    if (_overlay_state == OVERLAY_SIDE_POPUP) {
         _overlay_anim = PHASE_CLOSING;
-    } else if (_app_state == STATE_POPUP && _overlay_state == OVERLAY_NONE) {
+    } else if (_app_state == STATE_POPUP || _app_state == STATE_SLIDER) {
         _app_state = STATE_CAROUSEL;
     }
 }
@@ -389,6 +411,43 @@ void SmoothOLED::draw_side_list_menu() {
 }
 
 // =================================================================================
+// SLIDER PROGRESS ATOM
+// =================================================================================
+
+void SmoothOLED::update_slider_physics() {
+    _slider_val += (_target_slider_val - _slider_val) * 0.3f;
+}
+
+void SmoothOLED::draw_slider_menu() {
+    _u8g2->setDrawColor(1);
+    
+    // Vẽ tiêu đề
+    _u8g2->setFont(u8g2_font_6x10_tf);
+    int str_width = _u8g2->getStrWidth(_slider_title);
+    _u8g2->drawStr(64 - (str_width / 2), 18, _slider_title);
+
+    // Vẽ khung ngoài
+    _u8g2->drawRFrame(14, 28, 100, 14, 3);
+
+    // Tính toán độ dài thanh bar
+    float ratio = _slider_val / (float)_slider_max;
+    if (ratio < 0.0f) ratio = 0.0f;
+    if (ratio > 1.0f) ratio = 1.0f;
+    int fill_w = (int)(ratio * 96.0f);
+    
+    if (fill_w > 0) {
+        _u8g2->drawRBox(16, 30, fill_w, 10, 2);
+    }
+
+    // Hiển thị phần trăm (%) thay vì số thô
+    char val_str[10];
+    int percent = (int)((_target_slider_val / (float)_slider_max) * 100.0f + 0.5f);
+    snprintf(val_str, sizeof(val_str), "%d%%", percent);
+    int val_w = _u8g2->getStrWidth(val_str);
+    _u8g2->drawStr(64 - (val_w / 2), 56, val_str);
+}
+
+// =================================================================================
 // MAIN LOOP & STATE MACHINE
 // =================================================================================
 
@@ -470,6 +529,9 @@ void SmoothOLED::update() {
             if (_overlay_state == OVERLAY_NONE) {
                 draw_popup_menu();
             }
+        } else if (_app_state == STATE_SLIDER) {
+            update_slider_physics();
+            draw_slider_menu();
         }
 
         // 3. Draw Overlay

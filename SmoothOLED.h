@@ -12,7 +12,8 @@ struct MenuItem {
 
 enum AppState {
     STATE_CAROUSEL,
-    STATE_POPUP
+    STATE_POPUP,
+    STATE_SLIDER
 };
 
 enum OverlayState {
@@ -47,12 +48,15 @@ public:
     void down();
     void openPopup();
     void openSideList();
+    void openSlider(const char* title, int current_val, int max_val);
     void closeOverlay();
     void select();
 
     // --- State API ---
     int getCarouselIndex() const { return _current_index; }
     bool isOverlayOpen() const { return _overlay_state != OVERLAY_NONE; }
+    AppState getAppState() const { return _app_state; }
+    int getSliderValue() const { return (int)(_target_slider_val + 0.5f); }
 
 private:
     U8G2* _u8g2;
@@ -112,7 +116,11 @@ private:
     const float TARGET_PARENT_X = 18.0f;
     const float TARGET_ARC_RADIUS = 52.0f;
     const float SIDE_LERP_FACTOR = 0.20f;
-    const int SIDE_LINE_SPACING = 14;
+    // --- Biến Slider ---
+    float _slider_val;
+    float _target_slider_val;
+    int _slider_max;
+    const char* _slider_title;
 
     void flush_display();
 
@@ -124,6 +132,9 @@ private:
 
     void update_side_physics();
     void draw_side_list_menu();
+
+    void update_slider_physics();
+    void draw_slider_menu();
 };
 
 #endif
