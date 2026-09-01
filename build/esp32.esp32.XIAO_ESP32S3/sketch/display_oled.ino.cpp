@@ -142,9 +142,9 @@ String connecting_pwd = "";
 
 void on_wifi_selected(int idx);
 
-#line 214 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 219 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup();
-#line 242 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 247 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void loop();
 #line 144 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void open_settings_menu() {
@@ -167,6 +167,12 @@ char text_input_title_buf[64];
 void on_wifi_selected(int idx) {
   // Chặn mở mật khẩu nếu đang Scanning, không có mạng, hoặc lỗi
   if (idx >= 0 && idx < wifi_count && strncmp(wifi_ssid[0], "Scanning", 8) != 0 && strncmp(wifi_ssid[0], "No networks", 10) != 0 && strncmp(wifi_ssid[0], "Scan Failed", 11) != 0) {
+      // Nếu mạng này đang được kết nối rồi, báo luôn không cần nhập pass
+      if (WiFi.status() == WL_CONNECTED && WiFi.SSID() == String(wifi_raw_ssid[idx])) {
+          ui.openModal("Connected!", "Already connected to this network");
+          return;
+      }
+
       snprintf(text_input_title_buf, sizeof(text_input_title_buf), "PWD: %s", wifi_raw_ssid[idx]);
       
       // Lấy mật khẩu đã lưu từ Preferences
@@ -189,8 +195,7 @@ void on_enter_wifi() {
   if (is_scanning_wifi) return; // Đang quét thì không kích hoạt lại
   
   WiFi.mode(WIFI_STA);
-  WiFi.disconnect();
-  delay(100); // Chờ WiFi ngắt kết nối hoàn toàn và module ổn định (Fix lỗi báo false liên tục)
+  // XÓA WiFi.disconnect() ở đây để không làm rớt mạng đang kết nối khi load lại menu
   
   WiFi.scanNetworks(true); // Quét bất đồng bộ (Async)
   is_scanning_wifi = true;
