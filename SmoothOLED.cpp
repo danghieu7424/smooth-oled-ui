@@ -1040,9 +1040,9 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
     drawDigit(_clock_h1, 3, false);
     drawDigit(_clock_h2, 25, false);
 
-    // Dấu hai chấm (hình chữ nhật đứng, bo 1px)
-    _u8g2->drawRBox(offset_x + 47, 18, 4, 10, 1);
-    _u8g2->drawRBox(offset_x + 47, 34, 4, 10, 1);
+    // Dấu hai chấm (hình chữ nhật đứng, bo 1px) - giảm height 10% (còn 9) và dịch xuống để căn giữa
+    _u8g2->drawRBox(offset_x + 47, 21, 4, 9, 1);
+    _u8g2->drawRBox(offset_x + 47, 36, 4, 9, 1);
 
     drawDigit(_clock_m1, 53, false);
     drawDigit(_clock_m2, 75, false);

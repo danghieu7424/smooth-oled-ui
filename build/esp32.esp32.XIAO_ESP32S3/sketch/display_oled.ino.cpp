@@ -9,6 +9,7 @@
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 #include "SmoothOLED.h"
+#include "TimeSyncAPI.h"
 
 int saved_brightness = 20;
 
@@ -22,21 +23,19 @@ struct SystemState {
     int brightness;
 };
 
-#line 24 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 25 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void save_system_state(bool on, int brightness, String ssid, String pwd);
-#line 36 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 37 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 SystemState load_system_state();
-#line 152 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 153 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void on_restart();
-#line 156 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 157 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void on_power_off();
-#line 205 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
-void sync_time_with_api();
-#line 346 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 287 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void setup();
-#line 403 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 345 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void loop();
-#line 24 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
+#line 25 "D:\\all_projects\\rust\\rust\\display_oled\\display_oled.ino"
 void save_system_state(bool on, int brightness, String ssid, String pwd) {
     SystemState state;
     state.on = on;
@@ -208,73 +207,13 @@ String connecting_pwd = "742412624";
 
 void on_wifi_selected(int idx);
 
-// Clock State
-int current_hour = 0;
-int current_minute = 0;
-int current_second = 0;
-String solar_date_str = "";
-String lunar_date_str = "";
-uint32_t last_time_sync = 0;
-uint32_t last_second_tick = 0;
-bool is_time_synced = false;
 
-void sync_time_with_api() {
-    if (WiFi.status() == WL_CONNECTED) {
-        Serial.println("[API] Trying to sync time...");
-        WiFiClientSecure *client = new WiFiClientSecure;
-        client->setInsecure();
-        HTTPClient http;
-        if (http.begin(*client, "https://dh74.io.vn/api/time?tz=7")) {
-            int httpCode = http.GET();
-            Serial.printf("[API] HTTP Code: %d\n", httpCode);
-            if (httpCode == HTTP_CODE_OK) {
-                String payload = http.getString();
-                JsonDocument doc;
-                DeserializationError error = deserializeJson(doc, payload);
-                if (!error) {
-                    current_hour = doc["data"]["time"]["hour"];
-                    current_minute = doc["data"]["time"]["minute"];
-                    current_second = doc["data"]["time"]["second"];
-                    
-                    int s_d = doc["data"]["solar"]["day"];
-                    int s_m = doc["data"]["solar"]["month"];
-                    int s_y = doc["data"]["solar"]["year"];
-                    char buf[32];
-                    snprintf(buf, sizeof(buf), "%02d/%02d/%04d", s_d, s_m, s_y);
-                    solar_date_str = String(buf);
-                    
-                    int l_d = doc["data"]["lunar"]["day"];
-                    int l_m = doc["data"]["lunar"]["month"];
-                    char l_buf[64];
-                    snprintf(l_buf, sizeof(l_buf), "AL: %02d/%02d", l_d, l_m);
-                    lunar_date_str = String(l_buf);
-                    
-                    is_time_synced = true;
-                    last_time_sync = millis();
-                    last_second_tick = millis();
-                    ui.updateClock(current_hour, current_minute, current_second, solar_date_str.c_str(), lunar_date_str.c_str());
-                    Serial.println("[API] Sync SUCCESS!");
-                } else {
-                    Serial.println("[API] JSON Parse Error!");
-                }
-            } else {
-                Serial.println("[API] HTTP Request Failed!");
-            }
-            http.end();
-        } else {
-            Serial.println("[API] HTTP Begin Failed!");
-        }
-        delete client;
-    } else {
-        Serial.println("[API] WiFi NOT connected!");
-    }
-}
 
 void open_home_clock() {
   ui.openClock();
-  ui.updateClock(current_hour, current_minute, current_second, solar_date_str.c_str(), lunar_date_str.c_str());
-  if (!is_time_synced && WiFi.status() == WL_CONNECTED) {
-      sync_time_with_api();
+  ui.updateClock(timeSync.current_hour, timeSync.current_minute, timeSync.current_second, timeSync.solar_date_str.c_str(), timeSync.lunar_date_str.c_str());
+  if (!timeSync.is_time_synced && WiFi.status() == WL_CONNECTED) {
+      timeSync.update();
   }
 }
 
@@ -412,7 +351,8 @@ void setup() {
   // 3. Khởi động UI
   ui.begin();
 
-  // 4. MẶC ĐỊNH MỞ MÀN HÌNH ĐỒNG HỒ
+  // 4. Cấu hình TimeSync và mở Màn hình Đồng hồ
+  timeSync.begin(7);
   open_home_clock();
 }
 
@@ -610,27 +550,14 @@ void loop() {
   }
 
   // --- CLOCK TICK & SYNC LOGIC ---
-  if (is_time_synced) {
-      if (millis() - last_second_tick >= 1000) {
-          last_second_tick += 1000;
-          current_second++;
-          if (current_second >= 60) {
-              current_second = 0;
-              current_minute++;
-              if (current_minute >= 60) {
-                  current_minute = 0;
-                  current_hour++;
-                  if (current_hour >= 24) {
-                      current_hour = 0;
-                  }
-              }
-          }
-          ui.updateClock(current_hour, current_minute, current_second, solar_date_str.c_str(), lunar_date_str.c_str());
-      }
-      
+  if (timeSync.tick()) {
+      ui.updateClock(timeSync.current_hour, timeSync.current_minute, timeSync.current_second, timeSync.solar_date_str.c_str(), timeSync.lunar_date_str.c_str());
+  }
+  
+  if (timeSync.is_time_synced) {
       // Đồng bộ lại với API mỗi 1 giờ để bù sai số và cập nhật ngày
-      if (millis() - last_time_sync > 3600000) {
-          sync_time_with_api();
+      if (millis() - timeSync.last_time_sync > 3600000) {
+          timeSync.update();
       }
   } else {
       // Chưa đồng bộ được thời gian (do mới khởi động) -> Thử đồng bộ liên tục mỗi 2 giây nếu có mạng
@@ -639,7 +566,7 @@ void loop() {
           last_sync_try = millis();
           Serial.printf("[WIFI] Status: %d\n", WiFi.status());
           if (WiFi.status() == WL_CONNECTED) {
-              sync_time_with_api();
+              timeSync.update();
           }
       }
   }
