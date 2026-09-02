@@ -998,7 +998,7 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
         if (val < 0 || val > 9) return;
         
         int w = is_small ? 12 : 20;
-        int h = is_small ? 19 : 34;
+        int h = is_small ? 17 : 31; // Giảm chiều cao 10%
         int t = is_small ? 3 : 6;
         int r = is_small ? 1 : 3; // Bo 3px góc ngoài
         int half_h = (h - t) / 2;
@@ -1020,8 +1020,8 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
     };
 
     auto drawDigit = [&](ClockDigit& d, int x, bool is_small) {
-        int h = is_small ? 19 : 34;
-        int y = is_small ? 29 : 14; 
+        int h = is_small ? 17 : 31; // Chiều cao mới
+        int y = is_small ? 31 : 17; // Giữ nguyên căn đáy (y + h = 48)
 
         if (d.current_val == d.next_val) {
             draw7Seg(offset_x + x, y, d.current_val, is_small);
