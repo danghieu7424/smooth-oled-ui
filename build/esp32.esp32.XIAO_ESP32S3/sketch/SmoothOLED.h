@@ -72,7 +72,7 @@ public:
     void openTextInput(const char* title, TextCallback on_submit, const char* initial_text = nullptr);
     void openFullList(const char* title, const char** items, int count, ListCallback on_select = nullptr);
     void openClock();
-    void updateClock(int h, int m, int s, const char* solar_date, const char* lunar_date);
+    void updateClock(int h, int m, int s, const char* solar_date, const char* lunar_date, const char* temp_str);
     void closeOverlay();
     bool backspace();
     void select();
@@ -179,6 +179,7 @@ private:
     ClockDigit _clock_h1, _clock_h2, _clock_m1, _clock_m2, _clock_s1, _clock_s2;
     char _clock_solar[32];
     char _clock_lunar[64];
+    char _clock_temp[16];
 
     void flush_display();
 

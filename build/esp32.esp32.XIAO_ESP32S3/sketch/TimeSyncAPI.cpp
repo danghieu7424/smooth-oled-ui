@@ -15,6 +15,7 @@ TimeSyncAPI::TimeSyncAPI() {
     last_second_tick = 0;
     is_time_synced = false;
     api_synced = false;
+    current_temp_str = "--.-C";
 }
 
 // Hàm hỗ trợ tính thứ (0=CN, 1=T2, ...)
@@ -43,6 +44,11 @@ void TimeSyncAPI::syncFromRTC() {
     char buf[64];
     snprintf(buf, sizeof(buf), "%s %02d Th%02d %04d", dow_str[dow], d, mo, y);
     solar_date_str = String(buf);
+    
+    float t = rtc.readTemperature();
+    char temp_buf[16];
+    snprintf(temp_buf, sizeof(temp_buf), "%.1fC", t);
+    current_temp_str = String(temp_buf);
     
     // Lưu ý: RTC không lưu Âm lịch, ta đành để tạm "--/--" hoặc tính toán nếu có thuật toán
     // Hiện tại chờ API cập nhật Âm lịch sau.
@@ -130,6 +136,13 @@ bool TimeSyncAPI::tick() {
         if (current_second >= 60) {
             current_second = 0;
             current_minute++;
+            
+            // Cập nhật nhiệt độ mỗi 1 phút (khi sang phút mới)
+            float t = rtc.readTemperature();
+            char temp_buf[16];
+            snprintf(temp_buf, sizeof(temp_buf), "%.1fC", t);
+            current_temp_str = String(temp_buf);
+            
             if (current_minute >= 60) {
                 current_minute = 0;
                 current_hour++;

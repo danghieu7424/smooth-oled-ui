@@ -72,6 +72,15 @@ try:
     
     while True:
         if not synced:
+            # Gửi tín hiệu BẬT PC Viewer (ESC + V) liên tục cho đến khi đồng bộ
+            now = time.time()
+            if 'last_start_cmd' not in locals() or now - last_start_cmd > 0.5:
+                try:
+                    ser.write(b'\x1BV')
+                except:
+                    pass
+                last_start_cmd = now
+                
             b = ser.read(1)
             if not b: continue
             buffer += b
@@ -114,6 +123,11 @@ except KeyboardInterrupt:
     pass
 except Exception as e:
     print("Lỗi:", e)
-
-ser.close()
-cv2.destroyAllWindows()
+finally:
+    try:
+        # Gửi tín hiệu TẮT PC Viewer (ESC + v) trước khi thoát
+        ser.write(b'\x1Bv')
+        ser.close()
+    except:
+        pass
+    cv2.destroyAllWindows()

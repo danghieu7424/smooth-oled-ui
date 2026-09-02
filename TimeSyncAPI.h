@@ -16,6 +16,7 @@ public:
     int current_second;
     String solar_date_str;
     String lunar_date_str;
+    String current_temp_str;
     uint32_t last_time_sync;
     uint32_t last_second_tick;
     bool is_time_synced;

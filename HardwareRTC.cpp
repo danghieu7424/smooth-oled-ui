@@ -59,3 +59,17 @@ void HardwareRTC::adjust(int hour, int minute, int second, int day, int month, i
     Wire.write(decToBcd(year - 2000));
     Wire.endTransmission();
 }
+
+float HardwareRTC::readTemperature() {
+    Wire.beginTransmission(DS3231_ADDR);
+    Wire.write(0x11);
+    Wire.endTransmission();
+
+    Wire.requestFrom(DS3231_ADDR, (uint8_t)2);
+    if (Wire.available() >= 2) {
+        int8_t msb = Wire.read();
+        uint8_t lsb = Wire.read();
+        return (float)msb + ((lsb >> 6) * 0.25f);
+    }
+    return 0.0f;
+}

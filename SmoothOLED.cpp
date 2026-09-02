@@ -118,8 +118,12 @@ void SmoothOLED::up() {
         if (_current_index > 0) _current_index--;
         else _current_index = _carousel_count - 1;
     } else if (_app_state == STATE_SLIDER) {
-        _target_slider_val -= 5.0f;
-        if (_target_slider_val < 0.0f) _target_slider_val = 0.0f;
+        if (_slider_max == 1) {
+            _target_slider_val = 0.0f;
+        } else {
+            _target_slider_val -= 2.55f;
+            if (_target_slider_val < 0.0f) _target_slider_val = 0.0f;
+        }
     } else if (_app_state == STATE_TEXT_INPUT) {
         _current_char_idx++;
         if (_current_char_idx >= CHAR_MAP_LEN) _current_char_idx = 0;
@@ -129,6 +133,8 @@ void SmoothOLED::up() {
     } else if (_app_state == STATE_FULL_LIST) {
         if (_list_selected_index > 0) _list_selected_index--;
         else _list_selected_index = _list_count - 1;
+        _marquee_offset = 0;
+        _marquee_delay = 30;
     }
 }
 
@@ -143,8 +149,12 @@ void SmoothOLED::down() {
         _current_list_selection++;
         if (_current_list_selection >= _popup_count) _current_list_selection = 0;
     } else if (_app_state == STATE_SLIDER) {
-        _target_slider_val += 5.0f;
-        if (_target_slider_val > _slider_max) _target_slider_val = _slider_max;
+        if (_slider_max == 1) {
+            _target_slider_val = 1.0f;
+        } else {
+            _target_slider_val += 2.55f;
+            if (_target_slider_val > _slider_max) _target_slider_val = _slider_max;
+        }
     } else if (_app_state == STATE_TEXT_INPUT) {
         _current_char_idx--;
         if (_current_char_idx < 0) _current_char_idx = CHAR_MAP_LEN - 1;
@@ -154,6 +164,8 @@ void SmoothOLED::down() {
     } else if (_app_state == STATE_FULL_LIST) {
         if (_list_selected_index < _list_count - 1) _list_selected_index++;
         else _list_selected_index = 0;
+        _marquee_offset = 0;
+        _marquee_delay = 30;
     }
 }
 
@@ -623,28 +635,50 @@ void SmoothOLED::draw_slider_menu(int offset_x) {
     int str_width = _u8g2->getStrWidth(_slider_title);
     _u8g2->drawStr(64 - (str_width / 2) + offset_x, 18, _slider_title);
 
-    // Vẽ khung ngoài
-    _u8g2->drawRFrame(14 + offset_x, 28, 100, 14, 3);
+    if (_slider_max == 1) {
+        // --- Vẽ dạng Toggle Switch ---
+        // Tăng width/height lên số lẻ (41, 17) để núm xoay (bán kính 5) canh giữa tuyệt đối với khe hở 3px đều các cạnh
+        _u8g2->drawRFrame(44 + offset_x, 28, 41, 17, 8);
+        
+        float ratio = _slider_val;
+        if (ratio < 0.0f) ratio = 0.0f;
+        if (ratio > 1.0f) ratio = 1.0f;
+        
+        // Từ tâm trái (44+8 = 52) đến tâm phải (44+41-1-8 = 76). Khoảng cách là 24.
+        float knob_x = 52.0f + ratio * 24.0f;
+        _u8g2->drawDisc((int)(knob_x + 0.5f) + offset_x, 36, 5);
+    } else {
+        // --- Vẽ dạng Slider ---
+        _u8g2->drawRFrame(14 + offset_x, 28, 100, 14, 3);
 
-    // Tính toán độ dài thanh bar
-    float ratio = _slider_val / (float)_slider_max;
-    if (ratio < 0.0f) ratio = 0.0f;
-    if (ratio > 1.0f) ratio = 1.0f;
-    int fill_w = (int)(ratio * 96.0f);
-    
-    if (fill_w > 0) {
-        // Fix lỗi thư viện U8g2 vẽ tia dài khi width nhỏ hơn 2*radius
-        if (fill_w < 5) {
-            _u8g2->drawBox(16 + offset_x, 30, fill_w, 10);
-        } else {
-            _u8g2->drawRBox(16 + offset_x, 30, fill_w, 10, 2);
+        float ratio = _slider_val / (float)_slider_max;
+        if (ratio < 0.0f) ratio = 0.0f;
+        if (ratio > 1.0f) ratio = 1.0f;
+        int fill_w = (int)(ratio * 96.0f);
+        
+        if (fill_w > 0) {
+            if (fill_w < 5) {
+                _u8g2->drawBox(16 + offset_x, 30, fill_w, 10);
+            } else {
+                _u8g2->drawRBox(16 + offset_x, 30, fill_w, 10, 2);
+            }
         }
     }
 
-    // Hiển thị phần trăm (%) thay vì số thô
+    // Hiển thị phần trăm (%) hoặc ON/OFF ở dưới cùng
     char val_str[10];
-    int percent = (int)((_target_slider_val / (float)_slider_max) * 100.0f + 0.5f);
-    snprintf(val_str, sizeof(val_str), "%d%%", percent);
+    if (_slider_max == 1) {
+        if (_target_slider_val > 0.5f) {
+            snprintf(val_str, sizeof(val_str), "ON");
+        } else {
+            snprintf(val_str, sizeof(val_str), "OFF");
+        }
+    } else {
+        int percent = (int)((_target_slider_val / (float)_slider_max) * 100.0f + 0.5f);
+        snprintf(val_str, sizeof(val_str), "%d%%", percent);
+    }
+    
+    _u8g2->setFont(u8g2_font_6x10_tf);
     int val_w = _u8g2->getStrWidth(val_str);
     _u8g2->drawStr(64 - (val_w / 2) + offset_x, 56, val_str);
 }
@@ -698,29 +732,85 @@ void SmoothOLED::draw_full_list_menu(int offset_x) {
     _u8g2->drawStr(64 - title_w/2 + offset_x, 10, _list_title);
     _u8g2->drawLine(0 + offset_x, 13, 128 + offset_x, 13);
     
-    // Physics cho camera cuộn
+    // Physics cho camera cuộn (Selected Item luôn tiến về tọa độ y=28)
     float target_y = _list_selected_index * 12;
     _list_camera_y += (target_y - _list_camera_y) * 0.3f;
     
     int start_y = 28 - (int)_list_camera_y;
     
+    // Marquee logic
+    int text_pixel_width = _u8g2->getStrWidth(_list_items[_list_selected_index]);
+    uint32_t now = millis();
+    int gap = 30; // Khoảng cách giữa 2 vòng lặp chữ
+    if (now - _marquee_last_time >= 30) { 
+        _marquee_last_time = now;
+        int max_visible_w = 114; // Giới hạn chữ không đè vào scrollbar (128 - 8 (lề trái) - 6 (scrollbar) = 114)
+        if (text_pixel_width > max_visible_w) {
+            if (_marquee_delay > 0) {
+                _marquee_delay--;
+            } else {
+                _marquee_offset += 0.7f; // Tăng tốc độ cuộn một xíu cho mượt
+                if (_marquee_offset >= (text_pixel_width + gap)) { 
+                    _marquee_offset = 0;
+                    _marquee_delay = 45; // Dừng 1.5s khi vòng lặp hoàn thành
+                }
+            }
+        } else {
+            _marquee_offset = 0;
+            _marquee_delay = 45; 
+        }
+    }
+
+    _u8g2->setClipWindow(0 + offset_x, 14, 128 + offset_x, 64); // Không vẽ tràn lên tiêu đề
+
     // Vẽ danh sách
     for (int i = 0; i < _list_count; i++) {
         int y = start_y + i * 12;
-        if (y > 22 && y < 70) {
+        if (y > 10 && y < 76) {
             if (i == _list_selected_index) {
-                // Highlight box
+                // Highlight box (Chừa chỗ cho scrollbar bên phải)
                 _u8g2->setDrawColor(1);
-                _u8g2->drawBox(4 + offset_x, y - 9, 120, 12);
+                _u8g2->drawBox(4 + offset_x, y - 9, 118, 12);
                 _u8g2->setDrawColor(0);
+                
+                int max_w = 114;
+                if (text_pixel_width > max_w) {
+                    _u8g2->setClipWindow(4 + offset_x, y - 9, 122 + offset_x, y + 3); // Clip khít vào highlight box
+                    _u8g2->drawStr(8 + offset_x - (int)_marquee_offset, y, _list_items[i]);
+                    // Vẽ đoạn chữ lặp lại phía sau
+                    _u8g2->drawStr(8 + offset_x - (int)_marquee_offset + text_pixel_width + gap, y, _list_items[i]);
+                    _u8g2->setClipWindow(0 + offset_x, 14, 128 + offset_x, 64); // Phục hồi clip cũ
+                } else {
+                    _u8g2->drawStr(8 + offset_x, y, _list_items[i]);
+                }
             } else {
                 _u8g2->setDrawColor(1);
+                int unselected_w = _u8g2->getStrWidth(_list_items[i]);
+                if (unselected_w > 114) {
+                    _u8g2->drawStr(8 + offset_x, y, _list_items[i]);
+                    _u8g2->setDrawColor(0); // Màu đen để che phần đuôi chữ thừa
+                    _u8g2->drawBox(112 + offset_x, y - 9, 16, 12); // Rộng 16px để che phủ hoàn toàn đến viền phải (112 + 16 = 128)
+                    _u8g2->setDrawColor(1); // Trắng lại để vẽ dấu chấm
+                    _u8g2->drawStr(112 + offset_x, y, "..");
+                } else {
+                    _u8g2->drawStr(8 + offset_x, y, _list_items[i]);
+                }
             }
-            _u8g2->drawStr(8 + offset_x, y, _list_items[i]);
         }
     }
+    _u8g2->setMaxClipWindow(); // Bỏ clip window
+
+    // Vẽ Scrollbar
     _u8g2->setDrawColor(1);
+    if (_list_count > 4) {
+        int bar_h = (4 * 50) / _list_count;
+        if (bar_h < 5) bar_h = 5;
+        float scroll_ratio = (float)_list_selected_index / (float)(_list_count - 1);
+        int bar_y = 14 + (int)(scroll_ratio * (50 - bar_h));
+        _u8g2->drawBox(125 + offset_x, bar_y, 3, bar_h);
+    }
 }
+
 
 // =================================================================================
 // MODAL DIALOG ATOM
@@ -936,10 +1026,11 @@ void SmoothOLED::openClock() {
         _clock_h1.anim_y = _clock_h2.anim_y = _clock_m1.anim_y = _clock_m2.anim_y = _clock_s1.anim_y = _clock_s2.anim_y = 0.0f;
         memset(_clock_solar, 0, sizeof(_clock_solar));
         memset(_clock_lunar, 0, sizeof(_clock_lunar));
+        memset(_clock_temp, 0, sizeof(_clock_temp));
     }
 }
 
-void SmoothOLED::updateClock(int h, int m, int s, const char* solar_date, const char* lunar_date) {
+void SmoothOLED::updateClock(int h, int m, int s, const char* solar_date, const char* lunar_date, const char* temp_str) {
     auto updateDigit = [](ClockDigit& d, int new_val) {
         if (d.next_val != new_val) {
             d.current_val = d.next_val; 
@@ -957,6 +1048,7 @@ void SmoothOLED::updateClock(int h, int m, int s, const char* solar_date, const 
 
     if (solar_date) strncpy(_clock_solar, solar_date, 31);
     if (lunar_date) strncpy(_clock_lunar, lunar_date, 63);
+    if (temp_str) strncpy(_clock_temp, temp_str, 15);
 }
 
 void SmoothOLED::update_clock_physics() {
@@ -986,9 +1078,12 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
     int sw = _u8g2->getStrWidth(_clock_solar);
     _u8g2->drawStr(offset_x + (128 - sw) / 2, 10, _clock_solar);
 
-    // 2. Draw Lunar Date
-    sw = _u8g2->getStrWidth(_clock_lunar);
-    _u8g2->drawStr(offset_x + (128 - sw) / 2, 62, _clock_lunar);
+    // 2. Draw Lunar Date (căn trái để không chạm nhiệt độ)
+    _u8g2->drawStr(offset_x + 2, 62, _clock_lunar);
+
+    // 3. Draw Temperature at bottom right
+    sw = _u8g2->getStrWidth(_clock_temp);
+    _u8g2->drawStr(offset_x + 126 - sw, 62, _clock_temp);
 
     _u8g2->setDrawColor(1);
     
@@ -1035,7 +1130,11 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
     };
 
     // Clip window cho Giờ và Phút
-    _u8g2->setClipWindow(offset_x, 13, offset_x + 128, 49);
+    int clip_x0 = offset_x < 0 ? 0 : offset_x;
+    int clip_x1 = offset_x + 128;
+    if (clip_x1 > 127) clip_x1 = 127;
+    if (clip_x0 > 127) clip_x0 = 127;
+    _u8g2->setClipWindow(clip_x0, 13, clip_x1, 49);
 
     drawDigit(_clock_h1, 3, false);
     drawDigit(_clock_h2, 25, false);
@@ -1048,7 +1147,7 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
     drawDigit(_clock_m2, 75, false);
 
     // Thu hẹp Clip window cho Giây để không bị lẹm nét thừa khi trượt lên trên
-    _u8g2->setClipWindow(offset_x, 28, offset_x + 128, 49);
+    _u8g2->setClipWindow(clip_x0, 28, clip_x1, 49);
 
     drawDigit(_clock_s1, 99, true);
     drawDigit(_clock_s2, 113, true);

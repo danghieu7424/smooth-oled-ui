@@ -12,9 +12,9 @@ public:
     // Khởi tạo RTC
     bool begin();
     
-    // Lấy thời gian từ RTC
     void readTime(int &hour, int &minute, int &second);
     void readDate(int &day, int &month, int &year);
+    float readTemperature();
     
     // Cài đặt thời gian cho RTC (được gọi khi đồng bộ API thành công)
     void adjust(int hour, int minute, int second, int day, int month, int year);
