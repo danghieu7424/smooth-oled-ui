@@ -9,6 +9,8 @@
 #include <ArduinoJson.h>
 #include "SmoothOLED.h"
 #include "TimeSyncAPI.h"
+#include "HardwareRTC.h"
+#include "ExternalEEPROM.h"
 
 int saved_brightness = 20;
 
@@ -198,7 +200,7 @@ void on_wifi_selected(int idx);
 void open_home_clock() {
   ui.openClock();
   ui.updateClock(timeSync.current_hour, timeSync.current_minute, timeSync.current_second, timeSync.solar_date_str.c_str(), timeSync.lunar_date_str.c_str());
-  if (!timeSync.is_time_synced && WiFi.status() == WL_CONNECTED) {
+  if (!timeSync.api_synced && WiFi.status() == WL_CONNECTED) {
       timeSync.update();
   }
 }
@@ -306,6 +308,20 @@ void setup() {
 
   Wire.begin(47, 48);
   Wire.setClock(400000); 
+
+  // --- Khởi tạo và kiểm tra RTC & EEPROM ---
+  if (rtc.begin()) {
+      Serial.println("[HW] DS3231 RTC found!");
+  } else {
+      Serial.println("[HW] DS3231 RTC NOT found!");
+  }
+  
+  if (extEEPROM.begin()) {
+      Serial.println("[HW] AT24C256 EEPROM found!");
+  } else {
+      Serial.println("[HW] AT24C256 EEPROM NOT found!");
+  }
+
   u8g2.begin();
   u8g2.setContrast(current_brightness); // Áp dụng độ sáng đã lưu
 
@@ -339,6 +355,9 @@ void setup() {
 
   // 4. Cấu hình TimeSync và mở Màn hình Đồng hồ
   timeSync.begin(7);
+  if (rtc.begin()) {
+      timeSync.syncFromRTC();
+  }
   open_home_clock();
 }
 
@@ -540,17 +559,16 @@ void loop() {
       ui.updateClock(timeSync.current_hour, timeSync.current_minute, timeSync.current_second, timeSync.solar_date_str.c_str(), timeSync.lunar_date_str.c_str());
   }
   
-  if (timeSync.is_time_synced) {
+  if (timeSync.api_synced) {
       // Đồng bộ lại với API mỗi 1 giờ để bù sai số và cập nhật ngày
       if (millis() - timeSync.last_time_sync > 3600000) {
           timeSync.update();
       }
   } else {
-      // Chưa đồng bộ được thời gian (do mới khởi động) -> Thử đồng bộ liên tục mỗi 2 giây nếu có mạng
+      // Chưa đồng bộ được thời gian từ web -> Thử đồng bộ liên tục mỗi 2 giây nếu có mạng
       static uint32_t last_sync_try = 0;
       if (millis() - last_sync_try > 2000) {
           last_sync_try = millis();
-          Serial.printf("[WIFI] Status: %d\n", WiFi.status());
           if (WiFi.status() == WL_CONNECTED) {
               timeSync.update();
           }

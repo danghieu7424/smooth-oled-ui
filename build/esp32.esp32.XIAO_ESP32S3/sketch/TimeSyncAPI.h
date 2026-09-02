@@ -20,11 +20,15 @@ public:
     uint32_t last_time_sync;
     uint32_t last_second_tick;
     bool is_time_synced;
+    bool api_synced; // Cờ kiểm tra xem đã lấy giờ chuẩn từ web chưa
 
     TimeSyncAPI();
     
     // Khởi tạo thư viện với múi giờ mặc định
     void begin(int tz = 7);
+    
+    // Đọc giờ từ RTC để khỏi chờ mạng
+    void syncFromRTC();
     
     // Gọi API để đồng bộ thời gian từ dh74.io.vn
     bool update();

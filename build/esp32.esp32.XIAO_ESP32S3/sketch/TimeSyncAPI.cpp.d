@@ -242,4 +242,7 @@ D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\sketch\Tim
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\WiFi\src/WiFiClient.h \
  C:\Users\dangh\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson.h \
  C:\Users\dangh\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson.hpp \
- C:\Users\dangh\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Configuration.hpp
+ C:\Users\dangh\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Configuration.hpp \
+ D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\sketch\HardwareRTC.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\Wire\src/Wire.h \
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/esp32-hal.h

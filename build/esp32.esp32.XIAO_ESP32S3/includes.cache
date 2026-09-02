@@ -50,6 +50,16 @@
     "Includepath": null
   },
   {
+    "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\ExternalEEPROM.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\HardwareRTC.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
     "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\SmoothOLED.cpp",
     "Include": "",
     "Includepath": null

@@ -1,4 +1,5 @@
 #include "TimeSyncAPI.h"
+#include "HardwareRTC.h"
 
 TimeSyncAPI timeSync;
 
@@ -12,10 +13,45 @@ TimeSyncAPI::TimeSyncAPI() {
     last_time_sync = 0;
     last_second_tick = 0;
     is_time_synced = false;
+    api_synced = false;
 }
+
+// Hàm hỗ trợ tính thứ (0=CN, 1=T2, ...)
+static int getDayOfWeek(int d, int m, int y) {
+    static int t[] = { 0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4 };
+    y -= m < 3 ? 1 : 0;
+    return ( y + y/4 - y/100 + y/400 + t[m-1] + d ) % 7;
+}
+
 
 void TimeSyncAPI::begin(int tz) {
     _tz = tz;
+}
+
+void TimeSyncAPI::syncFromRTC() {
+    int h, m, s, d, mo, y;
+    rtc.readTime(h, m, s);
+    rtc.readDate(d, mo, y);
+    
+    current_hour = h;
+    current_minute = m;
+    current_second = s;
+    
+    int dow = getDayOfWeek(d, mo, y);
+    const char* dow_str[] = {"CN", "T2", "T3", "T4", "T5", "T6", "T7"};
+    char buf[64];
+    snprintf(buf, sizeof(buf), "%s %02d Th%02d %04d", dow_str[dow], d, mo, y);
+    solar_date_str = String(buf);
+    
+    // Lưu ý: RTC không lưu Âm lịch, ta đành để tạm "--/--" hoặc tính toán nếu có thuật toán
+    // Hiện tại chờ API cập nhật Âm lịch sau.
+    if (lunar_date_str == "") {
+        lunar_date_str = "AL: --/--";
+    }
+    
+    is_time_synced = true;
+    last_second_tick = millis();
+    Serial.printf("[RTC] Synced: %02d:%02d:%02d %s\n", h, m, s, buf);
 }
 
 bool TimeSyncAPI::update() {
@@ -48,19 +84,25 @@ bool TimeSyncAPI::update() {
                 int s_d = doc["data"]["solar"]["day"];
                 int s_m = doc["data"]["solar"]["month"];
                 int s_y = doc["data"]["solar"]["year"];
-                char buf[32];
-                snprintf(buf, sizeof(buf), "%02d/%02d/%04d", s_d, s_m, s_y);
+                int dow = getDayOfWeek(s_d, s_m, s_y);
+                const char* dow_str[] = {"CN", "T2", "T3", "T4", "T5", "T6", "T7"};
+                char buf[64];
+                snprintf(buf, sizeof(buf), "%s %02d Th%02d %04d", dow_str[dow], s_d, s_m, s_y);
                 solar_date_str = String(buf);
                 
                 int l_d = doc["data"]["lunar"]["day"];
                 int l_m = doc["data"]["lunar"]["month"];
                 char l_buf[64];
-                snprintf(l_buf, sizeof(l_buf), "AL: %02d/%02d", l_d, l_m);
+                snprintf(l_buf, sizeof(l_buf), "AL: %02d Th%02d", l_d, l_m);
                 lunar_date_str = String(l_buf);
                 
                 is_time_synced = true;
+                api_synced = true;
                 last_time_sync = millis();
                 last_second_tick = millis();
+                
+                // Cập nhật lại cho DS3231
+                rtc.adjust(current_hour, current_minute, current_second, s_d, s_m, s_y);
                 
                 Serial.println("[API] Sync SUCCESS!");
                 success = true;

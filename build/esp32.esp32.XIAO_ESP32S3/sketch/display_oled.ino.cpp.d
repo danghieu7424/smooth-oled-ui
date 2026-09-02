@@ -253,4 +253,6 @@ D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\sketch\dis
  C:\Users\dangh\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson.hpp \
  C:\Users\dangh\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Configuration.hpp \
  D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\sketch\SmoothOLED.h \
- D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\sketch\TimeSyncAPI.h
+ D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\sketch\TimeSyncAPI.h \
+ D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\sketch\HardwareRTC.h \
+ D:\all_projects\rust\rust\display_oled\build\esp32.esp32.XIAO_ESP32S3\sketch\ExternalEEPROM.h

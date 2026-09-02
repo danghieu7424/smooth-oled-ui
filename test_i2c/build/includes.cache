@@ -1,0 +1,27 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\cores\\esp32"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\variants\\XIAO_ESP32S3"
+  },
+  {
+    "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\test_i2c\\build\\sketch\\test_i2c.ino.cpp",
+    "Include": "Wire.h",
+    "Includepath": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\Wire\\src"
+  },
+  {
+    "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\test_i2c\\build\\sketch\\test_i2c.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\Wire\\src\\Wire.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]
