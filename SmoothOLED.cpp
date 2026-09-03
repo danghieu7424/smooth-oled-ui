@@ -289,6 +289,7 @@ void SmoothOLED::openFullList(const char* title, const char** items, int count, 
         _list_count = count;
         _list_selected_index = 0;
         _list_camera_y = 0;
+        _list_box_y = 0.0f; // Sử dụng _list_box_y như một virtual Y coordinate (0, 12, 24...)
         _list_on_select = on_select;
         _last_switch = millis();
     }
@@ -736,7 +737,12 @@ void SmoothOLED::draw_full_list_menu(int offset_x) {
     float target_y = _list_selected_index * 12;
     _list_camera_y += (target_y - _list_camera_y) * 0.3f;
     
+    // Khớp vị trí bằng số nguyên để chữ không bị rung
     int start_y = 28 - (int)_list_camera_y;
+    
+    // Physics cho hộp highlight mượt mà (Dùng tọa độ ảo để tránh OVERSHOOT)
+    _list_box_y += (target_y - _list_box_y) * 0.4f;
+    int current_box_screen_y = 28 - (int)_list_camera_y + (int)_list_box_y;
     
     // Marquee logic
     int text_pixel_width = _u8g2->getStrWidth(_list_items[_list_selected_index]);
@@ -763,19 +769,15 @@ void SmoothOLED::draw_full_list_menu(int offset_x) {
 
     _u8g2->setClipWindow(0 + offset_x, 14, 128 + offset_x, 64); // Không vẽ tràn lên tiêu đề
 
-    // Vẽ danh sách
+    // Vẽ danh sách chữ (Màu trắng)
     for (int i = 0; i < _list_count; i++) {
         int y = start_y + i * 12;
         if (y > 10 && y < 76) {
+            _u8g2->setDrawColor(1);
             if (i == _list_selected_index) {
-                // Highlight box (Chừa chỗ cho scrollbar bên phải)
-                _u8g2->setDrawColor(1);
-                _u8g2->drawBox(4 + offset_x, y - 9, 118, 12);
-                _u8g2->setDrawColor(0);
-                
                 int max_w = 114;
                 if (text_pixel_width > max_w) {
-                    _u8g2->setClipWindow(4 + offset_x, y - 9, 122 + offset_x, y + 3); // Clip khít vào highlight box
+                    _u8g2->setClipWindow(4 + offset_x, y - 9, 122 + offset_x, y + 3); // Clip khít vào vùng highlight
                     _u8g2->drawStr(8 + offset_x - (int)_marquee_offset, y, _list_items[i]);
                     // Vẽ đoạn chữ lặp lại phía sau
                     _u8g2->drawStr(8 + offset_x - (int)_marquee_offset + text_pixel_width + gap, y, _list_items[i]);
@@ -784,12 +786,11 @@ void SmoothOLED::draw_full_list_menu(int offset_x) {
                     _u8g2->drawStr(8 + offset_x, y, _list_items[i]);
                 }
             } else {
-                _u8g2->setDrawColor(1);
                 int unselected_w = _u8g2->getStrWidth(_list_items[i]);
                 if (unselected_w > 114) {
                     _u8g2->drawStr(8 + offset_x, y, _list_items[i]);
                     _u8g2->setDrawColor(0); // Màu đen để che phần đuôi chữ thừa
-                    _u8g2->drawBox(112 + offset_x, y - 9, 16, 12); // Rộng 16px để che phủ hoàn toàn đến viền phải (112 + 16 = 128)
+                    _u8g2->drawBox(112 + offset_x, y - 9, 16, 12); // Rộng 16px để che phủ hoàn toàn đến viền phải
                     _u8g2->setDrawColor(1); // Trắng lại để vẽ dấu chấm
                     _u8g2->drawStr(112 + offset_x, y, "..");
                 } else {
@@ -798,6 +799,12 @@ void SmoothOLED::draw_full_list_menu(int offset_x) {
             }
         }
     }
+    
+    // Vẽ XOR Highlight Box ĐÈ lên toàn bộ (Tạo hiệu ứng invert color mượt mà)
+    _u8g2->setDrawColor(2); // Chế độ XOR
+    _u8g2->drawBox(4 + offset_x, current_box_screen_y - 9, 118, 12);
+    _u8g2->setDrawColor(1); // Trả lại chế độ bình thường
+    
     _u8g2->setMaxClipWindow(); // Bỏ clip window
 
     // Vẽ Scrollbar
@@ -1024,9 +1031,9 @@ void SmoothOLED::openClock() {
         _clock_s1.current_val = _clock_s1.next_val = 0;
         _clock_s2.current_val = _clock_s2.next_val = 0;
         _clock_h1.anim_y = _clock_h2.anim_y = _clock_m1.anim_y = _clock_m2.anim_y = _clock_s1.anim_y = _clock_s2.anim_y = 0.0f;
-        memset(_clock_solar, 0, sizeof(_clock_solar));
-        memset(_clock_lunar, 0, sizeof(_clock_lunar));
-        memset(_clock_temp, 0, sizeof(_clock_temp));
+        _clock_solar.init("-- -- Th-- ----");
+        _clock_lunar.init("AL: -- Th--");
+        _clock_temp.init("--.-C");
     }
 }
 
@@ -1038,6 +1045,18 @@ void SmoothOLED::updateClock(int h, int m, int s, const char* solar_date, const 
             d.anim_y = 0.0f;
         }
     };
+    
+    auto updateString = [](StringAnim& sa, const char* new_str) {
+        const char* target = (new_str && new_str[0] != '\0') ? new_str : sa.placeholder;
+        for (int i = 0; i < sa.len; i++) {
+            char c = target[i] ? target[i] : ' '; // Bù khoảng trắng nếu chuỗi mới ngắn hơn
+            if (sa.chars[i].next_c != c) {
+                sa.chars[i].current_c = sa.chars[i].next_c;
+                sa.chars[i].next_c = c;
+                sa.chars[i].anim_y = 0.0f;
+            }
+        }
+    };
 
     updateDigit(_clock_h1, h / 10);
     updateDigit(_clock_h2, h % 10);
@@ -1046,9 +1065,9 @@ void SmoothOLED::updateClock(int h, int m, int s, const char* solar_date, const 
     updateDigit(_clock_s1, s / 10);
     updateDigit(_clock_s2, s % 10);
 
-    if (solar_date) strncpy(_clock_solar, solar_date, 31);
-    if (lunar_date) strncpy(_clock_lunar, lunar_date, 63);
-    if (temp_str) strncpy(_clock_temp, temp_str, 15);
+    updateString(_clock_solar, solar_date ? solar_date : "");
+    updateString(_clock_lunar, lunar_date ? lunar_date : "");
+    updateString(_clock_temp, temp_str ? temp_str : "");
 }
 
 void SmoothOLED::update_clock_physics() {
@@ -1064,26 +1083,81 @@ void SmoothOLED::update_clock_physics() {
         }
     };
 
+    auto physString = [](StringAnim& sa) {
+        for (int i = 0; i < sa.len; i++) {
+            if (sa.chars[i].current_c != sa.chars[i].next_c) {
+                sa.chars[i].anim_y += 0.1f; // Animation speed
+                if (sa.chars[i].anim_y >= 1.0f) {
+                    sa.chars[i].anim_y = 1.0f;
+                    sa.chars[i].current_c = sa.chars[i].next_c;
+                }
+            }
+        }
+    };
+
     physDigit(_clock_h1);
     physDigit(_clock_h2);
     physDigit(_clock_m1);
     physDigit(_clock_m2);
     physDigit(_clock_s1);
     physDigit(_clock_s2);
+    
+    physString(_clock_solar);
+    physString(_clock_lunar);
+    physString(_clock_temp);
 }
 
 void SmoothOLED::draw_clock_menu(int offset_x) {
-    // 1. Draw Solar Date
     _u8g2->setFont(u8g2_font_profont12_tf);
-    int sw = _u8g2->getStrWidth(_clock_solar);
-    _u8g2->drawStr(offset_x + (128 - sw) / 2, 10, _clock_solar);
 
-    // 2. Draw Lunar Date (căn trái để không chạm nhiệt độ)
-    _u8g2->drawStr(offset_x + 2, 62, _clock_lunar);
+    enum Align { ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT };
+    auto drawStringAnim = [&](StringAnim& sa, int start_x, int y, int clip_y0, int clip_y1, Align align) {
+        int slide_dist = 12; // Chiều cao font ~10px + 2px gap
+        
+        int clip_x0 = offset_x < 0 ? 0 : offset_x;
+        int clip_x1 = offset_x + 127 > 127 ? 127 : offset_x + 127;
+        _u8g2->setClipWindow(clip_x0, clip_y0, clip_x1, clip_y1);
+        
+        int total_w = 0;
+        int char_widths[32];
+        for (int i = 0; i < sa.len; i++) {
+            char temp[2] = { sa.chars[i].next_c, '\0' };
+            char_widths[i] = _u8g2->getStrWidth(temp);
+            total_w += char_widths[i];
+        }
+        
+        int current_x;
+        if (align == ALIGN_CENTER) {
+            current_x = start_x + (128 - total_w) / 2;
+        } else if (align == ALIGN_RIGHT) {
+            current_x = start_x - total_w;
+        } else {
+            current_x = start_x;
+        }
+        
+        for (int i = 0; i < sa.len; i++) {
+            char temp_cur[2] = { sa.chars[i].current_c, '\0' };
+            char temp_next[2] = { sa.chars[i].next_c, '\0' };
+            
+            if (sa.chars[i].current_c == sa.chars[i].next_c) {
+                _u8g2->drawStr(current_x + offset_x, y, temp_cur);
+            } else {
+                int offset = (int)(sa.chars[i].anim_y * slide_dist);
+                _u8g2->drawStr(current_x + offset_x, y - offset, temp_cur);
+                _u8g2->drawStr(current_x + offset_x, y + slide_dist - offset, temp_next);
+            }
+            current_x += char_widths[i];
+        }
+    };
 
-    // 3. Draw Temperature at bottom right
-    sw = _u8g2->getStrWidth(_clock_temp);
-    _u8g2->drawStr(offset_x + 126 - sw, 62, _clock_temp);
+    // 1. Draw Solar Date (Căn giữa)
+    drawStringAnim(_clock_solar, 0, 10, 0, 12, ALIGN_CENTER);
+
+    // 2. Draw Lunar Date (Căn trái)
+    drawStringAnim(_clock_lunar, 2, 62, 50, 64, ALIGN_LEFT);
+
+    // 3. Draw Temperature (Căn phải)
+    drawStringAnim(_clock_temp, 126, 62, 50, 64, ALIGN_RIGHT);
 
     _u8g2->setDrawColor(1);
     

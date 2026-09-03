@@ -44,6 +44,29 @@ struct ClockDigit {
     float anim_y;
 };
 
+struct CharAnim {
+    char current_c;
+    char next_c;
+    float anim_y;
+};
+
+struct StringAnim {
+    CharAnim chars[32];
+    int len;
+    char placeholder[32];
+    
+    void init(const char* ph) {
+        strncpy(placeholder, ph, 31);
+        placeholder[31] = '\0';
+        len = strlen(placeholder);
+        for (int i = 0; i < len; i++) {
+            chars[i].current_c = placeholder[i];
+            chars[i].next_c = placeholder[i];
+            chars[i].anim_y = 1.0f;
+        }
+    }
+};
+
 class SmoothOLED {
 public:
     SmoothOLED(U8G2* u8g2, Stream* serial = nullptr);
@@ -169,6 +192,7 @@ private:
     int _list_count;
     int _list_selected_index;
     float _list_camera_y;
+    float _list_box_y;
     ListCallback _list_on_select;
 
     // --- Biến Modal ---
@@ -177,9 +201,9 @@ private:
 
     // --- Biến Clock ---
     ClockDigit _clock_h1, _clock_h2, _clock_m1, _clock_m2, _clock_s1, _clock_s2;
-    char _clock_solar[32];
-    char _clock_lunar[64];
-    char _clock_temp[16];
+    StringAnim _clock_solar;
+    StringAnim _clock_lunar;
+    StringAnim _clock_temp;
 
     void flush_display();
 

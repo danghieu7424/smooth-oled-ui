@@ -53,7 +53,7 @@ void TimeSyncAPI::syncFromRTC() {
     // Lưu ý: RTC không lưu Âm lịch, ta đành để tạm "--/--" hoặc tính toán nếu có thuật toán
     // Hiện tại chờ API cập nhật Âm lịch sau.
     if (lunar_date_str == "") {
-        lunar_date_str = "AL: --/--";
+        lunar_date_str = "AL: -- Th--";
     }
     
     is_time_synced = true;
