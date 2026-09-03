@@ -123,6 +123,10 @@ bool TimeSyncAPI::update() {
         Serial.println("[API] HTTP Begin Failed!");
     }
     delete client;
+    
+    // Cập nhật mốc thời gian kể cả khi lỗi để tránh spam request liên tục làm treo máy
+    last_time_sync = millis();
+    
     return success;
 }
 
@@ -147,6 +151,15 @@ bool TimeSyncAPI::tick() {
                 current_hour++;
                 if (current_hour >= 24) {
                     current_hour = 0;
+                    
+                    // Sang ngày mới: Buộc cập nhật ngày tháng
+                    if (WiFi.status() == WL_CONNECTED) {
+                        if (!update()) {
+                            syncFromRTC();
+                        }
+                    } else {
+                        syncFromRTC();
+                    }
                 }
             }
         }
