@@ -71,40 +71,7 @@ pub fn DashboardPage() -> impl IntoView {
     view! {
         <div class="firebase-layout">
             // Top Navigation Bar
-            <header class="fb-header">
-                <div class="fb-header-left">
-                    <A href="/" class="logo">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFA000"><path d="M11.64 5.93h.01L15.8 13.5l1.83-3.19a.53.53 0 0 1 .9 0l4.31 7.5a.51.51 0 0 1-.44.78H1.61a.51.51 0 0 1-.45-.77l6.83-11.96a.53.53 0 0 1 .9 0l1.43 2.5 1.32-2.43a.52.52 0 0 1 .9 0z"/></svg>
-                        <span>"OTA Hub"</span>
-                    </A>
-                </div>
-                <div class="fb-header-right">
-                    <div class="nav-icon">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                    </div>
-                    <Suspense fallback=move || view! { <div></div> }>
-                        {move || {
-                            let me = me_resource.get().unwrap_or(Ok(UserProfile { id: None, name: None, picture: None, error: Some("Not loaded".to_string()) })).unwrap_or(UserProfile { id: None, name: None, picture: None, error: Some("Not loaded".to_string()) });
-                            if me.error.is_none() && me.name.is_some() {
-                                view! {
-                                    <div class="user-menu" style="display: flex; align-items: center; gap: 0.5rem; color: #fff;">
-                                        <img src=me.picture.unwrap_or_default() alt="Avatar" class="avatar" style="width: 28px; height: 28px; border-radius: 50%;" />
-                                        <span>{me.name.unwrap_or_default()}</span>
-                                        <a href="http://localhost:7424/api/auth/logout" style="color: #ff8a65; font-size: 0.8rem; margin-left: 0.5rem; text-decoration: none;">"Đăng xuất"</a>
-                                    </div>
-                                }.into_view()
-                            } else {
-                                view! {
-                                    <A href="/login" class="login-btn">
-                                        <img src="https://ui-avatars.com/api/?name=Guest&background=333&color=fff" alt="Avatar" class="avatar" />
-                                        <span>"Đăng nhập"</span>
-                                    </A>
-                                }.into_view()
-                            }
-                        }}
-                    </Suspense>
-                </div>
-            </header>
+
 
             <main class="fb-main">
                 <div class="greeting-section">

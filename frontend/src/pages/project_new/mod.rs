@@ -155,15 +155,6 @@ pub fn ProjectNewPage() -> impl IntoView {
 
     view! {
         <div class="firebase-layout firebase-new-project">
-            <header class="fb-header">
-                <div class="fb-header-left">
-                    <A href="/" class="logo">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFA000"><path d="M11.64 5.93h.01L15.8 13.5l1.83-3.19a.53.53 0 0 1 .9 0l4.31 7.5a.51.51 0 0 1-.44.78H1.61a.51.51 0 0 1-.45-.77l6.83-11.96a.53.53 0 0 1 .9 0l1.43 2.5 1.32-2.43a.52.52 0 0 1 .9 0z"/></svg>
-                        <span>"OTA Hub"</span>
-                    </A>
-                </div>
-            </header>
-
             <main class="fb-main fb-centered">
                 <div class="create-project-card wizard-mode-vertical">
                     <h1>"Tạo một dự án"</h1>
