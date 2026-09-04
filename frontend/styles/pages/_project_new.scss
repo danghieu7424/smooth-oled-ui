@@ -128,4 +128,132 @@
       }
     }
   }
+
+  // --- WIZARD STYLES ---
+  .wizard-mode {
+    .step-indicator-container {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      
+      .step-line {
+        flex: 1;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        transition: background 0.3s;
+        
+        &.active {
+          background: #ef5350; // The red color the user drew
+        }
+      }
+    }
+
+    textarea {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-family: inherit;
+      resize: vertical;
+      
+      &:focus {
+        outline: none;
+        border-color: #82b1ff;
+      }
+    }
+
+    .id-preview {
+      display: flex;
+      align-items: center;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      color: #fff;
+      
+      .id-prefix {
+        color: #90a4ae;
+      }
+    }
+
+    .file-drop-zone {
+      margin-top: 0.5rem;
+      
+      .file-input-hidden {
+        display: none;
+      }
+      
+      .file-label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px dashed rgba(255, 255, 255, 0.15);
+        padding: 2rem;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.06);
+          border-color: #ffca28;
+        }
+        
+        span {
+          color: #e0e0e0;
+          font-weight: 500;
+        }
+      }
+    }
+
+    .version-generator {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 8px;
+      
+      label {
+        font-size: 0.85rem;
+        color: #90a4ae;
+      }
+      
+      .version-preview {
+        font-family: monospace;
+        font-size: 1.1rem;
+        color: #82b1ff;
+        margin-top: 0.25rem;
+        margin-bottom: 1rem;
+      }
+      
+      .version-checkboxes {
+        display: flex;
+        gap: 1.5rem;
+        
+        .cb-label {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          cursor: pointer;
+          font-size: 0.9rem;
+          color: #e0e0e0;
+          
+          input {
+            width: auto;
+            accent-color: #82b1ff;
+          }
+        }
+      }
+    }
+
+    .wizard-actions {
+      justify-content: space-between;
+    }
+  }
 }

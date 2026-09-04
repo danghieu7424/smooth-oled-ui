@@ -27,6 +27,7 @@ pub fn router() -> Router<Arc<AppState>> {
     Router::new()
         .route("/stats", get(get_stats))
         .route("/:id", get(get_project))
+        .route("/:id/firmware", axum::routing::post(upload_firmware))
         .route("/", get(list_projects).post(create_project))
 }
 
@@ -144,26 +145,86 @@ async fn get_project(Path(id): Path<String>, State(state): State<Arc<AppState>>)
 pub struct CreateProjectReq {
     pub name: String,
     pub project_id: String,
+    pub description: Option<String>,
 }
 
-async fn create_project(State(state): State<Arc<AppState>>, axum::extract::Json(payload): axum::extract::Json<CreateProjectReq>) -> Result<Json<serde_json::Value>, axum::http::StatusCode> {
-    // Note: Trong thực tế sẽ lấy user_id từ Token JWT
-    let user_id = 1; 
-    let token = crate::helpers::suid::generate_random_hex(); // Tạo token mặc định cho Firmware push
+async fn create_project(
+    State(state): State<Arc<AppState>>,
+    jar: axum_extra::extract::cookie::CookieJar,
+    axum::extract::Json(payload): axum::extract::Json<CreateProjectReq>
+) -> Result<Json<serde_json::Value>, axum::http::StatusCode> {
+    
+    let mut user_id = 1;
+    if let Some(cookie) = jar.get("auth_token") {
+        if let Ok(token_data) = crate::auth::token::verify_user_token(cookie.value()) {
+            user_id = token_data.claims.sub;
+        }
+    }
+
+    let final_project_id = format!("{}-{}", user_id, payload.project_id);
+    let token = crate::helpers::suid::generate_random_hex();
     
     let res = state.storage.execute_query({
         let name = payload.name.clone();
-        let project_id = payload.project_id.clone();
+        let description = payload.description.clone();
+        let final_id_clone = final_project_id.clone();
         move |conn| {
             conn.execute(
-                "INSERT INTO projects (user_id, project_id, token, name) VALUES (?1, ?2, ?3, ?4)",
-                rusqlite::params![user_id, project_id, token, name],
+                "INSERT INTO projects (user_id, project_id, token, name, description) VALUES (?1, ?2, ?3, ?4, ?5)",
+                rusqlite::params![user_id, final_id_clone, token, name, description],
             )
         }
     }).await;
 
     match res {
-        Ok(_) => Ok(Json(serde_json::json!({"status": "success", "project_id": payload.project_id}))),
+        Ok(_) => Ok(Json(serde_json::json!({"status": "success", "project_id": final_project_id}))),
         Err(_) => Err(axum::http::StatusCode::BAD_REQUEST),
+    }
+}
+
+async fn upload_firmware(
+    Path(project_id): Path<String>,
+    State(state): State<Arc<AppState>>,
+    mut multipart: axum::extract::Multipart,
+) -> Result<Json<serde_json::Value>, axum::http::StatusCode> {
+    let mut version = String::new();
+    let mut file_data = Vec::new();
+
+    while let Some(field) = multipart.next_field().await.unwrap_or(None) {
+        if let Some(name) = field.name() {
+            if name == "version" {
+                version = field.text().await.unwrap_or_default();
+            } else if name == "file" {
+                file_data = field.bytes().await.unwrap_or_default().to_vec();
+            }
+        }
+    }
+
+    if version.is_empty() || file_data.is_empty() {
+        return Err(axum::http::StatusCode::BAD_REQUEST);
+    }
+
+    // Save firmware file (mock path for now, in real app save to storage)
+    let file_path = format!("storages/firmwares/{}_{}.bin", project_id, version);
+    if let Some(parent) = std::path::Path::new(&file_path).parent() {
+        std::fs::create_dir_all(parent).ok();
+    }
+    std::fs::write(&file_path, &file_data).map_err(|_| axum::http::StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let res = state.storage.execute_query({
+        let p_id = project_id.clone();
+        let ver = version.clone();
+        let path = file_path.clone();
+        move |conn| {
+            conn.execute(
+                "INSERT INTO firmwares (project_id, version, file_path) VALUES (?1, ?2, ?3)",
+                rusqlite::params![p_id, ver, path],
+            )
+        }
+    }).await;
+
+    match res {
+        Ok(_) => Ok(Json(serde_json::json!({"status": "success", "version": version}))),
+        Err(_) => Err(axum::http::StatusCode::INTERNAL_SERVER_ERROR),
     }
 }

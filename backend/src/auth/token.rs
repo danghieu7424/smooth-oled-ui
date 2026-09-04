@@ -51,3 +51,9 @@ pub fn generate_user_token(user_id: i64, role: String, _server_sk: &[u8]) -> Res
     };
     encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_bytes()))
 }
+
+pub fn verify_user_token(token: &str) -> Result<TokenData<UserClaims>, JwtError> {
+    let secret = jwt_secret();
+    let validation = Validation::default();
+    decode::<UserClaims>(token, &DecodingKey::from_secret(secret.as_bytes()), &validation)
+}

@@ -17,6 +17,8 @@ impl TableEngine {
         let conn = tokio::task::spawn_blocking(move || -> Result<Connection> {
             let conn = Connection::open(&path_str)?;
             
+            let _ = conn.execute("ALTER TABLE projects ADD COLUMN description TEXT", []);
+
             // Khởi tạo bảng cho OTA System
             conn.execute(
                 "CREATE TABLE IF NOT EXISTS users (
@@ -37,6 +39,7 @@ impl TableEngine {
                     project_id TEXT UNIQUE NOT NULL,
                     token TEXT NOT NULL,
                     name TEXT NOT NULL,
+                    description TEXT,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY(user_id) REFERENCES users(id)
                 )",

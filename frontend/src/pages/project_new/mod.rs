@@ -6,56 +6,129 @@ use serde::{Deserialize, Serialize};
 struct CreateProjectReq {
     project_id: String,
     name: String,
+    description: Option<String>,
 }
 
 #[component]
 pub fn ProjectNewPage() -> impl IntoView {
+    let (step, set_step) = create_signal(1);
+    
+    // Step 1
     let (name, set_name) = create_signal(String::new());
     let (project_id, set_project_id) = create_signal(String::new());
+    
+    // Step 2
+    let (description, set_description) = create_signal(String::new());
+    
+    // Step 3
+    let (file, set_file) = create_signal(None::<web_sys::File>);
+    let (is_major, set_is_major) = create_signal(false);
+    let (is_minor, set_is_minor) = create_signal(false);
+    let (is_patch, set_is_patch) = create_signal(true);
+
     let (error_msg, set_error_msg) = create_signal(None::<String>);
     let (is_loading, set_is_loading) = create_signal(false);
     
     let navigate = use_navigate();
 
-    let on_submit = move |ev: ev::SubmitEvent| {
-        ev.prevent_default();
-        if name.get().is_empty() || project_id.get().is_empty() {
-            set_error_msg.set(Some("Vui lòng điền đầy đủ thông tin.".to_string()));
-            return;
-        }
+    // Derived version name based on checkboxes
+    let derived_version = move || {
+        let major = if is_major.get() { 1 } else { 0 };
+        let minor = if is_minor.get() { 1 } else { 0 };
+        let patch = if is_patch.get() { 1 } else { 0 };
+        format!("firmware_V{}.{}.{}", major, minor, patch)
+    };
 
+    let go_next = move |_| {
+        if step.get() == 1 {
+            if name.get().is_empty() || project_id.get().is_empty() {
+                set_error_msg.set(Some("Vui lòng điền Tên dự án.".to_string()));
+                return;
+            }
+            set_error_msg.set(None);
+            set_step.set(2);
+        } else if step.get() == 2 {
+            set_step.set(3);
+        }
+    };
+
+    let go_back = move |_| {
+        if step.get() > 1 {
+            set_step.set(step.get() - 1);
+            set_error_msg.set(None);
+        }
+    };
+
+    let on_submit_all = move |ev: ev::SubmitEvent| {
+        ev.prevent_default();
         set_is_loading.set(true);
         set_error_msg.set(None);
 
         let nav = navigate.clone();
 
         spawn_local(async move {
+            // Create project first
             let req_body = CreateProjectReq {
                 name: name.get(),
                 project_id: project_id.get(),
+                description: if description.get().is_empty() { None } else { Some(description.get()) },
             };
 
             let res = gloo_net::http::Request::post("http://localhost:7424/api/projects")
+                .credentials(web_sys::RequestCredentials::Include)
                 .json(&req_body)
                 .expect("Failed to serialize")
                 .send()
                 .await;
 
-            set_is_loading.set(false);
+            if let Ok(resp) = res {
+                if resp.ok() {
+                    // Extract full project_id from response
+                    let created_data: serde_json::Value = resp.json().await.unwrap_or_default();
+                    let full_project_id = created_data["project_id"].as_str().unwrap_or(&project_id.get()).to_string();
 
-            match res {
-                Ok(resp) => {
-                    if resp.ok() {
-                        nav("/", Default::default());
-                    } else {
-                        set_error_msg.set(Some("Lỗi khi tạo dự án (Có thể ID đã tồn tại).".to_string()));
+                    // If file is selected, upload it
+                    if let Some(upload_file) = file.get() {
+                        let form_data = web_sys::FormData::new().unwrap();
+                        let filename = upload_file.name();
+                        form_data.append_with_str("version", &derived_version()).unwrap();
+                        form_data.append_with_blob_and_filename("file", &upload_file.into(), &filename).unwrap();
+
+                        let upload_res = gloo_net::http::Request::post(&format!("http://localhost:7424/api/projects/{}/firmware", full_project_id))
+                            .credentials(web_sys::RequestCredentials::Include)
+                            .body(form_data).unwrap()
+                            .send()
+                            .await;
+
+                        if upload_res.is_err() || !upload_res.as_ref().unwrap().ok() {
+                            set_error_msg.set(Some("Dự án đã tạo nhưng Upload Firmware thất bại.".to_string()));
+                            set_is_loading.set(false);
+                            return;
+                        }
                     }
-                }
-                Err(_) => {
-                    set_error_msg.set(Some("Lỗi kết nối máy chủ.".to_string()));
+
+                    nav("/", Default::default());
+                    return;
                 }
             }
+            set_error_msg.set(Some("Lỗi khi tạo dự án (Có thể ID đã tồn tại).".to_string()));
+            set_is_loading.set(false);
         });
+    };
+
+    let on_file_change = move |ev: ev::Event| {
+        let input: web_sys::HtmlInputElement = event_target(&ev);
+        if let Some(files) = input.files() {
+            if let Some(f) = files.get(0) {
+                if f.name().ends_with(".bin") {
+                    set_file.set(Some(f));
+                    set_error_msg.set(None);
+                } else {
+                    set_file.set(None);
+                    set_error_msg.set(Some("Chỉ chấp nhận file định dạng .bin".to_string()));
+                }
+            }
+        }
     };
 
     view! {
@@ -70,37 +143,100 @@ pub fn ProjectNewPage() -> impl IntoView {
             </header>
 
             <main class="fb-main fb-centered">
-                <div class="create-project-card">
+                <div class="create-project-card wizard-mode">
+                    // Step Indicators
+                    <div class="step-indicator-container">
+                        <div class=move || format!("step-line {}", if step.get() >= 1 { "active" } else { "" })></div>
+                        <div class=move || format!("step-line {}", if step.get() >= 2 { "active" } else { "" })></div>
+                        <div class=move || format!("step-line {}", if step.get() >= 3 { "active" } else { "" })></div>
+                    </div>
+
                     <h1>"Tạo một dự án"</h1>
                     <p class="subtitle">"Dự án cho phép bạn quản lý thiết bị và cập nhật Firmware."</p>
 
-                    <form on:submit=on_submit>
-                        <div class="form-group">
-                            <label for="p_name">"Tên dự án của bạn là gì?"</label>
-                            <input 
-                                type="text" 
-                                id="p_name"
-                                placeholder="VD: ESP32 Smart Home"
-                                prop:value=name
-                                on:input=move |ev| {
-                                    let val = event_target_value(&ev);
-                                    set_name.set(val.clone());
-                                    let generated_id = val.to_lowercase().replace(" ", "-");
-                                    set_project_id.set(generated_id);
-                                }
-                            />
+                    <form on:submit=on_submit_all>
+                        
+                        // --- STEP 1 ---
+                        <div class="wizard-step" style=move || if step.get() == 1 { "display: block;" } else { "display: none;" }>
+                            <div class="form-group">
+                                <label for="p_name">"Tên dự án của bạn là gì?"</label>
+                                <input 
+                                    type="text" 
+                                    id="p_name"
+                                    placeholder="VD: ESP32 Smart Home"
+                                    prop:value=name
+                                    on:input=move |ev| {
+                                        let val = event_target_value(&ev);
+                                        set_name.set(val.clone());
+                                        let generated_id = val.to_lowercase().replace(" ", "-");
+                                        set_project_id.set(generated_id);
+                                    }
+                                />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="p_id">"ID Dự án (Tự động tạo)"</label>
+                                <div class="id-preview">
+                                    <span class="id-prefix">"ID_cua_ban-"</span>
+                                    <span>{move || project_id.get()}</span>
+                                </div>
+                                <small class="hint">"ID dự án được tự động gán cùng với ID người dùng để đảm bảo tính duy nhất."</small>
+                            </div>
                         </div>
 
-                        <div class="form-group">
-                            <label for="p_id">"ID Dự án (định danh duy nhất)"</label>
-                            <input 
-                                type="text" 
-                                id="p_id"
-                                placeholder="VD: esp32-smart-home"
-                                prop:value=project_id
-                                on:input=move |ev| set_project_id.set(event_target_value(&ev))
-                            />
-                            <small class="hint">"ID dự án không thể thay đổi sau khi tạo."</small>
+                        // --- STEP 2 ---
+                        <div class="wizard-step" style=move || if step.get() == 2 { "display: block;" } else { "display: none;" }>
+                            <div class="form-group">
+                                <label for="p_desc">"Mô tả dự án (Có thể bỏ qua)"</label>
+                                <textarea 
+                                    id="p_desc"
+                                    placeholder="VD: Dự án điều khiển đèn LED qua Wifi..."
+                                    rows="4"
+                                    prop:value=description
+                                    on:input=move |ev| set_description.set(event_target_value(&ev))
+                                ></textarea>
+                            </div>
+                        </div>
+
+                        // --- STEP 3 ---
+                        <div class="wizard-step" style=move || if step.get() == 3 { "display: block;" } else { "display: none;" }>
+                            <div class="form-group">
+                                <label>"Tải lên Firmware khởi tạo (Có thể bỏ qua)"</label>
+                                <div class="file-drop-zone">
+                                    <input type="file" id="fw_upload" accept=".bin" on:change=on_file_change class="file-input-hidden" />
+                                    <label for="fw_upload" class="file-label">
+                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFCA28" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                        <span>{move || if let Some(f) = file.get() { format!("Đã chọn: {}", f.name()) } else { "Click để chọn file .bin".to_string() }}</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            {move || if file.get().is_some() {
+                                view! {
+                                    <div class="version-generator">
+                                        <label>"Phiên bản tự động:"</label>
+                                        <div class="version-preview">
+                                            {move || derived_version()}
+                                        </div>
+                                        <div class="version-checkboxes">
+                                            <label class="cb-label">
+                                                <input type="checkbox" prop:checked=is_major on:change=move |ev| set_is_major.set(event_target_checked(&ev)) />
+                                                <span>"Bản chính thức"</span>
+                                            </label>
+                                            <label class="cb-label">
+                                                <input type="checkbox" prop:checked=is_minor on:change=move |ev| set_is_minor.set(event_target_checked(&ev)) />
+                                                <span>"Bản bổ sung"</span>
+                                            </label>
+                                            <label class="cb-label">
+                                                <input type="checkbox" prop:checked=is_patch on:change=move |ev| set_is_patch.set(event_target_checked(&ev)) />
+                                                <span>"Bản vá lỗi"</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                }.into_view()
+                            } else {
+                                view! {}.into_view()
+                            }}
                         </div>
 
                         {move || {
@@ -112,11 +248,26 @@ pub fn ProjectNewPage() -> impl IntoView {
                             })
                         }}
 
-                        <div class="form-actions">
-                            <A href="/" class="btn-cancel">"Hủy"</A>
-                            <button type="submit" class="btn-submit" disabled=is_loading>
-                                {move || if is_loading.get() { "Đang tạo..." } else { "Tạo dự án" }}
-                            </button>
+                        <div class="form-actions wizard-actions">
+                            {move || if step.get() > 1 {
+                                view! { <button type="button" class="btn-cancel" on:click=go_back>"Quay lại"</button> }.into_view()
+                            } else {
+                                view! { <A href="/" class="btn-cancel">"Hủy"</A> }.into_view()
+                            }}
+
+                            {move || if step.get() < 3 {
+                                view! { 
+                                    <button type="button" class="btn-submit" on:click=go_next>
+                                        {if step.get() == 2 { "Tiếp tục / Bỏ qua" } else { "Tiếp tục" }}
+                                    </button> 
+                                }.into_view()
+                            } else {
+                                view! {
+                                    <button type="submit" class="btn-submit" disabled=is_loading>
+                                        {if is_loading.get() { "Đang tạo..." } else { "Hoàn tất tạo dự án" }}
+                                    </button>
+                                }.into_view()
+                            }}
                         </div>
                     </form>
                 </div>
