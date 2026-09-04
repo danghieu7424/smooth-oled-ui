@@ -51,10 +51,15 @@ pub fn ProjectDetailPage() -> impl IntoView {
                 <div class="fb-header-left">
                     <div class="logo">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFA000"><path d="M11.64 5.93h.01L15.8 13.5l1.83-3.19a.53.53 0 0 1 .9 0l4.31 7.5a.51.51 0 0 1-.44.78H1.61a.51.51 0 0 1-.45-.77l6.83-11.96a.53.53 0 0 1 .9 0l1.43 2.5 1.32-2.43a.52.52 0 0 1 .9 0z"/></svg>
-                        <span>"Firebase"</span> // Bắt chước chữ Firebase
+                        <span>"OTA Hub"</span>
                     </div>
                     <span class="header-divider"></span>
-                    <span class="project-name-header">{id_str} " ▼"</span>
+                    <span class="project-name-header">
+                        {move || match project_resource.get() {
+                            Some(Ok(p)) => format!("{} ▼", p.name),
+                            _ => "Đang tải...".to_string()
+                        }}
+                    </span>
                 </div>
                 <div class="fb-header-right">
                     <div class="nav-icon">
@@ -67,36 +72,24 @@ pub fn ProjectDetailPage() -> impl IntoView {
             </header>
 
             <div class="detail-container">
-                // Sidebar mô phỏng Firebase
+                // Sidebar
                 <aside class="fb-sidebar">
                     <div class="sidebar-group">
-                        <div class="sidebar-item active">
+                        <A href="/" class="sidebar-item" style="text-decoration: none; color: inherit;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
-                            <span>"Vue d'ensemble du projet"</span> // Bắt chước theo ảnh của bạn
-                        </div>
-                        <div class="sidebar-item">
+                            <span>"Dashboard"</span>
+                        </A>
+                        <div class="sidebar-item active">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                            <span>"Paramètres"</span>
+                            <span>"Chi tiết dự án"</span>
                         </div>
                     </div>
                     
-                    <div class="sidebar-title">"Raccourcis de projet"</div>
+                    <div class="sidebar-title">"QUẢN LÝ"</div>
                     <div class="sidebar-group">
                         <div class="sidebar-item">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path></svg>
-                            <span>"Realtime Database"</span>
-                        </div>
-                        <div class="sidebar-item">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                            <span>"Authentication"</span>
-                        </div>
-                        <div class="sidebar-item">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            <span>"App Check"</span>
-                        </div>
-                        <div class="sidebar-item">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
-                            <span>"Extensions"</span>
+                            <span>"Các phiên bản"</span>
                         </div>
                     </div>
                 </aside>
@@ -109,23 +102,25 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                 Some(Ok(detail)) => view! {
                                     <div class="analytics-header">
                                         <div class="title-row">
-                                            <h1>{detail.name.clone()}</h1>
-                                            <span class="badge spark-badge">"Forfait Spark"</span>
-                                        </div>
-                                        <div class="action-row">
-                                            <div class="link-box">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-                                                <span>"https://dang-hieu..."</span>
+                                            <div class="main-header">
+                                                {move || {
+                                                    let api_link = format!("http://localhost:7424/api/firmware/{}", detail.project_id);
+                                                    view! {
+                                                        <div>
+                                                            <h1 style="color: #fff; font-size: 1.5rem; margin-bottom: 0.5rem;">{detail.name.clone()} <span class="badge">"Pro"</span></h1>
+                                                            <div class="project-info" style="color: #90a4ae; font-size: 0.9rem; font-family: monospace;">
+                                                                <div style="margin-bottom: 0.25rem;">"ID: " <span style="color: #82b1ff;">{detail.project_id.clone()}</span></div>
+                                                                <div>"Link Update: " <span style="color: #a5d6a7;">{api_link}</span></div>
+                                                            </div>
+                                                        </div>
+                                                    }.into_view()
+                                                }}
                                             </div>
-                                            <button class="btn-add-app">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                                                <span>"Ajouter une application"</span>
-                                            </button>
                                         </div>
                                     </div>
 
                                     <div class="analytics-content">
-                                        <h2>"Données analytiques"</h2>
+                                        <h2>"Thống kê dữ liệu"</h2>
                                         
                                         <div class="analytics-card">
                                             <div class="card-header">
@@ -138,19 +133,19 @@ pub fn ProjectDetailPage() -> impl IntoView {
 
                                             <div class="card-body">
                                                 <div class="chart-column">
-                                                    <h3>"Utilisateurs actifs par jour"</h3>
+                                                    <h3>"Thiết bị hoạt động (Active)"</h3>
                                                     <div class="chart-val">
                                                         <span>{detail.active_devices}</span>
                                                         <span class="trend">"--"</span>
                                                     </div>
                                                     <div class="chart-area empty">
-                                                        "Aucune donnée"
-                                                        <small>"for the last 14 days"</small>
+                                                        "Chưa có dữ liệu"
+                                                        <small>"trong 14 ngày qua"</small>
                                                     </div>
                                                 </div>
                                                 
                                                 <div class="chart-column">
-                                                    <h3>"Fidélisation (1er jour)"</h3>
+                                                    <h3>"Số bản phát hành (Firmwares)"</h3>
                                                     <div class="chart-val">
                                                         <span>{detail.firmwares.len()}</span>
                                                         <span class="trend">"--"</span>
@@ -166,19 +161,19 @@ pub fn ProjectDetailPage() -> impl IntoView {
 
                                                 <div class="chart-promo">
                                                     <div class="promo-img">
-                                                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#82b1ff" stroke-width="1.5"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+                                                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#82b1ff" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
                                                     </div>
                                                     <div class="promo-text">
-                                                        <p>"Track your revenue!"</p>
-                                                        <a href="#">"Associer à AdMob"</a>
-                                                        <a href="#">"Associer à Google Play"</a>
+                                                        <p>"Tích hợp nền tảng!"</p>
+                                                        <a href="#">"Tài liệu API"</a>
+                                                        <a href="#">"Tài liệu ESP-IDF"</a>
                                                     </div>
                                                 </div>
                                             </div>
                                             
                                             <div class="card-footer">
-                                                <span class="legend"><span class="color-box this-week"></span> "Cette semaine"</span>
-                                                <span class="legend"><span class="color-box last-week"></span> "La semaine dernière"</span>
+                                                <span class="legend"><span class="color-box this-week"></span> "Tuần này"</span>
+                                                <span class="legend"><span class="color-box last-week"></span> "Tuần trước"</span>
                                             </div>
                                         </div>
                                     </div>

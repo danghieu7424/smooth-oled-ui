@@ -217,10 +217,14 @@ pub fn DashboardPage() -> impl IntoView {
                                                 let list_view = filtered_projects.into_iter().map(|p| {
                                                     let p_id_clone_star = p.project_id.clone();
                                                     let p_id_clone_del = p.project_id.clone();
+                                                    let p_id = p.id;
                                                     let is_starred = p.is_starred;
                                                     
                                                     view! {
-                                                        <A href=format!("/projects/{}", p.id) class="project-list-item">
+                                                        <div class="project-list-item" style="cursor: pointer;" on:click=move |_| {
+                                                            let navigate = use_navigate();
+                                                            navigate(&format!("/projects/{}", p_id), Default::default());
+                                                        }>
                                                             <div class="p-icon">
                                                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2.69l5.66 4.2c.22.16.34.42.34.69v8.42c0 .27-.12.53-.34.69L12 20.89l-5.66-4.2a1.14 1.14 0 0 1-.34-.69V7.58c0-.27.12-.53.34-.69L12 2.69z"/></svg>
                                                             </div>
@@ -258,7 +262,7 @@ pub fn DashboardPage() -> impl IntoView {
                                                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                                                 </div>
                                                             </div>
-                                                        </A>
+                                                        </div>
                                                     }
                                                 }).collect_view();
                                                 
