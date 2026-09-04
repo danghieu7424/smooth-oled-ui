@@ -20,7 +20,7 @@ pub struct UserClaims {
 }
 
 fn jwt_secret() -> String {
-    env::var("JWT_SECRET").expect("JWT_SECRET must be set in .env")
+    env::var("JWT_SECRET").unwrap_or_else(|_| "OTA_HUB_SECRET_KEY_FOR_DEV_987654321".to_string())
 }
 
 /// Tạo token với expiry_seconds và optional ip

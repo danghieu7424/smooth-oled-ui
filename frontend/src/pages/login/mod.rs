@@ -8,11 +8,31 @@ pub fn LoginPage() -> impl IntoView {
     let navigate = use_navigate();
     let nav = navigate.clone();
 
-    // Lắng nghe MessageEvent từ cửa sổ popup
     let cb = Closure::wrap(Box::new(move |event: web_sys::MessageEvent| {
         if let Some(data) = event.data().as_string() {
-            if data == "login_success" {
-                nav("/", Default::default());
+            if data.starts_with("login_success") {
+                let nav2 = nav.clone();
+                let hash_part = data.replace("login_success", "");
+                
+                let mut access_token = String::new();
+                for part in hash_part.trim_start_matches('#').split('&') {
+                    if part.starts_with("access_token=") {
+                        access_token = part.replace("access_token=", "");
+                        break;
+                    }
+                }
+
+                if !access_token.is_empty() {
+                    spawn_local(async move {
+                        let req_body = serde_json::json!({ "access_token": access_token });
+                        let _ = gloo_net::http::Request::post("http://localhost:7424/api/auth/login_with_token")
+                            .credentials(web_sys::RequestCredentials::Include)
+                            .json(&req_body).unwrap()
+                            .send()
+                            .await;
+                        nav2("/", Default::default());
+                    });
+                }
             }
         }
     }) as Box<dyn FnMut(_)>);

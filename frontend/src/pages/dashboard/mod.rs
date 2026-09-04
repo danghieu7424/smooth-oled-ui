@@ -11,6 +11,7 @@ pub struct UserProfile {
 
 async fn fetch_me() -> Result<UserProfile, String> {
     gloo_net::http::Request::get("http://localhost:7424/api/auth/me")
+        .credentials(web_sys::RequestCredentials::Include)
         .send()
         .await
         .map_err(|e| e.to_string())?
@@ -38,6 +39,7 @@ pub struct Project {
 
 async fn fetch_stats() -> Result<Stats, String> {
     gloo_net::http::Request::get("http://localhost:7424/api/projects/stats")
+        .credentials(web_sys::RequestCredentials::Include)
         .send()
         .await
         .map_err(|e| e.to_string())?
@@ -48,6 +50,7 @@ async fn fetch_stats() -> Result<Stats, String> {
 
 async fn fetch_projects() -> Result<Vec<Project>, String> {
     gloo_net::http::Request::get("http://localhost:7424/api/projects")
+        .credentials(web_sys::RequestCredentials::Include)
         .send()
         .await
         .map_err(|e| e.to_string())?

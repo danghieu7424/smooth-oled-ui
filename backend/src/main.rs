@@ -78,12 +78,7 @@ async fn favicon_handler() -> impl IntoResponse {
 
 #[tokio::main]
 async fn main() {
-    // Đảm bảo thư mục gốc luôn là thư mục chứa file chạy (để tính năng khởi động cùng hệ thống hoạt động đúng do Windows hay gọi từ System32)
-    if let Ok(current_exe) = std::env::current_exe() {
-        if let Some(parent) = current_exe.parent() {
-            let _ = std::env::set_current_dir(parent);
-        }
-    }
+    // Không tự động đổi thư mục làm việc trong lúc phát triển để tránh tạo file DB sai chỗ (như trong target/debug)
 
     dotenv().ok();
 
@@ -135,7 +130,11 @@ async fn main() {
 
 
     let local_cache = crate::infrastructure::cache::LocalCache::init(50_000).await;
-    let table_engine = crate::infrastructure::storage::TableEngine::new("storages/demo.rdb").await.expect("Không tạo được TableEngine");
+    let db_path = std::env::var("DATABASE_URL").unwrap_or_else(|_| "./storages/database/otahub_core.db".to_string());
+    if let Some(parent) = Path::new(&db_path).parent() {
+        let _ = fs::create_dir_all(parent);
+    }
+    let table_engine = crate::infrastructure::storage::TableEngine::new(&db_path).await.expect("Không tạo được Database Engine");
 
     let server_private_key_hex = std::env::var("SERVER_PRIVATE_KEY_HEX")
         .expect("Thảm họa: Chưa set SERVER_PRIVATE_KEY_HEX trong file .env");
