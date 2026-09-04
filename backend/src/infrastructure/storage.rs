@@ -59,8 +59,7 @@ impl TableEngine {
                     version TEXT NOT NULL,
                     file_path TEXT NOT NULL,
                     notes TEXT,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY(project_id) REFERENCES projects(project_id)
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )",
                 [],
             )?;
