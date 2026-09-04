@@ -214,11 +214,9 @@ async fn upload_firmware(
     mut multipart: axum::extract::Multipart,
 ) -> Result<Json<serde_json::Value>, axum::http::StatusCode> {
     let mut user_id = 1;
-    let mut user_suid = "0".to_string();
     if let Some(cookie) = jar.get("auth_token") {
         if let Ok(token_data) = crate::auth::token::verify_user_token(cookie.value()) {
             user_id = token_data.claims.sub;
-            user_suid = token_data.claims.suid;
         }
     }
 
@@ -226,9 +224,9 @@ async fn upload_firmware(
         let p_id = project_id.clone();
         move |conn| {
             let res: i64 = conn.query_row("SELECT 1 FROM projects WHERE project_id = ?1 AND user_id = ?2", rusqlite::params![p_id, user_id], |row| row.get(0)).unwrap_or(0);
-            res == 1
+            Ok(res == 1)
         }
-    }).await;
+    }).await.unwrap_or(false);
     
     if !is_owner {
         return Err(axum::http::StatusCode::FORBIDDEN);
