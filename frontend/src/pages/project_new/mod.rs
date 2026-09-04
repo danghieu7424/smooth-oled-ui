@@ -31,7 +31,7 @@ pub fn ProjectNewPage() -> impl IntoView {
         || (),
         |_| async move {
             crate::pages::dashboard::fetch_me().await.unwrap_or(crate::pages::dashboard::UserProfile {
-                id: Some(0),
+                id: Some("0".to_string()),
                 name: None,
                 picture: None,
                 error: None,
@@ -193,7 +193,7 @@ pub fn ProjectNewPage() -> impl IntoView {
                                         <span class="id-prefix">
                                             <Suspense fallback=move || view! { "Đang tải..." }>
                                                 {move || match user_profile.get() {
-                                                    Some(profile) => format!("{}-", profile.id.unwrap_or(0)),
+                                                    Some(profile) => format!("{}-", profile.id.unwrap_or("0".to_string())),
                                                     None => "".to_string(),
                                                 }}
                                             </Suspense>

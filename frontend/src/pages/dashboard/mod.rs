@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct UserProfile {
-    pub id: Option<i64>,
+    pub id: Option<String>,
     pub name: Option<String>,
     pub picture: Option<String>,
     pub error: Option<String>,
