@@ -7,7 +7,7 @@ use axum::{
 use axum::http::header::{self, HeaderName};
 use tower_http::{
     cors::CorsLayer,
-    services::{ServeDir, ServeFile},
+    services::ServeDir,
     trace::TraceLayer,
 };
 use dotenvy::dotenv;
@@ -195,18 +195,10 @@ async fn main() {
         fs::create_dir_all(&storage_path).expect("Không tạo được folder storages");
         info!(category = "System", "Đã tạo thư mục lưu trữ: {}", storage_path);
     }
-    
-    // Đảm bảo tạo thư mục tmp và thumbnails
+    // Đảm bảo tạo thư mục tmp
     let _ = fs::create_dir_all(Path::new(&storage_path).join(".tmp"));
-    let _ = fs::create_dir_all(Path::new(&storage_path).join(".thumbnails"));
-
-    let storage_path_clone = storage_path.clone();
-    tokio::task::spawn_blocking(move || {
-        crate::core::cleanup::cleanup_orphaned_thumbnails(Path::new(&storage_path_clone));
-    });
 
     let spa_storages = ServeDir::new(&storage_path); 
-    let spa_thumbnails = ServeDir::new(Path::new(&storage_path).join(".thumbnails"));
 
     let trace_layer = TraceLayer::new_for_http()
         .make_span_with(|request: &Request<_>| {
@@ -232,20 +224,9 @@ async fn main() {
             );
         });
 
-    let api_router = Router::new()
-        .nest("/users", crate::routes::users::router())
-        .nest("/events", crate::routes::events::router())
-        .nest("/ws", crate::routes::ws::router())
-        .nest("/webrtc", crate::routes::webrtc::router())
-        .nest("/files", crate::routes::files::router())
-        .route("/subtitle", axum::routing::get(crate::routes::subtitle::get_subtitle))
-        .layer(axum::middleware::from_fn_with_state(app_state.clone(), crate::core::middleware::rate_limiter));
-
     let app = Router::new()
         .route("/favicon.ico", axum::routing::get(favicon_handler))
-        .nest("/demo", crate::routes::demo::router())
-        .nest("/api/v1", api_router)
-        .nest_service("/storages/.thumbnails", spa_thumbnails)
+        // API OTA sẽ được mount vào đây sau
         .nest_service("/storages", spa_storages)
         .fallback(static_handler)
         .layer(DefaultBodyLimit::max(1024 * 1024 * 1024))

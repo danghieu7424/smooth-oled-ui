@@ -1,7 +1,1 @@
-pub mod demo;
-pub mod users;
-pub mod events;
-pub mod ws;
-pub mod webrtc;
-pub mod files;
-pub mod subtitle;
+// Các API của hệ thống OTA sẽ được đặt ở đây

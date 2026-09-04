@@ -2,10 +2,7 @@
 use leptos::*;
 use leptos_router::*;
 
-use crate::pages::home_page::HomePage;
 use crate::store::init_global_state;
-
-use crate::features::file_browser::page::FileBrowserPage;
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -18,8 +15,10 @@ pub fn App() -> impl IntoView {
             <div class="super-app-layout">
                 <main class="main-content">
                     <Routes>
-                        <Route path="/*path" view=FileBrowserPage />
-                        <Route path="/demo" view=HomePage />
+                        <Route
+                            path="/"
+                            view=|| view! { <div>"Hệ thống Quản lý Firmware OTA - Đang phát triển"</div> }
+                        />
                         <Route
                             path="/*any"
                             view=|| {
