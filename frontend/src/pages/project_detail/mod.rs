@@ -2,7 +2,7 @@ use leptos::*;
 use leptos_router::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, PartialEq)]
 pub struct Firmware {
     pub id: i64,
     pub version: String,
@@ -12,7 +12,7 @@ pub struct Firmware {
     pub devices_count: i64,
 }
 
-#[derive(Clone, PartialEq, Deserialize)]
+#[derive(Clone, PartialEq, Deserialize, Serialize)]
 pub struct ProjectDetail {
     pub id: i64,
     pub project_id: String,
@@ -25,6 +25,7 @@ pub struct ProjectDetail {
 
 async fn fetch_project_detail(id: String) -> Result<ProjectDetail, String> {
     gloo_net::http::Request::get(&format!("http://localhost:7424/api/projects/{}", id))
+        .credentials(web_sys::RequestCredentials::Include)
         .send()
         .await
         .map_err(|e| e.to_string())?
