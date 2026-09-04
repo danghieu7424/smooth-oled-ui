@@ -64,6 +64,7 @@ async fn fetch_projects() -> Result<Vec<Project>, String> {
 #[component]
 pub fn DashboardPage() -> impl IntoView {
     let (filter_mode, set_filter_mode) = create_signal("all".to_string());
+    let (show_dropdown, set_show_dropdown) = create_signal(false);
     let projects_resource = create_resource(|| (), |_| async move { fetch_projects().await });
     let me_resource = create_resource(|| (), |_| async move { fetch_me().await });
 
@@ -158,16 +159,43 @@ pub fn DashboardPage() -> impl IntoView {
                         </div>
 
                         <div class="project-list-container">
-                            <div class="project-list-header" style="position: relative; display: flex; align-items: center; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-                                <select 
-                                    class="dropdown" 
-                                    style="background: transparent; color: #fff; border: none; font-size: 1rem; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none; padding-right: 1.5rem;"
-                                    on:change=move |ev| set_filter_mode.set(event_target_value(&ev))
+                            <div class="project-list-header" style="position: relative; padding: 0.75rem 1.25rem; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+                                <div 
+                                    class="dropdown"
+                                    style="display: inline-flex; align-items: center; gap: 0.5rem; cursor: pointer; color: #b0bec5; font-size: 0.95rem; font-weight: 500;"
+                                    on:click=move |_| set_show_dropdown.update(|s| *s = !*s)
                                 >
-                                    <option value="all" style="background: #2a2a2c; color: #fff;">"Dự án"</option>
-                                    <option value="starred" style="background: #2a2a2c; color: #fff;">"Dự án đánh dấu"</option>
-                                </select>
-                                <span style="position: absolute; right: 0; pointer-events: none; font-size: 0.8rem; top: 0.3rem;">"▼"</span>
+                                    <span>{move || if filter_mode.get() == "all" { "Dự án" } else { "Dự án đánh dấu" }}</span>
+                                    <span style="font-size: 0.7rem; transition: transform 0.2s;" style:transform=move || if show_dropdown.get() { "rotate(180deg)" } else { "rotate(0deg)" }>"▼"</span>
+                                </div>
+                                
+                                {move || if show_dropdown.get() {
+                                    view! {
+                                        <div style="position: absolute; top: calc(100% + 4px); left: 1.25rem; background: #2a2a2c; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 0.5rem 0; min-width: 220px; z-index: 10; box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
+                                            <div 
+                                                style=move || format!("padding: 0.6rem 1.25rem; cursor: pointer; font-size: 0.9rem; transition: background 0.2s; color: {}; background: {};", 
+                                                    if filter_mode.get() == "all" { "#82b1ff" } else { "#b0bec5" },
+                                                    if filter_mode.get() == "all" { "rgba(130, 177, 255, 0.1)" } else { "transparent" }
+                                                )
+                                                on:click=move |_| { set_filter_mode.set("all".to_string()); set_show_dropdown.set(false); }
+                                            >
+                                                "Dự án"
+                                            </div>
+                                            <div 
+                                                style=move || format!("padding: 0.6rem 1.25rem; cursor: pointer; font-size: 0.9rem; transition: background 0.2s; display: flex; align-items: center; justify-content: space-between; color: {}; background: {};", 
+                                                    if filter_mode.get() == "starred" { "#82b1ff" } else { "#b0bec5" },
+                                                    if filter_mode.get() == "starred" { "rgba(130, 177, 255, 0.1)" } else { "transparent" }
+                                                )
+                                                on:click=move |_| { set_filter_mode.set("starred".to_string()); set_show_dropdown.set(false); }
+                                            >
+                                                <span>"Dự án đánh dấu"</span>
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                            </div>
+                                        </div>
+                                    }.into_view()
+                                } else {
+                                    view! {}.into_view()
+                                }}
                             </div>
                             
                             <Suspense fallback=move || view! { <div class="loading-state">"Đang tải danh sách..."</div> }>
