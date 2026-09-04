@@ -132,7 +132,7 @@ async fn get_project(
                    (SELECT COUNT(*) FROM devices WHERE project_id = ?1 AND current_version = firmwares.version) as devices_count
             FROM firmwares WHERE project_id = ?1 ORDER BY id DESC
         ")?;
-        let f_iter = f_stmt.query_map([&p_project_id, &p_project_id], |row| {
+        let f_iter = f_stmt.query_map([&p_project_id], |row| {
             Ok(serde_json::json!({
                 "id": row.get::<_, i64>(0)?,
                 "version": row.get::<_, String>(1)?,
