@@ -193,7 +193,13 @@ pub fn ProjectNewPage() -> impl IntoView {
                                         <span class="id-prefix">
                                             <Suspense fallback=move || view! { "Đang tải..." }>
                                                 {move || match user_profile.get() {
-                                                    Some(profile) => format!("{}-", profile.id.unwrap_or("0".to_string())),
+                                                    Some(profile) => {
+                                                        let mut id_str = profile.id.unwrap_or("0".to_string());
+                                                        if id_str.len() > 6 {
+                                                            id_str.truncate(6);
+                                                        }
+                                                        format!("{}-", id_str)
+                                                    },
                                                     None => "".to_string(),
                                                 }}
                                             </Suspense>
