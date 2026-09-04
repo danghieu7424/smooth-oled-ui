@@ -178,11 +178,9 @@ async fn create_project(
 ) -> Result<Json<serde_json::Value>, axum::http::StatusCode> {
     
     let mut user_id = 1;
-    let mut user_suid = "0".to_string();
     if let Some(cookie) = jar.get("auth_token") {
         if let Ok(token_data) = crate::auth::token::verify_user_token(cookie.value()) {
             user_id = token_data.claims.sub;
-            user_suid = token_data.claims.suid;
         }
     }
 
@@ -214,9 +212,11 @@ async fn upload_firmware(
     mut multipart: axum::extract::Multipart,
 ) -> Result<Json<serde_json::Value>, axum::http::StatusCode> {
     let mut user_id = 1;
+    let mut user_suid = "0".to_string();
     if let Some(cookie) = jar.get("auth_token") {
         if let Ok(token_data) = crate::auth::token::verify_user_token(cookie.value()) {
             user_id = token_data.claims.sub;
+            user_suid = token_data.claims.suid;
         }
     }
 
