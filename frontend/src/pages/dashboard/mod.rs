@@ -230,7 +230,6 @@ pub fn DashboardPage() -> impl IntoView {
                                                             </div>
                                                             <div class="p-info">
                                                                 <div class="p-name">{p.name.clone()}</div>
-                                                                <div class="p-id">{p.project_id.clone()}</div>
                                                             </div>
                                                             <div class="p-actions" style="display: flex; gap: 0.75rem; align-items: center;">
                                                                 <div class="p-star" on:click=move |ev| {

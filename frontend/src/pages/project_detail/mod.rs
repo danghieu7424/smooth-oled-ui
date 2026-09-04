@@ -106,7 +106,7 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                         <div class="title-row">
                                             <div class="main-header">
                                                 {move || {
-                                                    let api_link = format!("http://localhost:7424/api/firmware/{}/{}", detail.user_suid, detail.project_id);
+                                                    let api_link = format!("http://localhost:7424/api/firmware/{}-{}", detail.user_suid, detail.project_id);
                                                     view! {
                                                         <div>
                                                             <h1 style="color: #fff; font-size: 1.5rem; margin-bottom: 0.5rem;">{detail.name.clone()} <span class="badge">"Pro"</span></h1>

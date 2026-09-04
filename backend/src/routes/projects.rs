@@ -260,8 +260,8 @@ async fn upload_firmware(
         return Err(axum::http::StatusCode::BAD_REQUEST);
     }
 
-    // Save firmware file matching the draft_plan.md structure: storages/projects/X/project_id_Y/firmware_vZ.bin
-    let file_path = format!("storages/projects/{}/{}/firmware_{}.bin", user_suid, project_id, version);
+    // Save firmware file matching the draft_plan.md structure: storages/projects/X-project_id_Y/firmware_vZ.bin
+    let file_path = format!("storages/projects/{}-{}/firmware_{}.bin", user_suid, project_id, version);
     if let Some(parent) = std::path::Path::new(&file_path).parent() {
         std::fs::create_dir_all(parent).ok();
     }
@@ -351,7 +351,7 @@ async fn delete_project(
     match res {
         Ok(exists) => {
             if exists == 1 && !user_suid.is_empty() {
-                let dir_path = format!("storages/projects/{}/{}", user_suid, p_id_clone);
+                let dir_path = format!("storages/projects/{}-{}", user_suid, p_id_clone);
                 let _ = std::fs::remove_dir_all(&dir_path);
             }
             Ok(Json(serde_json::json!({"status": "success"})))
