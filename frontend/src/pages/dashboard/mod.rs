@@ -219,11 +219,11 @@ pub fn DashboardPage() -> impl IntoView {
                                                     let p_id_clone_del = p.project_id.clone();
                                                     let p_id = p.id;
                                                     let is_starred = p.is_starred;
-                                                    
+                                                    let p_id_str = p.project_id.clone();
                                                     view! {
                                                         <div class="project-list-item" style="cursor: pointer;" on:click=move |_| {
                                                             let navigate = use_navigate();
-                                                            navigate(&format!("/projects/{}", p_id), Default::default());
+                                                            navigate(&format!("/projects/{}", p_id_str), Default::default());
                                                         }>
                                                             <div class="p-icon">
                                                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2.69l5.66 4.2c.22.16.34.42.34.69v8.42c0 .27-.12.53-.34.69L12 20.89l-5.66-4.2a1.14 1.14 0 0 1-.34-.69V7.58c0-.27.12-.53.34-.69L12 2.69z"/></svg>
