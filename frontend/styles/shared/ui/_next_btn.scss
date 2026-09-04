@@ -1,0 +1,97 @@
+// styles/shared/_next_btn.scss
+
+.yt-next-btn {
+  --btn-size: 64px;
+  --icon-ratio: 0.7;
+  --icon-size: calc(var(--btn-size) * var(--icon-ratio));
+
+  width: var(--btn-size);
+  height: var(--btn-size);
+  background-color: transparent;
+  color: var(--text-main);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+  outline: none;
+
+  &:hover {
+    background-color: var(--bg-hover);
+  }
+  
+  svg {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    display: block;
+    overflow: hidden;
+  }
+
+  path {
+    fill: currentColor;
+    stroke: currentColor;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    stroke-width: 1.5px;
+    // Bật gia tốc mượt mà
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  // 🆕 CÚ LỪA THỊ GIÁC: Tắt hoàn toàn transition khi KHÔNG CÓ class is-animating
+  // Giúp 3 element giật về vị trí ban đầu trong 0 giây (Mắt người không thể thấy)
+  &:not(.is-animating) path {
+    transition: none !important;
+  }
+
+  /* TỌA ĐỘ GỐC */
+  /* TỌA ĐỘ GỐC (Đã ép khít và căn tâm tuyệt đối) */
+  .icon-line {
+    // 🆕 Vạch đứng được kéo sát vào tam giác (X từ 23 đến 25)
+    d: path("M 23 10 L 25 10 L 25 26 L 23 26 Z");
+    transform-origin: center;
+  }
+
+  .icon-triangle-main {
+    // Tam giác giữa giữ nguyên
+    d: path("M 11 10 L 21 18 L 21 18 L 11 26 Z");
+  }
+
+  .icon-triangle-incoming {
+    d: path("M 11 10 L 21 18 L 21 18 L 11 26 Z");
+    // 🆕 Tính toán lại độ trượt đúng bằng 1 chu kỳ (14px)
+    transform: translateX(-14px);
+    opacity: 0;
+  }
+
+  /* TRẠNG THÁI ANIMATING (KHI CLICK) */
+  &.is-animating {
+    .icon-line {
+      transform: scaleY(0);
+      opacity: 0;
+    }
+    .icon-triangle-main {
+      // 🆕 Tam giác giữa biến thành vạch ở tọa độ mới
+      d: path("M 23 10 L 25 10 L 25 26 L 23 26 Z");
+    }
+    .icon-triangle-incoming {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.35; // Giảm độ đậm
+    cursor: not-allowed; // Đổi con trỏ chuột
+    pointer-events: none; // Chặn hover effect từ CSS
+    filter: grayscale(
+      1
+    ); // 🆕 Tuyệt chiêu: Chuyển sang đen trắng để dễ nhận diện trong Dark Mode
+
+    &:hover {
+      background-color: var(--bg-surface); // Không cho đổi màu khi hover
+      transform: none; // Không cho scale
+    }
+  }
+}

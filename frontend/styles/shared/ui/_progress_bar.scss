@@ -1,0 +1,96 @@
+// styles/shared/ui/_progress_bar.scss
+
+.yt-progress-atom {
+    position: relative;
+    width: 100%;
+    // 🪄 Bơm chiều cao 20px để mở rộng "Vùng chạm" (Hitbox). 
+    // Người dùng vuốt lệch lên/xuống 1 tí vẫn ăn, rất tốt cho Mobile UX.
+    height: 20px; 
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+
+    // Khung chứa Track: Quyết định việc bo góc
+    .progress-track-wrapper {
+        position: relative;
+        width: 100%;
+        height: 4px; // Độ dày của thanh giống trong hình
+        background-color: var(--overlay-20); // Màu track xám tối
+        border-radius: 4px; // 🪄 BÍ KÍP: Bo góc 2 đầu
+        overflow: hidden;   // 🪄 BÍ KÍP: Máy chém, gọt giũa mọi thứ tràn ra ngoài
+        transition: height 0.1s ease;
+    }
+
+    .progress-buffer {
+        position: absolute;
+        top: 0; left: 0;
+        height: 100%;
+        background-color: var(--overlay-40); // Xám sáng hơn track 1 chút
+        // Không có border-radius -> Cạnh phải luôn vuông góc tuyệt đối
+        transition: width 0.2s linear;
+    }
+
+    .progress-fill {
+        position: absolute;
+        top: 0; left: 0;
+        height: 100%;
+        background-color: var(--text-main); // Trắng tinh theo ảnh mẫu
+        transition: all 0.1s linear;
+        // Không có border-radius -> Cạnh phải cắt phẳng
+    }
+
+    // styles/shared/ui/_progress_bar.scss
+
+    .progress-ghost-slider {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0; 
+        cursor: pointer;
+        margin: 0;
+        z-index: 10; 
+        
+        // 🪄 1. Tắt giao diện mặc định của hệ điều hành
+        -webkit-appearance: none; 
+        appearance: none;
+        background: transparent;
+
+        // 🪄 2. Xóa sổ độ rộng của Thumb trên Chrome/Safari/Edge
+        &::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 0; 
+            height: 0;
+        }
+
+        // 🪄 3. Xóa sổ độ rộng của Thumb trên Firefox
+        &::-moz-range-thumb {
+            width: 0;
+            height: 0;
+            border: 0;
+        }
+    }
+    
+    // (Tuỳ chọn) Hiệu ứng hover: Khi trỏ chuột vào, thanh trượt dày lên 1 tí xíu
+    &:hover .progress-track-wrapper {
+        height: 5px;
+    }
+
+    .progress-tooltip {
+        position: absolute;
+        bottom: 25px; // Cách thanh trượt một chút
+        transform: translateX(-50%);
+        background-color: rgba(0, 0, 0, 0.5); // Nền đen alpha 0.5
+        color: #ffffff; // Text trắng tinh
+        padding: 4px 12px; // Đệm hai bên rộng hơn một chút cho giống viên thuốc
+        border-radius: 9999px; // Border radius viên thuốc
+        font-size: 12px;
+        font-family: inherit;
+        white-space: nowrap;
+        pointer-events: none; // Tránh chặn sự kiện chuột
+        z-index: 100;
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.1); // Viền siêu mỏng
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+}

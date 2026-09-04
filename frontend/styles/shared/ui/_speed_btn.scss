@@ -1,0 +1,23 @@
+// styles/shared/ui/_speed_btn.scss
+
+.speed-btn {
+  svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+    overflow: hidden;
+  }
+
+  path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .icon-speed .speed-path {
+    d: path("M 12 2 A 10 10 0 1 1 2 12 A 10 10 0 0 1 12 2 Z M 12 6 V 12 L 16 14");
+  }
+}

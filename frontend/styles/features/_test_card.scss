@@ -1,0 +1,85 @@
+// features/_test_card.scss
+@use '../shared/ui/atoms/glass_surface';
+@use '../shared/ui/atoms/protected_text';
+
+.f-test-card {
+  /* Layer 1: Đóng gói và Animation (Tuyệt đối không dùng bộ lọc đồ họa ở đây) */
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  min-height: 250px;
+  
+  /* Chuẩn bị Stacking Context an toàn */
+  isolation: isolate;
+  will-change: transform, opacity;
+  
+  /* Layer 2: Thành phần Kính hiển thị bên trong */
+  &__visual-container {
+    @extend .a-glass-surface;
+    
+    width: 100%;
+    height: 100%;
+    padding: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+
+    h2 {
+      @extend .a-protected-text;
+      font-size: 1.5rem;
+      border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+
+      label {
+        @extend .a-protected-text;
+        font-size: 0.9rem;
+      }
+
+      input, button {
+        padding: 8px 12px;
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(128, 128, 128, 0.3);
+        background: rgba(0, 0, 0, 0.1);
+        color: var(--theme-text-color);
+        font-family: inherit;
+
+        &:focus {
+          outline: none;
+          border-color: var(--color-light-text-muted);
+        }
+      }
+
+      button {
+        cursor: pointer;
+        background: var(--primary-color, #0b7285);
+        color: white;
+        font-weight: bold;
+        transition: opacity 0.2s;
+
+        &:hover {
+          opacity: 0.9;
+        }
+      }
+    }
+
+    .response-box {
+      margin-top: auto;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: var(--radius-sm);
+      font-family: monospace;
+      font-size: 0.85rem;
+      color: var(--theme-text-color);
+      white-space: pre-wrap;
+      overflow-y: auto;
+      max-height: 150px;
+    }
+  }
+}

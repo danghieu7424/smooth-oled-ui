@@ -1,0 +1,26 @@
+// shared/ui/atoms/_glass_surface.scss
+
+.a-glass-surface {
+  background: var(--glass-tint-base);
+  border-radius: var(--radius-md);
+  
+  /* Khúc xạ Viền Kính (Edge Lighting) */
+  box-shadow: 
+    inset 1px 1px 1px var(--glass-border-light), 
+    inset -1px -1px 1px var(--glass-border-dark),
+    var(--glass-shadow-ambient);
+    
+  /* Sử dụng biến động từ hệ thống để bật/tắt (Graceful Degradation) */
+  backdrop-filter: blur(var(--current-glass-blur)) saturate(var(--current-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--current-glass-blur)) saturate(var(--current-glass-saturate));
+  
+  /* Chuyển động mượt mà cho thuộc tính tĩnh (Tránh giật khung hình) */
+  transition: 
+    background-color var(--duration-normal) var(--ease-power3-out),
+    backdrop-filter var(--duration-fast) var(--ease-power4-in-out),
+    box-shadow var(--duration-normal) var(--ease-power3-out);
+
+  &:hover {
+    background: var(--glass-tint-hover);
+  }
+}

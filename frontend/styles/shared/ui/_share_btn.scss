@@ -1,0 +1,61 @@
+// styles/shared/ui/_share_btn.scss
+
+.yt-share-atom {
+    .icon-slot {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        overflow: visible !important; 
+    }
+
+    svg {
+        overflow: visible !important;
+    }
+
+    .share-arrow-main, .share-arrow-incoming {
+        will-change: transform, opacity;
+    }
+
+    .share-arrow-main {
+        transform-origin: 21px 3px;
+    }
+
+    .share-arrow-incoming {
+        transform-origin: 10px 14px;
+        transform: scale(0); 
+        opacity: 0;
+    }
+
+    &:not(.is-animating) g {
+        transition: none !important;
+    }
+
+    // ==========================================
+    // 🪄 ĐẠO DIỄN THỜI GIAN (TỔNG 600ms)
+    // ==========================================
+    &.is-animating {
+        .share-arrow-main {
+            // Mũi tên 1: Rút lên chóp trong 250ms
+            animation: share-tail-to-head 0.30s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        .share-arrow-incoming {
+            // Mũi tên 2: Chờ mũi tên 1 chạy xong (250ms) + Nghỉ (100ms) = Delay 350ms
+            animation: share-grow-from-tail 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation-delay: 0.20s; 
+        }
+    }
+}
+
+// 🎬 HOẠT CẢNH VẬT LÝ
+@keyframes share-tail-to-head {
+    0%   { transform: scale(1); opacity: 1; }
+    // Rút đuôi về đầu
+    100% { transform: scale(0) translate(8px, -8px);  }
+}
+
+@keyframes share-grow-from-tail {
+    // Không cần set % trung gian nữa vì đã dùng animation-delay ở trên
+    0%   { transform: scale(0);  }
+    // Đâm chồi từ dưới gốc lên
+    100% { transform: scale(1); opacity: 1; } 
+}

@@ -1,0 +1,69 @@
+// styles/main.scss
+
+// 1. Core / Variables
+@use 'color_base';
+@use 'abstracts/variables';
+@use 'abstracts/glass_tokens';
+
+// 2. Base / Resets
+@use 'base/reset';
+@use 'base/global';
+
+// 3. Components / UI Atoms
+@use "./shared/ui/atoms/theme_toggle";
+@use "./shared/ui/atoms/text_preview";
+@use "./shared/ui/atoms/glass_surface";
+@use "./shared/ui/atoms/protected_text";
+
+// 4. Shared UI Elements (Molecules, etc)
+@use "./shared/ui/spinner";
+@use './shared/ui/button';
+@use './shared/ui/repeat_btn';
+@use './shared/ui/play_pause_btn';
+@use './shared/ui/next_btn';
+@use './shared/ui/prev_btn';
+@use './shared/ui/progress_bar';
+@use './shared/ui/volume_btn';
+@use './shared/ui/fullscreen_btn';
+@use './shared/ui/cc_btn';
+@use './shared/ui/skip_btn';
+@use './shared/ui/rotate_btn';
+@use './shared/ui/speed_btn';
+@use './shared/ui/playback_settings';
+@use './shared/ui/speed_settings_modal';
+@use './shared/ui/subtitle_settings_modal';
+@use "./shared/ui/double_tap_seek";
+@use "./shared/ui/checkbox";
+@use "./shared/ui/file_upload";
+// 5. Pages
+@use 'pages/home';
+
+// 6. Features
+@use 'features/test_card';
+@use 'features/youtube_player';
+@use '../src/features/file_browser/page';
+
+@use './shared/ui/toggle_group';
+@use './shared/ui/toggle_switch';
+
+// 2. Biến Global (Dùng chung cho cả app)
+$primary-color: #0b7285;
+$warning-color: #e67700;
+
+// 3. Reset CSS cơ bản
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: light-dark(rgba(0, 0, 0, 0.4), rgba(255, 255, 255, 0.4)) transparent;
+}
+
+body {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  font-family: sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+}

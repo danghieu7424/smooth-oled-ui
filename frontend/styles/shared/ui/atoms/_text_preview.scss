@@ -1,0 +1,236 @@
+.text-preview-container {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    padding: 20px;
+    background: var(--bg-surface, rgba(255, 255, 255, 0.95));
+    border-radius: 8px;
+    color: var(--text-main, #24292e);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    line-height: 1.5;
+
+    .plain-text-body {
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+        font-size: 14px;
+        color: var(--text-main, #24292e);
+    }
+
+    .markdown-body {
+        h1, h2, h3, h4, h5, h6 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.25;
+            border-bottom: 1px solid var(--border-color, #eaecef);
+            padding-bottom: 0.3em;
+        }
+
+        p {
+            margin-bottom: 16px;
+        }
+
+        a {
+            color: #0366d6;
+            text-decoration: none;
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+
+        ul, ol {
+            padding-left: 2em;
+            margin-bottom: 16px;
+        }
+
+        li {
+            word-wrap: break-all;
+        }
+
+        blockquote {
+            padding: 0 1em;
+            color: #6a737d;
+            border-left: 0.25em solid #dfe2e5;
+            margin: 0 0 16px 0;
+        }
+
+        code {
+            padding: 0.2em 0.4em;
+            margin: 0;
+            font-size: 85%;
+            background-color: rgba(27,31,35,0.05);
+            border-radius: 3px;
+            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+        }
+
+        .code-block-wrapper {
+            margin-bottom: 16px;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #f6f8fa;
+            border: 1px solid #d0d7de;
+
+            .code-block-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                background-color: #f6f8fa;
+                padding: 6px 12px;
+                color: #57606a;
+                font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+                font-size: 12px;
+                border-bottom: 1px solid #d0d7de;
+
+                .code-block-lang {
+                    text-transform: capitalize;
+                    font-weight: 600;
+                }
+
+                .copy-btn {
+                    position: static;
+                    opacity: 1;
+                    background: transparent;
+                    border: none;
+                    color: #57606a;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    cursor: pointer;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    transition: background 0.2s, color 0.2s;
+
+                    &:hover {
+                        background: #eaecef;
+                        color: #24292f;
+                    }
+                }
+            }
+
+            pre {
+                margin: 0;
+                border-radius: 0;
+                background-color: #ffffff;
+                color: #24292f;
+                padding: 16px;
+                overflow: auto;
+                font-size: 85%;
+                line-height: 1.45;
+                
+                code {
+                    background-color: transparent;
+                    padding: 0;
+                    color: inherit;
+                }
+            }
+        }
+
+        img {
+            max-width: 100%;
+            box-sizing: content-box;
+            background-color: #fff;
+        }
+
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+            width: 100%;
+            margin-bottom: 16px;
+            border-radius: 2px;
+            overflow: hidden;
+            border: 1px solid #e1e4e8;
+
+            th, td {
+                padding: 8px 13px;
+                border-bottom: 1px solid #e1e4e8;
+                border-right: 1px solid #e1e4e8;
+            }
+
+            th:last-child, td:last-child {
+                border-right: none;
+            }
+
+            tr:last-child td {
+                border-bottom: none;
+            }
+
+            th {
+                background-color: #f0f3f6;
+                font-weight: 600;
+                color: #24292f;
+            }
+
+            tr {
+                background-color: #ffffff;
+            }
+
+            tr:nth-child(2n) {
+                background-color: #f8f9fa;
+            }
+        }
+
+        .task-list-item {
+            list-style-type: none;
+        }
+
+        input[type="checkbox"] {
+            transform: scale(1.1);
+            margin-right: 8px;
+            vertical-align: middle;
+            cursor: default;
+
+            &:disabled {
+                opacity: 1 !important;
+                filter: contrast(1.1) grayscale(0.2);
+            }
+        }
+
+        html.dark & {
+            h1, h2, h3, h4, h5, h6 { border-bottom-color: rgba(255, 255, 255, 0.1); }
+            a { color: #58a6ff; }
+            blockquote { 
+                color: #8b949e; 
+                border-left-color: #30363d; 
+            }
+            code { 
+                background-color: rgba(240, 246, 252, 0.15); 
+            }
+            .code-block-wrapper {
+                background-color: #0d1117;
+                border-color: #30363d;
+                .code-block-header {
+                    background-color: #161b22;
+                    color: #8b949e;
+                    border-bottom-color: #30363d;
+                    .copy-btn {
+                        color: #8b949e;
+                        &:hover {
+                            background: #30363d;
+                            color: #c9d1d9;
+                        }
+                    }
+                }
+                pre {
+                    background-color: #0d1117;
+                    color: #c9d1d9;
+                    
+                    code {
+                        background-color: transparent;
+                    }
+                }
+            }
+            img { background-color: transparent; }
+            table {
+                border-color: #30363d;
+                th, td { border-color: #30363d; }
+                th { 
+                    background-color: #161b22; 
+                    color: #c9d1d9; 
+                }
+                tr { background-color: #0d1117; }
+                tr:nth-child(2n) { background-color: #161b22; }
+            }
+        }
+    }
+}

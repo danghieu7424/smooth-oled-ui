@@ -1,0 +1,16 @@
+// TẠI FILE src/styles/shared/ui/_follow_btn.scss
+.icon-action-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--border-color); color: var(--text-main);
+  border: 1px solid transparent; cursor: pointer;
+  transition: all 0.2s ease; text-decoration: none;
+
+  &:hover { background: var(--overlay-20); transform: scale(1.05); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  &.is-following {
+    background: transparent; color: var(--brand-primary); border-color: rgba(20, 184, 166, 0.3);
+    &:hover { background: rgba(20, 184, 166, 0.1); border-color: var(--brand-primary); }
+  }
+}

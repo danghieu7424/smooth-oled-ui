@@ -1,0 +1,101 @@
+.yt-double-tap-seek {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50%;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &.left {
+        left: 0;
+    }
+
+    &.right {
+        right: 0;
+    }
+
+    .ripple {
+        position: absolute;
+        width: 100%;
+        aspect-ratio: 1/1;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        transform: scale(0);
+        opacity: 0;
+        animation: doubleTapRipple 0.5s ease-out forwards;
+    }
+
+    .content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: white;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+
+        .arrows {
+            display: flex;
+            align-items: center;
+            margin-bottom: 4px;
+
+            svg {
+                width: 24px;
+                height: 24px;
+                margin: 0 -6px;
+                animation: doubleTapArrow 0.6s infinite;
+            }
+
+            .arrow-1 {
+                animation-delay: 0s;
+            }
+
+            .arrow-2 {
+                animation-delay: 0.15s;
+            }
+
+            .arrow-3 {
+                animation-delay: 0.3s;
+            }
+
+            &.left-arrows {
+                transform: scaleX(-1);
+            }
+        }
+
+        .text {
+            font-size: 14px;
+            font-weight: 500;
+        }
+    }
+}
+
+@keyframes doubleTapRipple {
+    0% {
+        transform: scale(0.1);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 0;
+    }
+}
+
+@keyframes doubleTapArrow {
+    0% {
+        opacity: 0.2;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.2;
+    }
+}

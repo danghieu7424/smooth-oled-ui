@@ -1,0 +1,78 @@
+// styles/shared/_toggle_switch.scss
+
+.atm-toggle-switch {
+    // 1. Kích thước (Tinh chỉnh lề rộng hơn cho "vừa đủ")
+    --track-width: 52px;    
+    --track-height: 28px;   
+    --thumb-size: 20px;     // 🆕 Thu nhỏ nút một chút (từ 24 xuống 20) để lề rộng hơn
+    --thumb-margin: calc((var(--track-height) - var(--thumb-size)) / 2); // ~4px lề
+
+    // 2. Hệ màu Neumorphism cậu cung cấp
+    --track-off: var(--bg-app);  
+    --thumb-off: #272727;  
+    --light-top: var(--border-color);  
+    --shadow-bot: #030303; 
+    --shadow-light-bot: var(--border-color);
+    // 🆕 TRẠNG THÁI BẬT: Trắng trong suốt (Pha với nền var(--bg-app))
+    --track-on: var(--overlay-50); 
+    --thumb-on: #CCC;
+
+    appearance: none; outline: none; border: none; margin: 0; padding: 0; cursor: pointer;
+    
+    // 3. Thanh trượt (Track)
+    width: var(--track-width);
+    height: var(--track-height);
+    background-color: var(--track-off);
+    border-radius: calc(var(--track-height) / 2);
+    position: relative;
+    
+    // Track Lõm
+    box-shadow: 
+        inset 0 2px 4px var(--shadow-bot),
+        0 1px 2px var(--shadow-light-bot);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    // 4. Chấm tròn (Thumb)
+    &::after {
+        content: '';
+        position: absolute;
+        top: var(--thumb-margin);
+        left: var(--thumb-margin);
+        width: var(--thumb-size);
+        height: var(--thumb-size);
+        background-color: var(--thumb-off);
+        border-radius: 50%;
+        
+        // Đổ bóng nổi khối cho nút tối
+        box-shadow: 
+            inset 0 1px 1px var(--light-top), 
+            0 2px 4px var(--shadow-bot),
+            0 4px 8px var(--shadow-bot);
+
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    // 5. Trạng thái BẬT
+    &.is-on {
+        background-color: var(--track-on);
+        
+        // 🆕 FIX 1: Rãnh sâu hơn. 
+        // Tăng bóng chìm từ 0.1 lên 0.5 để nó đủ sức hằn vết lõm trên nền xám đục
+        box-shadow: inset 0 2px 5px var(--dark-a50);
+
+        &::after {
+            background-color: var(--thumb-on);
+            transform: translateX(calc(var(--track-width) - var(--thumb-size) - (var(--thumb-margin) * 2)));
+            
+            // 🆕 FIX 2: Phục hồi vật lý ánh sáng 3 lớp
+            // Lớp 1 (inset): Đánh highlight trắng tinh (#FFF) lên đỉnh nút #EEE để nó lồi lên.
+            // Lớp 2 & 3: Tăng độ đậm bóng đổ (0.4 và 0.3) để tách nút hoàn toàn khỏi nền track bán trong suốt.
+            box-shadow: 
+                inset 0 1.5px 1px rgba(255, 255, 255, 1), 
+                0 2px 4px var(--dark-a30),
+                0 4px 8px var(--dark-a20);
+        }
+    }
+
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+}

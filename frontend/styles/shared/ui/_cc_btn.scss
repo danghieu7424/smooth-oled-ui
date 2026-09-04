@@ -1,0 +1,37 @@
+// styles/shared/ui/_cc_btn.scss
+
+.cc-btn {
+  svg.icon-cc {
+    width: 24px;
+    height: 24px;
+    display: block;
+
+    .bg {
+      fill: transparent;
+      stroke: currentColor;
+      stroke-width: 1.5;
+      transition: fill 0.3s ease, stroke-width 0.3s ease;
+    }
+
+    .text {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      transform-origin: center;
+    }
+
+    &.on {
+      .bg {
+        fill: currentColor;
+        stroke-width: 0;
+      }
+      .text {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+    }
+  }
+}

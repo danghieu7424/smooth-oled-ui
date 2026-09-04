@@ -1,0 +1,95 @@
+// styles/shared/ui/_repeat_btn.scss
+
+.yt-repeat-atom {
+    background: transparent;
+    border: none !important;
+    outline: none !important;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    
+    color: #717171; 
+    transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    svg {
+        width: 24px; height: 24px;
+        overflow: visible;
+    }
+
+    .rp-line, .rp-head {
+        will-change: stroke-dashoffset;
+        // Đặt sẵn chiều dài nét vẽ (chu vi đường kẻ này khoảng ~22px)
+        stroke-dasharray: 40; 
+        stroke-dashoffset: 0;
+    }
+
+    .repeat-digit-one {
+        transform-origin: center;
+        transform: scale(0);
+        opacity: 0;
+        stroke-width: 2;
+    }
+
+    // ==========================================
+    // TRẠNG THÁI ON (ALL & ONE)
+    // ==========================================
+    &.is-all, &.is-one {
+        color: var(--text-main);
+        // filter: drop-shadow(0 0 4px var(--dark-a20));
+    }
+
+    &:hover {
+        background-color: var(--bg-hover);
+    }
+
+    // ==========================================
+    // HOẠT CẢNH VẼ ĐUỔI NHAU KHI VỪA BẬT (OFF -> ALL)
+    // ==========================================
+    &.is-animating {
+        // Tạm thời giấu nét vẽ trước khi animation chạy tới
+        .rp-line, .rp-head { stroke-dashoffset: 40; }
+
+        .rp-top-group {
+            .rp-line, .rp-head {
+                // Vẽ nhóm trên trước
+                animation: rp-shoot-draw 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            }
+        }
+        
+        .rp-bot-group {
+            .rp-line, .rp-head {
+                // 🪄 Nhóm dưới chờ nhóm trên vẽ gần xong mới đuổi theo (trễ 0.15s)
+                animation: rp-shoot-draw 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+                animation-delay: 0.15s; 
+            }
+        }
+    }
+
+    // ==========================================
+    // TRẠNG THÁI "ONE": Hiện số 1 nảy
+    // ==========================================
+    &.is-one {
+        .repeat-digit-one {
+            animation: digit-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        // Làm mờ nhẹ vòng lặp để tôn số 1 lên
+        .rp-top-group, .rp-bot-group {
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+    }
+}
+
+// 🎬 Đạo diễn đường vẽ
+@keyframes rp-shoot-draw {
+    0% { stroke-dashoffset: 40; }
+    100% { stroke-dashoffset: 0; }
+}
+
+// 🎬 Hoạt cảnh số 1 nảy búng ra (Overshoot)
+@keyframes digit-pop {
+    0%   { transform: scale(0); opacity: 0; }
+    70%  { transform: scale(1.15); opacity: 1; } // Nảy lố ra
+    100% { transform: scale(1); opacity: 1; }
+}

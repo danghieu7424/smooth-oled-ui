@@ -1,0 +1,169 @@
+.atom-playback-settings {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+    pointer-events: none;
+
+    .settings-btn {
+        position: absolute;
+        top: clamp(8px, 3%, 20px);
+        right: clamp(8px, 3%, 20px);
+        pointer-events: auto;
+
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        border-radius: 50%;
+        width: clamp(24px, 5vw, 36px);
+        aspect-ratio: 1;
+        height: auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        backdrop-filter: blur(10px);
+
+        .icon-settings {
+            width: 50%;
+            height: 50%;
+
+            .settings-path {
+                fill: none;
+                stroke: currentColor;
+                stroke-width: 2;
+                stroke-linejoin: round;
+                stroke-linecap: round;
+                d: path("M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z M 12 9 a 3 3 0 1 1 0 6 a 3 3 0 1 1 0 -6");
+            }
+        }
+
+        &:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: none; // No scale on hover
+        }
+
+        &:active {
+            transform: none; // No scale on click
+        }
+    }
+
+    .playback-settings-dropdown {
+        pointer-events: auto;
+        position: absolute;
+        top: clamp(36px, 12%, 50px);
+        right: clamp(8px, 3%, 20px);
+        background: rgba(30, 30, 30, 0.7);
+        backdrop-filter: blur(15px);
+        border-radius: 12px;
+        padding: clamp(4px, 2%, 8px) 0;
+        width: clamp(140px, 45%, 250px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        display: flex;
+        flex-direction: column;
+        z-index: 1001;
+        animation: fadeIn 0.2s ease-out;
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: clamp(4px, 1.5vmin, 8px) clamp(8px, 2vmin, 16px);
+            cursor: pointer;
+            transition: background 0.2s;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.1);
+            }
+
+            .menu-item-left {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+
+                .repeat-icon-wrapper {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transform: scale(0.9);
+                }
+
+                .menu-label {
+                    font-size: clamp(11px, 2.5vmin, 14px);
+                    font-weight: 500;
+                }
+            }
+
+            .menu-item-right {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                color: #ccc;
+                font-size: clamp(10px, 2vmin, 13px);
+            }
+        }
+
+        .menu-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: clamp(12px, 3vmin, 15px);
+            margin-bottom: 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: clamp(4px, 1.5vmin, 8px) clamp(8px, 2vmin, 16px) clamp(6px, 2vmin, 12px) clamp(8px, 2vmin, 16px);
+            cursor: pointer;
+            transition: background 0.2s;
+
+            &:hover {
+                background: rgba(255, 255, 255, 0.05);
+            }
+        }
+
+        .menu-options {
+            display: flex;
+            flex-direction: column;
+            gap: clamp(4px, 1vmin, 8px);
+            padding: clamp(4px, 1.5vmin, 8px) clamp(8px, 2vmin, 16px);
+
+            .radio-label {
+                display: flex;
+                align-items: center;
+                gap: clamp(6px, 1.5vmin, 12px);
+                font-size: clamp(11px, 2.5vmin, 14px);
+                cursor: pointer;
+                transition: color 0.2s;
+
+                &:hover {
+                    color: #fff;
+                }
+
+                input[type="radio"] {
+                    margin: 0;
+                    width: clamp(12px, 2.5vmin, 16px);
+                    height: clamp(12px, 2.5vmin, 16px);
+                    accent-color: var(--brand-primary, #14b8a6);
+                    cursor: pointer;
+                }
+            }
+        }
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

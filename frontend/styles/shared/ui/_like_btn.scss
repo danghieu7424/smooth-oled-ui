@@ -1,0 +1,89 @@
+// styles/shared/ui/_like_btn.scss
+
+.yt-like-atom {
+  // BẮT BUỘC: Đập vỡ lồng kính chặn overflow
+  overflow: visible !important; 
+  position: relative;
+  z-index: 10;
+
+  .icon-container {
+    position: relative;
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    overflow: visible !important;
+  }
+
+  .main-like-icon {
+    width: 100%; height: 100%;
+    transition: opacity 0.1s ease;
+  }
+
+  // Nốt chính màu trắng
+.big-note-center {
+    position: absolute;
+    width: 24px; height: 24px; 
+    top: 50%; left: 50%;
+    margin-top: -12px; margin-left: -12px;
+    pointer-events: none;
+    z-index: 20;
+    
+    /* KHÓA CHẶT LÚC CHƯA BẤM */
+    opacity: 0; 
+    transform: scale(0); 
+  }
+
+  // styles/shared/ui/_like_btn.scss
+
+  .small-note {
+    position: absolute;
+    pointer-events: none;
+    filter: drop-shadow(0 2px 4px var(--dark-a30));
+    z-index: 15;
+    
+    opacity: 0; 
+    transform: scale(0);
+
+    // 🪄 SỬA LỖI 2: Quản lý màu sắc 100% bằng CSS, không dính líu đến Rust
+    &.note-p1 { left: -15px; top: -15px; width: 12px } // Hồng Đậm
+    &.note-p2 { left: 10px;  top: -20px; width: 16px } // Tím Neon
+    &.note-p3 { left: 23px;  top: 14px;  width: 14px } // Xanh Cyan
+    &.note-p4 { left: -15px; top: 18px;  width: 10px } // Cam
+  }
+
+  &.is-animating {
+    .main-like-icon { opacity: 0; }
+
+    .big-note-center {
+      animation: big-note-static-shake 0.8s ease-in-out forwards;
+    }
+
+    .small-note {
+      animation: note-appear-shake 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      &.note-p2 { animation-delay: 0.05s; }
+      &.note-p3 { animation-delay: 0.1s; }
+      &.note-p4 { animation-delay: 0.15s; }
+    }
+  }
+}
+
+// ==========================================
+// ANIMATION: Thu nhỏ vật lý (Scale về 0), KHÔNG dùng Opacity để làm mờ
+// ==========================================
+
+@keyframes big-note-static-shake {
+  /* Ép opacity: 1 xuyên suốt toàn bộ quá trình chạy animation */
+  0%   { opacity: 1; transform: scale(0) rotate(-8deg); }
+  20%  { opacity: 1; transform: scale(1.2) rotate(-8deg); }
+  40%  { opacity: 1; transform: scale(1.2) rotate(8deg); }
+  60%  { opacity: 1; transform: scale(1.1) rotate(0deg); }
+  100% { opacity: 1; transform: scale(0) rotate(0deg); } /* Thu nhỏ vật lý đến mức không thấy */
+}
+
+@keyframes note-appear-shake {
+  /* Ép opacity: 1 xuyên suốt toàn bộ quá trình chạy animation */
+  0%   { opacity: 1; transform: scale(0); }
+  20%  { opacity: 1; transform: scale(1.2); }
+  50%  { opacity: 1; transform: scale(1.1) rotate(15deg); }
+  70%  { opacity: 1; transform: scale(1) rotate(-15deg); }
+  100% { opacity: 1; transform: scale(0); } /* Thu nhỏ vật lý đến mức không thấy */
+}

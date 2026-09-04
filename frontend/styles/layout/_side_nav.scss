@@ -1,0 +1,72 @@
+// styles/layout/_side_nav.scss
+.desktop-side-nav {
+  display: none; // Mặc định Mobile sẽ tàng hình
+
+  // Khi lên Desktop hiện ra làm Sidebar
+  @media (min-width: 768px) {
+    display: flex;
+    flex-direction: column;
+    width: 240px; 
+    flex-shrink: 0;
+    background: light-dark(rgba(248, 249, 250, 0.85), rgba(18, 18, 18, 0.85));
+    border-right: 1px solid var(--border-color);
+    padding: 24px 16px;
+    gap: 8px;
+    overflow-y: auto;
+
+    .nav-item {
+      display: flex; 
+      align-items: center; 
+      gap: 16px; 
+      padding: 12px 16px;
+      color: var(--text-muted); 
+      text-decoration: none; 
+      font-weight: 600; 
+      border-radius: 12px;
+      transition: all 0.2s;
+
+      &:hover { 
+        background: var(--border-color); 
+        color: var(--text-main); 
+      }
+      
+      // 🚀 BẮT ĐÚNG CLASS is-active TỪ BẢN GỐC CỦA CẬU
+      &.is-active { 
+        background: rgba(20, 184, 166, 0.15); 
+        color: var(--primary, var(--brand-primary)); 
+      }
+
+      // 🚀 CSS cho cấu trúc DOM đồng nhất
+      .icon-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        svg { 
+          width: 24px; 
+          height: 24px; 
+        }
+      }
+      
+      .nav-label {
+        font-size: 1rem;
+      }
+
+      // 🚀 Badge đỏ cho tin nhắn chưa đọc
+      .msg-badge {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 8px;
+        height: 8px;
+        background-color: var(--brand-danger);
+        border-radius: 50%;
+        border: 2px solid rgba(18, 18, 18, 1);
+      }
+
+      .icon-wrapper {
+        position: relative;
+      }
+    }
+  }
+}

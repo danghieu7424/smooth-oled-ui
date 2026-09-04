@@ -1,0 +1,184 @@
+// styles/shared/_status_ring.scss
+
+// 🆕 BƯỚC 1: ĐỊNH NGHĨA ANIMATION XOAY VÔ TẬN (Đặt trên cùng, ngoài khối .atm-status-ring)
+@keyframes spin-loading {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.atm-status-ring {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
+    svg {
+        transform: rotate(-90deg);
+        overflow: visible;
+    }
+
+    // 1. CẤU HÌNH GỐC (Bỏ hoàn toàn transition ở đây để không bị xung đột)
+    circle {
+        fill: none;
+        stroke-width: 2;
+        stroke-linecap: round;
+    }
+
+    .icon-group {
+        transform: rotate(90deg);
+        transform-origin: center;
+
+        path {
+            fill: none;
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 25; 
+            stroke-dashoffset: 25; 
+            opacity: 0;
+            // 🆕 SỬA Ở ĐÂY: Xóa transition đi để khi Reset nó biến mất ngay lập tức (0s)
+            transition: none;
+        }
+    }
+    .ring-text {
+        transform: rotate(90deg);
+        transform-origin: center;
+        dominant-baseline: middle;
+        text-anchor: middle;
+        font-weight: bold;
+        font-size: 8px;
+        fill: var(--text-main, #ffffff);
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+
+    // ==========================================
+    // 2. KHỞI TẠO 3 VÒNG KẾT QUẢ ĐỘC LẬP
+    // ==========================================
+    
+    .ring-base {
+        stroke: var(--text-secondary, var(--text-muted));
+        stroke-dasharray: 66; // Vòng gốc là vòng kín
+        stroke-dashoffset: 0; 
+        // 🆕 PHỤC HỒI HIỆU ỨNG GHÉP KÍN: Trình duyệt sẽ tự nội suy để lấp đầy các khoảng trống
+        transition: stroke-dasharray 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    }
+
+    .ring-progress {
+        stroke: var(--text-main, #ffffff); 
+        stroke-dasharray: 66;
+        opacity: 0;
+        transition: stroke-dashoffset 0.1s linear, opacity 0.2s;
+    }
+
+    // 🆕 THÊM CẤU HÌNH GỐC CHO SPINNER
+    .ring-spinner {
+        stroke: var(--text-main, #ffffff); // Lấy màu nổi nhất
+        stroke-dasharray: 14 19;       // Tuyệt kỹ chia 4 vòng tròn bằng toán học
+        opacity: 0;
+        transform-origin: center;          // Đóng đinh tâm quay
+        transition: opacity 0.2s ease;
+    }
+
+    // Bơm màu sẵn ngay từ lúc tàng hình để trình duyệt không bị "sốc"
+    // 🆕 ĐÃ SỬA: Thêm .icon-... vào để cấp màu nét vẽ
+    .ring-success, .icon-success { stroke: var(--brand-primary); }
+    .ring-error, .icon-error     { stroke: #EF4444; }
+    .ring-warning, .icon-warning { stroke: #F59E0B; }
+    .ring-skipped, .icon-skipped { stroke: #3B82F6; }
+
+    .ring-success, .ring-error, .ring-warning, .ring-skipped {
+        stroke-dasharray: 66;
+        stroke-dashoffset: 66; 
+        opacity: 0;
+        transition: none;
+    }
+
+    // ==========================================
+    // 3. CÁC TRẠNG THÁI KÍCH HOẠT (STATES)
+    // ==========================================
+
+    // 1. TRẠNG THÁI IDLE (Nét đứt)
+    &.is-idle {
+        .ring-base { 
+            stroke-dasharray: 5 4.4; 
+            // Khi Component đổi sang is-loading, class này bị gỡ bỏ.
+            // Vòng tròn sẽ lập tức transition từ (5 4.4) lên (66), các nét sẽ chạy dọc nối đuôi nhau ghép thành 1 vòng kín!
+        } 
+    }
+
+    &.is-loading {
+        .ring-base { opacity: 0.3; } 
+        .ring-progress { opacity: 1; } 
+        .ring-text { opacity: 1; } 
+    }
+
+    // 2B. TRẠNG THÁI PROCESSING (Không biết tham số - Xoay vô cực)
+    &.is-processing {
+        .ring-base { stroke-dashoffset: 0; opacity: 0.1; } // Vòng khép kín nền bên dưới
+        .ring-spinner { 
+            opacity: 1; // HIỆN vòng xoay 2 nét
+            animation: spin-loading 1s linear infinite; 
+        }
+        // Progress và Text tự động ẩn
+    }
+
+    &.is-success {
+        .ring-base { opacity: 0.2; }
+        .ring-success {
+            stroke-dashoffset: 0;
+            opacity: 1;
+            transition: stroke-dashoffset 0.3s ease-out, opacity 0.1s ease-in;
+        }
+        .icon-success {
+            stroke-dashoffset: 0;
+            opacity: 1;
+            // 🆕 MANG XUỐNG ĐÂY: Chỉ khi BẬT mới delay 0.3s chờ vòng chạy xong
+            transition: stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.3s, opacity 0.2s 0.3s;
+        }
+    }
+
+    &.is-error {
+        .ring-base { opacity: 0.2; }
+        .ring-error {
+            stroke-dashoffset: 0;
+            opacity: 1;
+            transition: stroke-dashoffset 0.3s ease-out, opacity 0.1s ease-in;
+        }
+        .icon-error {
+            stroke-dashoffset: 0;
+            opacity: 1;
+            // 🆕 TRUYỀN GIA TỐC VÀO ĐÂY
+            transition: stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.3s, opacity 0.2s 0.3s;
+        }
+    }
+
+    &.is-warning {
+        .ring-base { opacity: 0.2; }
+        .ring-warning {
+            stroke-dashoffset: 0;
+            opacity: 1;
+            transition: stroke-dashoffset 0.3s ease-out, opacity 0.1s ease-in;
+        }
+        .icon-warning {
+            stroke-dashoffset: 0;
+            opacity: 1;
+            // 🆕 TRUYỀN GIA TỐC VÀO ĐÂY
+            transition: stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.3s, opacity 0.2s 0.3s;
+        }
+    }
+
+    &.is-skipped {
+        .ring-base { opacity: 0.2; }
+        .ring-skipped {
+            stroke-dashoffset: 0;
+            opacity: 1;
+            transition: stroke-dashoffset 0.3s ease-out, opacity 0.1s ease-in;
+        }
+        .icon-skipped {
+            stroke-dashoffset: 0;
+            opacity: 1;
+            // 🆕 TRUYỀN GIA TỐC VÀO ĐÂY
+            transition: stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.3s, opacity 0.2s 0.3s;
+        }
+    }
+}

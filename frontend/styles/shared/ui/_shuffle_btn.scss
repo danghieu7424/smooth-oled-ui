@@ -1,0 +1,135 @@
+// styles/shared/ui/_shuffle_btn.scss
+
+.yt-shuffle-atom {
+  // 🪄 Diệt tận gốc viền vuông bao ngoài khi click
+  background-color: transparent;
+  border: none !important;
+  outline: none !important;
+
+  // 🪄 TRẠNG THÁI OFF: Mặc định màu xám
+  color: #717171;
+
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 50%;
+  // 🪄 BÍ KÍP CHUYỂN MÀU: Từ từ nguội lại thành xám khi tắt
+  transition:
+    color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.2s ease;
+
+  // ==========================================
+  // TRẠNG THÁI ON (BẬT)
+  // ==========================================
+  &.is-active {
+    // 🪄 TRẠNG THÁI ON: Trắng rực rỡ
+    color: var(--text-main);
+    // Phủ thêm 1 lớp hào quang nhẹ để nó nổi bật trên nền đen
+    // filter: drop-shadow(0 0 6px var(--dark-a30));
+  }
+
+  // Hover effect chung (Sáng lên một chút dù đang on hay off)
+  &:hover {
+    background-color: var(--bg-hover);
+  }
+
+  svg {
+    width: 24px;
+    height: 24px;
+    overflow: visible;
+  }
+
+  .sf-top-group,
+  .sf-bot-group {
+    transform-origin: center;
+    will-change: transform, stroke-dashoffset;
+  }
+
+
+  // Chuẩn bị nét vẽ
+  .sf-line {
+    stroke-dasharray: 25;
+    stroke-dashoffset: 0;
+  }
+
+  .sf-head {
+    stroke-dasharray: 10;
+    stroke-dashoffset: 0;
+  }
+
+  &:not(.is-animating) g {
+    transition: none !important;
+  }
+
+  // ==========================================
+  // HOẠT CẢNH ĐÂM ĐÈ KHI KÍCH HOẠT (500ms)
+  // ==========================================
+  &.is-animating {
+    .sf-top-group {
+      animation: sf-top-dive 0.4s ease forwards;
+
+      .sf-line,
+      .sf-head {
+        animation: sf-shoot-draw 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+    }
+
+    .sf-bot-group {
+      animation: sf-bot-shoot 0.4s ease forwards;
+      animation-delay: 0.1s; // Chờ mũi tên kia đi trước
+
+      .sf-line,
+      .sf-head {
+        animation: sf-shoot-draw 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        animation-delay: 0.1s;
+      }
+    }
+  }
+}
+
+// 🎬 Đạo diễn đường vẽ
+@keyframes sf-shoot-draw {
+  0% {
+    stroke-dashoffset: 25;
+  }
+
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+// 🎬 Mũi tên TRÊN: Co mình lại nhường đường
+@keyframes sf-top-dive {
+  0% {
+    transform: translateY(-2px) scale(0.9);
+  }
+
+  50% {
+    transform: translateY(0) scale(0.85);
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
+
+// 🎬 Mũi tên DƯỚI: Phóng lên và nở to đè bẹp
+@keyframes sf-bot-shoot {
+  0% {
+    transform: translateY(2px) scale(0.9);
+    opacity: 0;
+  }
+
+  50% {
+    transform: translateY(0) scale(1.15);
+    opacity: 1;
+  }
+
+  // Nở to đè bẹp
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}

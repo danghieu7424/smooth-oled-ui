@@ -1,0 +1,129 @@
+// styles/shared/ui/_volume_btn.scss
+
+.yt-volume-btn {
+  --btn-size: 64px;
+  --icon-ratio: 0.7;
+  --icon-size: calc(var(--btn-size) * var(--icon-ratio));
+
+  width: var(--btn-size);
+  height: var(--btn-size);
+  background-color: transparent;
+  color: var(--text-main);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease, transform 0.1s, color 0.2s;
+  outline: none;
+  padding: clamp(2px, 1%, 4px);
+
+  @media (hover: hover) {
+    &:hover {
+      color: #f00;
+    }
+  }
+
+  &:active {
+    color: #f00;
+  }
+
+  svg {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    display: block;
+    overflow: hidden;
+  }
+
+  .icon-volume {
+    overflow: visible;
+
+    .vol-base,
+    .vol-wave-1,
+    .vol-wave-2,
+    .vol-cross {
+      fill: currentColor;
+      stroke: currentColor;
+      stroke-width: 0.6;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-origin: center;
+    }
+
+    .vol-base {
+      d: path("M3 9v6h4l5 5V4L7 9H3z");
+    }
+
+    .vol-wave-1 {
+      d: path("M16.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z");
+      opacity: 0;
+    }
+
+    .vol-wave-2 {
+      d: path("M14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z");
+      opacity: 0;
+    }
+
+    .vol-cross {
+      d: path("M21 4.27l-1.27-1.27L4.27 18.46l1.27 1.27z");
+      opacity: 0;
+    }
+  }
+
+  &.state-mute {
+
+    .vol-wave-1,
+    .vol-wave-2 {
+      opacity: 1;
+      transform: scale(1) translateX(0);
+    }
+
+    .vol-cross {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  &.state-0 {
+
+    .vol-wave-1,
+    .vol-wave-2,
+    .vol-cross {
+      opacity: 0;
+      transform: scale(0.5) translateX(-5px);
+    }
+  }
+
+  &.state-1 {
+    .vol-wave-1 {
+      opacity: 1;
+      transform: scale(1) translateX(0);
+    }
+
+    .vol-wave-2 {
+      opacity: 0;
+      transform: scale(0.5) translateX(-5px);
+    }
+
+    .vol-cross {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+  }
+
+  &.state-2 {
+
+    .vol-wave-1,
+    .vol-wave-2 {
+      opacity: 1;
+      transform: scale(1) translateX(0);
+    }
+
+    .vol-cross {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+  }
+}

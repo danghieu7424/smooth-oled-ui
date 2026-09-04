@@ -1,0 +1,88 @@
+// styles/abstracts/_glass_tokens.scss
+
+:root {
+  /* --- Chuyển động (GSAP-like Easings) --- */
+  --ease-power3-out: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --ease-power4-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-expo-out: cubic-bezier(0.19, 1, 0.22, 1);
+  
+  /* --- Thời lượng --- */
+  --duration-fast: 300ms;
+  --duration-normal: 600ms;
+  --duration-slow: 1200ms;
+
+  /* --- Khoảng cách (Spacing Scale) --- */
+  --space-2: 8px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* --- Bo góc (Border Radii) --- */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
+
+  /* --- Màu sắc cố định (Light/Dark Variables) --- */
+  --color-light-canvas: #F4F5F7;
+  --color-light-glass-base: rgba(255, 255, 255, 0.4);
+  --color-light-glass-hover: rgba(255, 255, 255, 0.6);
+  --color-light-edge-refract: rgba(255, 255, 255, 0.7);
+  --color-light-edge-occlude: rgba(0, 0, 0, 0.05);
+  --color-light-text-primary: #1E293B;
+  --color-light-text-muted: #64748B;
+  --color-light-shadow: rgba(31, 38, 135, 0.07);
+
+  --color-dark-canvas: #0F0F14;
+  --color-dark-glass-base: rgba(15, 15, 20, 0.4);
+  --color-dark-glass-hover: rgba(21, 21, 31, 0.6);
+  --color-dark-edge-refract: rgba(255, 255, 255, 0.15);
+  --color-dark-edge-occlude: rgba(0, 0, 0, 0.6);
+  --color-dark-text-primary: #F8FAFC;
+  --color-dark-text-muted: #94A3B8;
+  --color-dark-shadow: rgba(0, 0, 0, 0.3);
+}
+
+/* Biến động được FSD Context kiểm soát (Phục vụ Graceful Degradation) */
+:root {
+  --current-glass-blur: 16px; 
+  --current-glass-saturate: 180%;
+}
+
+/* Global Class để tắt Blur khi cuộn hoặc di chuyển cấu trúc phức tạp */
+body.is-animating {
+  --current-glass-blur: 0px;
+  --current-glass-saturate: 100%;
+}
+
+/* Ánh xạ Light Theme */
+:root.light {
+  --theme-canvas: var(--color-light-canvas);
+  --theme-text-color: var(--color-light-text-primary);
+  --theme-text-muted: var(--color-light-text-muted);
+  
+  --glass-tint-base: var(--color-light-glass-base);
+  --glass-tint-hover: var(--color-light-glass-hover);
+  
+  --glass-border-light: var(--color-light-edge-refract);
+  --glass-border-dark: var(--color-light-edge-occlude);
+  
+  --glass-shadow-ambient: var(--color-light-shadow);
+  --text-protect-shadow: 0px 1px 3px rgba(255, 255, 255, 0.8), 0px 2px 8px rgba(255, 255, 255, 0.5);
+}
+
+/* Ánh xạ Dark Theme */
+:root.dark, :root {
+  --theme-canvas: var(--color-dark-canvas);
+  --theme-text-color: var(--color-dark-text-primary);
+  --theme-text-muted: var(--color-dark-text-muted);
+  
+  --glass-tint-base: var(--color-dark-glass-base);
+  --glass-tint-hover: var(--color-dark-glass-hover);
+  
+  --glass-border-light: var(--color-dark-edge-refract);
+  --glass-border-dark: var(--color-dark-edge-occlude);
+  
+  --glass-shadow-ambient: var(--color-dark-shadow);
+  --text-protect-shadow: 0px 1px 3px rgba(0, 0, 0, 0.8), 0px 2px 8px rgba(0, 0, 0, 0.5);
+}

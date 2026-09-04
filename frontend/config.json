@@ -1,0 +1,18 @@
+{
+  "name": "Frontend",
+  "ignores": [
+    "/target",
+    "/node_modules",
+    "/.git",
+    "/assets",
+    "/dist",
+    "/learn_hook",
+    "/public",
+    ".env",
+    "config.json",
+    "package-lock.json",
+    "readme.md",
+    "Cargo.lock"
+  ],
+  "output_dir": "./"
+}

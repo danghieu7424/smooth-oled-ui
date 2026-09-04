@@ -1,0 +1,59 @@
+@use "sass:math";
+
+:root {
+  color-scheme: light dark;
+  --theme-mode: light;
+
+  // --- LIGHT MODE (DEFAULT) ---
+  --bg-app: #f4f4f5;
+  --bg-surface: #ffffff;
+  --bg-hover: #f4f4f7;
+  --text-main: #171717;
+  --text-muted: #525252;
+  --brand-primary: #0d9488;
+  --brand-danger: #dc2626;
+  --border-color: #e5e7eb;
+
+  @for $i from 1 through 19 {
+    $pct: $i * 5;
+    $light-pct: math.max(2, math.round(math.div($pct, 3)));
+
+    --dark-a#{$pct}: rgb(0 0 0 / #{$light-pct}%);
+    --overlay-#{$pct}: rgb(0 0 0 / #{$pct}%);
+    --text-alpha-#{$pct}: rgb(0 0 0 / #{$pct}%);
+
+    --pure-black-a#{$pct}: rgb(0 0 0 / #{$pct}%);
+    --pure-white-a#{$pct}: rgb(255 255 255 / #{$pct}%);
+  }
+
+  // ALIAS FOR BACKWARD COMPATIBILITY
+  --primary-color: var(--brand-primary);
+}
+
+:root.light {
+  color-scheme: light;
+  --theme-mode: light;
+}
+
+:root.dark {
+  color-scheme: dark;
+  --theme-mode: dark;
+
+  // --- DARK MODE ---
+  --bg-app: #121212;
+  --bg-surface: #1a1a1a;
+  --bg-hover: #282828;
+  --text-main: #ffffff;
+  --text-muted: #a3a3a3;
+  --brand-primary: #14b8a6;
+  --brand-danger: #ef4444;
+  --border-color: #333333;
+
+  @for $i from 1 through 19 {
+    $pct: $i * 5;
+
+    --dark-a#{$pct}: rgb(0 0 0 / #{$pct}%);
+    --overlay-#{$pct}: rgb(255 255 255 / #{$pct}%);
+    --text-alpha-#{$pct}: rgb(255 255 255 / #{$pct}%);
+  }
+}

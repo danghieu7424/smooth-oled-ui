@@ -1,0 +1,15 @@
+// styles/shared/ui/_rotate_btn.scss
+
+.rotate-btn {
+    svg.icon-rotate {
+        width: 24px;
+        height: 24px;
+        display: block;
+        transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        transform: rotate(-90deg);
+    }
+
+    &.is-rotated svg.icon-rotate {
+        transform: rotate(0deg);
+    }
+}

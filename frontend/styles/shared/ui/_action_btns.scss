@@ -1,0 +1,102 @@
+// styles/components/_action_btns.scss
+
+// Khu vực cuộn ngang bao ngoài
+.interaction-bar-container {
+  margin-bottom: 24px;
+  width: 100%;
+}
+
+.interaction-scroll-area {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  
+  // 🪄 TĂNG TRẦN NHÀ LÊN 35px ĐỂ PHÁO HOA KHÔNG BỊ CẮT ĐỈNH/ĐÁY
+  padding-top: 1rem !important;    
+  padding-bottom: 1rem !important; 
+  margin-top: -0.5rem !important;    
+  margin-bottom: -0.5rem !important; 
+  
+  &::-webkit-scrollbar { display: none; }
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.yt-pill-group {
+  display: flex;
+  align-items: center;
+  background: var(--border-color);
+  border-radius: 100px;
+  flex-shrink: 0;
+  
+  // 🪄 PHÁ LỒNG KÍNH CỦA KHỐI BAO NGOÀI
+  overflow: visible !important; 
+}
+
+.yt-pill-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  height: 36px;
+  transition: background 0.2s, transform 0.1s;
+  overflow: visible !important;
+  
+  svg {
+    width: 20px;
+    height: 20px;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); // Nảy nhẹ
+  }
+
+  // Active State (Khi bấm Like/Dislike)
+  &.is-active {
+    svg {
+      fill: currentColor; // Đổ màu đặc (tự động theo Light/Dark)
+      // transform: scale(1.2); // Phóng to chớp nhoáng
+      animation: icon-bounce 0.4s ease;
+    }
+  }
+
+  // Khi bấm xuống (Click feedback)
+  &:active {
+    background: var(--overlay-20);
+  }
+
+  // Nút độc lập (Share, Download)
+  &.standalone {
+    background: var(--border-color);
+    border-radius: 100px;
+    padding: 0 16px;
+    flex-shrink: 0;
+  }
+
+  // Gọt dũa bo góc cho cụm Like/Dislike
+  &.left-side {
+    padding: 0 12px 0 16px;
+    border-radius: 100px 0 0 100px;
+  }
+  &.right-side {
+    padding: 0 16px 0 12px;
+    border-radius: 0 100px 100px 0;
+  }
+}
+
+// Vạch ngăn cách giữa Like và Dislike
+.yt-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--overlay-20);
+}
+
+// Keyframe nảy icon
+@keyframes icon-bounce {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.35) rotate(-10deg); }
+  100% { transform: scale(1.2) rotate(0deg); }
+}

@@ -1,0 +1,87 @@
+// styles/shared/_radio.scss
+
+.atm-radio-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+
+    .atm-radio-input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+        margin: 0;
+    }
+
+    // Cái hộp hình tròn (Nổi khối)
+    .atm-radio-circle {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%; // Khác checkbox ở điểm này
+        background-color: var(--bg-surface);
+        
+        box-shadow: 
+            inset 0 1.5px 1px var(--border-color), 
+            0 2px 4px var(--dark-a40),
+            0 4px 8px var(--dark-a30);
+            
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+        // Dấu chấm bên trong (Ẩn đi)
+        &::after {
+            content: '';
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--text-muted);
+            
+            // Dấu chấm lồi lên từ đáy hố
+            box-shadow: 
+                inset 0 1px 1px rgba(255, 255, 255, 1),
+                0 2px 4px var(--dark-a50);
+                
+            opacity: 0;
+            transform: scale(0);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+    }
+
+    // Trạng thái Checked (Hình tròn lún thành hố)
+    .atm-radio-input:checked ~ .atm-radio-circle {
+        background-color: var(--border-color);
+        box-shadow: 
+            inset 0 2px 5px var(--dark-a50),
+            inset 0 4px 10px var(--dark-a30),
+            0 1px 2px var(--border-color);
+
+        // Chấm tròn hiện ra
+        &::after {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    // Trạng thái Disabled
+    .atm-radio-input:disabled ~ .atm-radio-circle,
+    .atm-radio-input:disabled ~ .atm-radio-label {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .atm-radio-input:disabled ~ .atm-radio-circle {
+        box-shadow: none;
+        background-color: var(--bg-surface);
+    }
+
+    .atm-radio-label {
+        color: var(--text-main, var(--text-main));
+        font-size: 1rem;
+        transition: opacity 0.2s ease;
+    }
+}

@@ -1,0 +1,40 @@
+// [TÊN FILE]: src/shared/ui/atoms/logo.scss
+
+.verivibe-logo-atom {
+  display: flex;
+  align-items: center; // Căn giữa trục dọc cho nội bộ Atom
+  justify-content: center;
+  gap: 8px; // Khóa khoảng cách Icon và Text thương hiệu
+  color: var(--brand-primary); 
+  font-family: 'Poppins', sans-serif;
+  text-decoration: none;
+  height: 100%;
+
+  .logo-svg-icon {
+    width: 24px;  // 🚀 ĐIỀU CHỈNH CHUẨN: Hạ nhẹ kích thước để cân đối hoàn hảo với Topbar
+    height: 24px; // Khóa cứng chiều cao hình vuông ngăn chặn việc tự do giãn nở lệch tâm
+    flex-shrink: 0;
+    display: block;
+    
+    path {
+        animation: logoWaveAnim 1.5s infinite ease-in-out;
+    }
+    .wave-2 { animation-delay: 0.2s; }
+    .wave-3 { animation-delay: 0.4s; }
+  }
+
+  .logo-text-brand {
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    line-height: 1; // 🚀 KHÓA TRỤC DỌC: Triệt tiêu padding thừa của font chữ gây lệch tâm Y
+    display: inline-flex;
+    align-items: center;
+  }
+}
+
+@keyframes logoWaveAnim {
+    0%, 100% { transform: scaleY(1); }
+    50% { transform: scaleY(0.5); }
+}

@@ -1,0 +1,48 @@
+.track-card-mini {
+  width: 140px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+
+  .thumbnail {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background-color: var(--bg-elevated);
+    border-radius: 8px;
+    position: relative;
+    margin-bottom: 8px;
+    box-shadow: 0 4px 10px var(--dark-a30);
+    background-image: linear-gradient(45deg, var(--bg-hover), var(--bg-surface));
+
+    .premium-badge {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: #eab308;
+      color: var(--bg-app);
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 3px 6px;
+      border-radius: 4px;
+      box-shadow: 0 2px 5px var(--dark-a40);
+    }
+  }
+
+  .track-info {
+    .title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .artist {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}

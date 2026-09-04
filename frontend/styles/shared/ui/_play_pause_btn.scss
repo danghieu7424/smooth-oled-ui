@@ -1,0 +1,206 @@
+// styles/shared/_play_pause_btn.scss
+@use "sass:map";
+@use "sass:math";
+
+// ==========================================
+// 🚀 ĐỘNG CƠ TÍNH TOÁN TOÁN HỌC SCSS
+// ==========================================
+
+// Hàm xác định Ring nào sẽ nhảy dựa trên Bước (Step) hiện tại
+@function get-jumping-ring($base, $s) {
+  $val: (
+    ($base - $s) % 12 + 12) % 12;
+
+  @if $val ==0 {
+    @return 12;
+  }
+
+  @return $val;
+}
+
+// Khởi tạo tọa độ Trạng thái 1 chuẩn xác theo thông số cậu đưa ra
+$angles: (
+);
+
+@for $r from 1 through 12 {
+  $val: 0;
+
+  @if $r <=10 {
+    $val: (
+      $r - 1) * 20; // Ring 1-10: 0, 20, 40... 180
+  }
+
+  @else if $r ==11 {
+    $val: 240; // Ring 11: 240
+  }
+
+  @else if $r ==12 {
+    $val: 300; // Ring 12: 300
+  }
+
+  $angles: map.merge($angles, ($r: $val)
+  );
+}
+
+// Sinh ra 12 bộ Keyframes độc lập cho 12 Rings
+@for $r from 1 through 12 {
+  @keyframes spin-ring-#{$r} {
+    $curr_angle: map.get($angles, $r);
+
+    // Một chu kỳ tuần hoàn mất 36 bước (Đủ để mảng dịch chuyển lùi 720 độ về đúng mốc 0)
+    @for $s from 0 through 36 {
+      $percent: math.div($s * 100, 36);
+
+      // Ghi tọa độ góc hiện tại vào Frame
+      #{$percent}% {
+        transform: rotate(#{$curr_angle}deg);
+      }
+
+      // Xác định 3 Ring nào ở cuối hàng chuẩn bị nhảy
+      $jump1: get-jumping-ring(10, $s);
+      $jump2: get-jumping-ring(11, $s);
+      $jump3: get-jumping-ring(12, $s);
+
+      // Nếu Ring hiện tại nằm trong danh sách nhảy, tịnh tiến nó lên +40 độ
+      @if $r ==$jump1 or $r ==$jump2 or $r ==$jump3 {
+        $curr_angle: $curr_angle + 40;
+      }
+    }
+  }
+}
+
+// ==========================================
+// 🎨 GIAO DIỆN COMPONENT
+// ==========================================
+
+.yt-morph-btn {
+  --btn-size: 64px;
+  --icon-ratio: 0.7;
+  --icon-size: calc(var(--btn-size) * var(--icon-ratio));
+
+  --btn-bg: var(--bg-surface);
+  --btn-color: var(--text-main);
+  --btn-hover: var(--bg-hover);
+
+  width: var(--btn-size);
+  height: var(--btn-size);
+  background-color: var(--btn-bg);
+  color: var(--btn-color);
+
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  outline: none;
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+
+  &:hover {
+    background-color: var(--btn-hover);
+    transform: scale(1);
+  }
+
+  svg {
+    position: absolute;
+    width: var(--icon-size);
+    height: var(--icon-size);
+    display: block;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  .icon-play-pause {
+    opacity: 1;
+    transform: scale(1);
+
+    .morph-path {
+      fill: currentColor;
+      stroke: currentColor;
+      stroke-width: 1.5px;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      transition: d 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      d: path("M 12 10 L 18 14 L 18 22 L 12 26 Z M 18 14 L 24 18 L 24 18 L 18 22 Z");
+    }
+  }
+
+  &.paused .icon-play-pause .morph-path {
+    d: path("M 12 10 L 14 10 L 14 26 L 12 26 Z M 22 10 L 24 10 L 24 26 L 22 26 Z");
+  }
+
+  .icon-spinner {
+    opacity: 0;
+    transform: scale(0.5);
+    pointer-events: none;
+    // Đảo SVG -90 độ để điểm 0 nằm ở 12 giờ (Đỉnh)
+    transform: scale(0.5) rotate(-90deg);
+
+    .ring {
+      fill: none;
+      stroke: var(--primary, var(--brand-primary));
+      stroke-width: 10;
+      stroke-linecap: round;
+      // 🚀 Mỗi vòng đúng 20 độ, còn lại tàng hình
+      stroke-dasharray: 20 340;
+      transform-origin: 50px 50px;
+    }
+  }
+
+  &.is-loading {
+    cursor: wait;
+
+    .icon-play-pause {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+
+    .icon-spinner {
+      opacity: 1;
+      transform: scale(1) rotate(-90deg);
+
+      // Kích hoạt động cơ cho 12 vòng
+      @for $r from 1 through 12 {
+        .ring-#{$r} {
+          // Linear: Chạy tuyến tính liên tục để tạo cảm giác các hạt trôi chảy không bị giật
+          animation: spin-ring-#{$r} 12s linear infinite;
+        }
+      }
+    }
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    pointer-events: none;
+    filter: grayscale(1);
+
+    &:hover {
+      background-color: var(--bg-surface);
+      transform: none;
+    }
+  }
+}
+
+// 🚀 QUỸ ĐẠO CỦA HẠT (Từ 180° trượt về 0°)
+@keyframes organic-flow {
+  0% {
+    stroke-dasharray: 0 360; // Nảy ra từ Đuôi Cung tròn
+    stroke-dashoffset: -180; // Vị trí 180° (Đáy)
+  }
+
+  15% {
+    stroke-dasharray: 12 360; // Nở thành kích thước chuẩn 12°
+  }
+
+  85% {
+    stroke-dasharray: 12 360;
+  }
+
+  100% {
+    stroke-dasharray: 0 360; // Bị hút tụt vào Đầu Cung tròn
+    stroke-dashoffset: -360; // Vị trí 360° (Đỉnh 0°)
+  }
+}

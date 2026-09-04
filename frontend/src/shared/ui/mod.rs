@@ -1,0 +1,35 @@
+// /src/shared/ui/mod.rs
+pub mod atoms;
+
+pub mod action_btns;
+pub mod button;
+pub mod checkbox;
+pub mod download_btn;
+pub mod file_item;
+pub mod file_upload;
+pub mod follow_btn;
+pub mod like_btn;
+pub mod minimize_btn;
+pub mod next_btn;
+pub mod play_pause_btn;
+pub mod prev_btn;
+pub mod progress_bar;
+pub mod radio;
+pub mod repeat_btn;
+pub mod save_btn;
+pub mod share_btn;
+pub mod skip_btn;
+pub mod volume_btn;
+pub mod cc_btn;
+pub mod speed_btn;
+pub mod fullscreen_btn;
+pub mod shuffle_btn;
+pub mod spinner;
+pub mod status_ring;
+pub mod toggle_group;
+pub mod toggle_switch;
+pub mod playback_settings;
+pub mod speed_settings_modal;
+pub mod subtitle_settings_modal;
+pub mod double_tap_seek;
+pub mod rotate_btn;

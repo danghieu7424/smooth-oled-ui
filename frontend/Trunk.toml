@@ -1,0 +1,19 @@
+# frontend/Trunk.toml
+[build]
+target = "index.html"
+
+[[proxy]]
+rewrite = "/api"
+backend = "http://localhost:7424/api"
+
+[[proxy]]
+rewrite = "/media"
+backend = "http://localhost:7424/media"
+
+[[proxy]]
+rewrite = "/storages"
+backend = "http://localhost:7424/storages"
+
+[watch]
+# Trunk chỉ theo dõi src/ (chứa Rust) và index.html
+ignore = ["../backend", "target", "dist", "styles", "public"]

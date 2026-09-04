@@ -1,0 +1,138 @@
+// styles/shared/_timeline.scss
+
+.atm-timeline-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: var(--bg-surface); // Sử dụng biến CSS để hỗ trợ cả Light/Dark Mode
+    border-radius: 16px;
+    box-shadow: 0 10px 30px var(--dark-a50);
+}
+
+.timeline-step {
+        position: relative;
+        display: grid;
+        grid-template-columns: 48px 1fr;
+        gap: 20px;
+        padding-bottom: 30px; 
+
+        // 1. LỚP NỀN: Đường thẳng Xám tĩnh
+        &:not(:last-child)::before {
+            content: '';
+            position: absolute;
+            top: 36px; 
+            left: 23px; 
+            width: 2px;
+            height: calc(100% - 41px); 
+            border-radius: 1px;
+            background-color: var(--border-color); // Track xám
+            z-index: 10;
+        }
+
+        // 2. 🆕 LỚP FILL: Đường thẳng Xanh ngọc chảy từ trên xuống
+        // Nó sẽ nhận biến --line-progress từ file Rust
+        &:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 36px;
+            left: 23px;
+            width: 2px;
+            // Chiều cao tự động bám theo biến CSS, nếu không có mặc định là 0%
+            height: calc((100% - 41px) * (var(--line-progress, 0) / 100)); 
+            border-radius: 1px;
+            background-color: var(--brand-primary); // Màu fill
+            box-shadow: 0 0 8px rgba(20, 184, 166, 0.6); // Hiệu ứng phát sáng neon
+            z-index: 10;
+            transition: height 0.2s linear; // Chảy mượt mà
+        }
+
+        .step-ring-wrapper {
+            position: relative;
+            z-index: 2; // Nổi lên trên cả 2 đường kẻ
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 4px;
+            background-color: var(--bg-surface); 
+        }
+
+    // Thẻ bài chứa thông tin Task
+    .step-card {
+        background-color: var(--bg-hover);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 16px;
+        transition: all 0.3s ease;
+
+        h4 {
+            margin: 0 0 4px 0;
+            font-size: 1rem;
+            color: var(--text-main);
+        }
+
+        p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        // Hiệu ứng khi Task đang chạy
+        &.is-active {
+            border-color: var(--brand-primary);
+            box-shadow: 0 0 15px rgba(20, 184, 166, 0.1);
+            h4 { color: var(--brand-primary); }
+        }
+        
+        // Hiệu ứng khi Task lỗi
+        &.is-error {
+            border-color: #EF4444;
+            background-color: rgba(239, 68, 68, 0.05);
+            h4 { color: #EF4444; }
+        }
+    }
+}
+
+// 🆕 CLASS DÀNH RIÊNG CHO NÚT UPLOAD CHÍNH
+.btn-upload-submit {
+    background-color: var(--brand-primary); // Màu Xanh ngọc đặc trưng
+    color: var(--bg-app);            // Chữ đen để tạo độ tương phản gắt nhất
+    font-weight: 800;
+    font-size: 0.95rem;
+    padding: 14px 36px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    
+    // Hiệu ứng phát sáng & viền nổi 3D
+    box-shadow: 0 0 15px rgba(20, 184, 166, 0.2), 
+                inset 0 2px 4px var(--dark-a30);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    // KHI RÊ CHUỘT VÀO (Không bị khóa mới có hiệu ứng)
+    &:hover:not(:disabled) {
+        transform: translateY(-3px);
+        background-color: var(--primary); // Sử dụng màu primary
+        box-shadow: 0 0 25px rgba(20, 184, 166, 0.5), 
+                    inset 0 2px 4px var(--dark-a40);
+    }
+
+    // KHI CLICK NHẤN XUỐNG
+    &:active:not(:disabled) {
+        transform: translateY(1px);
+        box-shadow: 0 0 10px rgba(20, 184, 166, 0.2);
+    }
+
+    // KHI BỊ KHÓA (Chưa thả file / Đang Upload)
+    &:disabled {
+        background-color: var(--bg-hover);
+        color: var(--text-muted);
+        box-shadow: inset 0 2px 5px var(--dark-a50); // Lõm xuống
+        cursor: not-allowed;
+        border: 1px solid var(--border-color);
+    }
+}

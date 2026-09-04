@@ -1,0 +1,31 @@
+{
+  "name": "web-browse-files",
+  "version": "1.0.0",
+  "description": "1. [Rust](https://rust-lang.org/tools/install/)",
+  "author": "dh74",
+  "license": "ISC",
+  "scripts": {
+    "sass:watch": "cd ./frontend && sass --watch styles/main.scss:public/main.css",
+    "bs:proxy": "cd ./frontend && browser-sync start --proxy \"localhost:8080\" --serveStatic \"public\" --files \"public/main.css, dist/index.html\" --port 3000 --no-open --reload-delay 500 --no-ui --no-ghost-mode",
+    "fix": "cargo fix --allow-dirty --allow-staged",
+    "lint": "cargo clippy -- -D warnings",
+    "dev:front": "cd ./frontend && trunk serve --color always --port 8080",
+    "dev:back:clippy": "cd ./backend && cargo watch -c -w src -x \"clippy -- -D warnings\" -x test -x \"run --release --color always\"",
+    "dev:back": "cd ./backend && cargo watch -c -w src -x test -x \"run --release --color always\"",
+    "dev": "shx rm -rf ./frontend/dist && concurrently -i false -c \"blue,yellow,cyan,magenta\" -n \"SASS,SYNC,FRONT,BACK\" \"npm run sass:watch\" \"npm run bs:proxy\" \"npm run dev:front\" \"npm run dev:back\"",
+    "dev:f": "shx rm -rf ./frontend/dist && concurrently -i false -c \"blue,yellow,cyan,magenta\" -n \"SASS,SYNC,FRONT\" \"npm run sass:watch\" \"npm run bs:proxy\" \"npm run dev:front\"",
+    "clean": "shx rm -rf ./build/*.exe ./build/.env && shx mkdir -p ./build/storages",
+    "build:front": "cd ./frontend && trunk build index.prod.html --release",
+    "build:back": "cd ./backend && cargo build --release",
+    "build:copy": "shx cp ./backend/target/release/my_rust_module.exe ./build/script.exe && shx cp ./backend/.env ./build/",
+    "build": "npm run clean && npm run build:front && npm run build:back && npm run build:copy"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "devDependencies": {
+    "browser-sync": "^3.0.4",
+    "concurrently": "^9.2.1",
+    "sass": "^1.99.0",
+    "shx": "^0.4.0"
+  }
+}

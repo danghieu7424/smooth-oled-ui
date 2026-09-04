@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Web File Manager</title>
+  <link data-trunk rel="copy-dir" href="assets" />
+  <link data-trunk rel="copy-dir" href="src/assets" />
+  <link data-trunk rel="scss" href="styles/main.scss" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.compiled.js"></script>
+  <script>
+    (function() {
+      try {
+        var theme = localStorage.getItem("theme");
+        if (!theme) {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          localStorage.setItem("theme", theme);
+        }
+        document.documentElement.classList.remove("light", "dark");
+        document.documentElement.classList.add(theme);
+      } catch (e) {}
+    })();
+  </script>
+  <script>
+    window.processDropEvent = async function(e) {
+      let files = [];
+
+      function traverseFileTree(item, path) {
+        path = path || "";
+        return new Promise((resolve) => {
+          if (item.isFile) {
+            item.file(function(file) {
+              file.customPath = path + file.name;
+              files.push(file);
+              resolve();
+            });
+          } else if (item.isDirectory) {
+            let dirReader = item.createReader();
+            let entries = [];
+            function readEntries() {
+              dirReader.readEntries(function(results) {
+                if (!results.length) {
+                  let subPromises = [];
+                  for (let i = 0; i < entries.length; i++) {
+                    subPromises.push(traverseFileTree(entries[i], path + item.name + "/"));
+                  }
+                  Promise.all(subPromises).then(resolve);
+                } else {
+                  entries = entries.concat(Array.from(results));
+                  readEntries();
+                }
+              });
+            }
+            readEntries();
+          } else {
+            resolve();
+          }
+        });
+      }
+
+      let promises = [];
+      if (e.dataTransfer && e.dataTransfer.items) {
+        for (let i = 0; i < e.dataTransfer.items.length; i++) {
+          let item = e.dataTransfer.items[i].webkitGetAsEntry();
+          if (item) {
+            promises.push(traverseFileTree(item));
+          }
+        }
+      }
+      await Promise.all(promises);
+      return files;
+    };
+  </script>
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/rust/rust.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/markdown/markdown.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
+  
+  <script>
+    window.initCodeMirror = function(textareaId, ext, isDark) {
+      let mode = "javascript";
+      if (ext === "rs") mode = "rust";
+      if (ext === "md") mode = "markdown";
+      if (ext === "html" || ext === "xml") mode = "xml";
+      if (ext === "css" || ext === "scss") mode = "css";
+      
+      let theme = isDark ? "dracula" : "default";
+      
+      let el = document.getElementById(textareaId);
+      if (!el) return null;
+      
+      // Prevent initializing multiple times on the same textarea
+      if (el.nextSibling && el.nextSibling.classList && el.nextSibling.classList.contains("CodeMirror")) {
+          return window.currentEditor;
+      }
+
+      let editor = CodeMirror.fromTextArea(el, {
+        lineNumbers: true,
+        mode: mode,
+        theme: theme,
+        viewportMargin: Infinity,
+        lineWrapping: true
+      });
+      
+      window.currentEditor = editor;
+      return editor;
+    };
+    
+    window.getCodeMirrorValue = function() {
+      if (window.currentEditor) {
+        return window.currentEditor.getValue();
+      }
+      return "";
+    };
+  </script>
+</head>
+
+<body></body>
+
+</html>

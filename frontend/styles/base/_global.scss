@@ -1,0 +1,46 @@
+// ==========================================
+// 🚀 QUẢN LÝ APP SHELL CHO ĐA NỀN TẢNG
+// ==========================================
+:root {
+  --header-height: 64px;
+  // 🚀 Bí kíp của Native App: Cộng thêm vùng an toàn (tai thỏ, home bar) của iPhone/Android
+  --bottom-nav-height: calc(70px + env(safe-area-inset-bottom, 0px)); 
+}
+
+// Khi lên màn hình PC/Tablet, ẩn Bottom Nav đi thì tự động reset về 0
+@media (min-width: 768px) {
+  :root {
+    --bottom-nav-height: 0px; 
+  }
+}
+
+// Tái sử dụng keyframes từ _play_pause_btn.scss cho màn hình Đăng nhập
+.auth-spinner-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+  
+  .auth-spinner {
+    width: 48px;
+    height: 48px;
+    transform: rotate(-90deg); // Xoay lại điểm gốc
+
+    .ring {
+      fill: none;
+      stroke: var(--primary, #14B8A6);
+      stroke-width: 8;
+      stroke-linecap: round;
+      stroke-dasharray: 20 340;
+      transform-origin: 50px 50px;
+    }
+
+    // 🚀 Tái kích hoạt 12 vòng lặp (Chạy ké động cơ SCSS đã viết ở play_pause_btn)
+    @for $r from 1 through 12 {
+      .ring-#{$r} {
+        animation: spin-ring-#{$r} 12s linear infinite;
+      }
+    }
+  }
+}

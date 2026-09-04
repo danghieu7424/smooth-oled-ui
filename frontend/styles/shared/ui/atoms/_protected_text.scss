@@ -1,0 +1,8 @@
+// shared/ui/atoms/_protected_text.scss
+
+.a-protected-text {
+  color: var(--theme-text-color);
+  text-shadow: var(--text-protect-shadow);
+  font-family: system-ui, -apple-system, sans-serif;
+  transition: color var(--duration-fast) var(--ease-power3-out);
+}

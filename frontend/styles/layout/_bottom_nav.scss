@@ -1,0 +1,73 @@
+// _bottom_nav.scss
+.bottom-nav-container {
+  height: var(--bottom-nav-height);
+  flex-shrink: 0; // 🚀 Chống bị ép lùn
+  background: light-dark(rgba(248, 249, 250, 0.85), rgba(18, 18, 18, 0.85));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border-color);
+  z-index: 100;
+  
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  
+  // 🚀 ĐÃ XÓA position: fixed/absolute VÀ bottom: 0
+
+  @media (min-width: 768px) {
+    display: none; // Ẩn trên Desktop
+  }
+
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: var(--text-muted);
+    transition: color 0.2s ease;
+    width: 76px; // 🚀 TĂNG NHẸ CỠ: Chỉnh từ 60px lên 76px để có không gian cho text dài
+    text-decoration: none;
+
+    .icon-wrapper { 
+      transition: transform 0.2s ease; 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      position: relative;
+
+      svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      // 🚀 Badge đỏ cho tin nhắn chưa đọc
+      .msg-badge {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 8px;
+        height: 8px;
+        background-color: var(--brand-danger);
+        border-radius: 50%;
+        border: 2px solid rgba(18, 18, 18, 1);
+      }
+    }
+
+    .nav-label {
+      font-size: 0.68rem; // 🚀 TỐI ƯU UX: Hạ size xuống một chút để chữ "Kênh đăng ký" không bị thô
+      font-weight: 500;
+      white-space: nowrap; // 🚀 CHỐT CHẶN: Tuyệt đối không cho phép rớt chữ xuống dòng thứ 2
+      letter-spacing: -0.02em;
+    }
+
+    &.is-active, &:hover {
+      color: var(--text-main);
+      .icon-wrapper {
+        transform: translateY(-2px);
+      }
+    }
+  }
+}

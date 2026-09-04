@@ -1,0 +1,87 @@
+// SCSS cho Restricted Modal
+.restricted-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--pure-black-a60);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.restricted-modal-box {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 32px 0 var(--dark-a30);
+    border-radius: 16px;
+    padding: 32px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    animation: scaleUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.modal-icon-lock {
+    color: #f43f5e; /* Rose 500 */
+    background: rgba(244, 63, 94, 0.1);
+    padding: 16px;
+    border-radius: 50%;
+    margin-bottom: 8px;
+}
+
+.modal-title {
+    color: var(--text-main);
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.modal-desc {
+    color: #a1a1aa;
+    font-size: 15px;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.modal-actions {
+    margin-top: 16px;
+    width: 100%;
+}
+
+.modal-actions .btn-primary {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: var(--text-main);
+    font-weight: 600;
+    font-size: 16px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+}
+
+@keyframes scaleUp {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}

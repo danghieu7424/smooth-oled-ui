@@ -1,0 +1,568 @@
+.youtube-player-container {
+    position: relative;
+    /* Căn cứ theo yêu cầu UI/UX: Không dùng width/height cố định để container có thể thu hẹp ôm sát video dọc (9:16) hoặc vuông (1:1), xoá khoảng đen thừa */
+    width: fit-content;
+    height: fit-content;
+    max-width: 90vw;
+    max-height: 90vh;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+    isolation: isolate;
+    /* Create new stacking context */
+
+    .youtube-player-inner {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+
+        &.is-rotated {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            width: 100vh !important;
+            height: 100vw !important;
+            max-width: none !important;
+            max-height: none !important;
+            border-radius: 0 !important;
+            transform: translate(-50%, -50%) rotate(90deg) !important;
+            z-index: 99999 !important;
+
+            .youtube-video {
+                width: 100% !important;
+                height: 100% !important;
+                max-width: none !important;
+                max-height: none !important;
+            }
+        }
+    }
+
+    &.fullscreen {
+        width: 100vw;
+        height: 100vh;
+        max-width: 100vw;
+        max-height: 100vh;
+        border-radius: 0;
+
+        .youtube-video {
+            width: 100%;
+            height: 100%;
+            max-width: 100vw;
+            max-height: 100vh;
+        }
+    }
+
+    .youtube-video {
+        /* Căn cứ theo yêu cầu UI/UX: Để video giữ kích thước thực nhưng không vượt quá 90vw/90vh, cho phép container thu ôm sát */
+        width: auto;
+        height: auto;
+        max-width: 90vw;
+        max-height: 90vh;
+        outline: none;
+        object-fit: contain;
+        position: relative;
+        z-index: 1;
+        transform: rotate(0.001deg) translateZ(0);
+        /* Prevent hardware overlay from eating UI */
+    }
+
+    .yt-loading-spinner {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 50;
+        transition: opacity 0.2s ease;
+        /* Kích thước co giãn linh hoạt theo màn hình từ 40px đến 64px */
+        width: clamp(40px, 8vw, 64px);
+        height: clamp(40px, 8vw, 64px);
+
+        .spinner {
+            width: 100%;
+            height: 100%;
+            animation: yt-spinner-rotate 2s linear infinite;
+
+            .path {
+                stroke: rgba(255, 255, 255, 0.9);
+                stroke-linecap: round;
+                animation: yt-spinner-dash 1.5s ease-in-out infinite;
+            }
+        }
+    }
+
+    @keyframes yt-spinner-rotate {
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @keyframes yt-spinner-dash {
+        0% {
+            stroke-dasharray: 1, 150;
+            stroke-dashoffset: 0;
+        }
+
+        50% {
+            stroke-dasharray: 90, 150;
+            stroke-dashoffset: -35;
+        }
+
+        100% {
+            stroke-dasharray: 90, 150;
+            stroke-dashoffset: -124;
+        }
+    }
+
+    .yt-speed-overlay {
+        position: absolute;
+        top: 24px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.75);
+        color: #fff;
+        padding: 6px 16px 6px 12px;
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        font-size: 15px;
+        font-weight: 600;
+        pointer-events: none;
+        z-index: 100;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(8px);
+
+        @media (max-width: 768px) {
+            scale: 0.85;
+            padding: 4px 12px 4px 10px;
+            top: 16px;
+        }
+
+        &.locked {
+            background: rgba(46, 125, 50, 0.9);
+            /* Dark green for locked state */
+            color: #fff;
+        }
+
+        .yt-speed-arrows {
+            display: flex;
+            align-items: center;
+            margin-right: 2px;
+
+            svg {
+                margin: 0 -7.5px;
+            }
+
+            .arrow1 {
+                animation: flashArrow 0.5s infinite;
+            }
+
+            .arrow2 {
+                animation: flashArrow 0.5s infinite;
+                animation-delay: 0.1s;
+            }
+        }
+    }
+
+    .youtube-controls-wrapper {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+        padding: clamp(4px, 2%, 20px) clamp(8px, 3%, 20px) clamp(2px, 1%, 10px) clamp(8px, 3%, 20px);
+        display: flex;
+        flex-direction: column;
+        gap: clamp(4px, 1.5%, 10px);
+        transition: opacity 0.3s, transform 0.3s;
+        opacity: 1;
+        transform: translateY(0);
+        z-index: 20;
+
+        @media (max-width: 768px) {
+            padding: 10px 10px 5px 10px;
+            gap: 6px;
+            transform: scale(0.9);
+            transform-origin: bottom center;
+            width: 111%;
+            /* compensate for 0.9 scale to keep it full width */
+            left: -5.5%;
+        }
+    }
+
+    &.hide-controls {
+        cursor: none;
+    }
+
+    &.hide-controls .youtube-controls-wrapper {
+        opacity: 0;
+        transform: translateY(10px);
+
+        @media (max-width: 768px) {
+            transform: translateY(10px) scale(0.9);
+        }
+
+        pointer-events: none;
+    }
+
+    &.hide-controls .yt-video-title {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .yt-video-title {
+        position: absolute;
+        top: 16px;
+        left: 16px;
+        color: white;
+        padding-left: 12px;
+        font-family: inherit;
+        font-size: clamp(13px, 2.5vw, 18px);
+        z-index: 40;
+        pointer-events: none;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 4px rgba(0, 0, 0, 0.5);
+        opacity: 1;
+        transition: opacity 0.3s ease;
+        max-width: calc(100% - 80px);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: normal;
+        word-break: break-word;
+
+        &::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 2px;
+            bottom: 2px;
+            width: 3px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 1px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 4px rgba(0, 0, 0, 0.5);
+        }
+    }
+
+    .yt-progress-atom {
+        // Ghi đè màu sắc riêng cho Video Player (luôn có nền trong suốt & fill đỏ)
+        --overlay-20: rgba(255, 255, 255, 0.2);
+        --overlay-40: rgba(255, 255, 255, 0.4);
+        --text-main: #f00;
+    }
+
+    .youtube-controls-top .yt-btn {
+        background: transparent;
+        border: none;
+        color: white;
+        cursor: pointer;
+        padding: clamp(2px, 1%, 4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.1s, color 0.2s;
+        width: clamp(20px, 5vw, 30px);
+        height: auto;
+        aspect-ratio: 1;
+
+        svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        position: relative;
+
+        &[data-title]::after {
+            content: attr(data-title);
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%) translateY(4px);
+            background: rgba(70, 70, 70, 0.9);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 100;
+            font-weight: 500;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0.15s;
+            transition-delay: 0.3s;
+        }
+
+        @media (hover: hover) {
+            &[data-title]:hover::after {
+                opacity: 1;
+                visibility: visible;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        @media (hover: hover) {
+            &:hover {
+                color: #f00;
+                transform: scale(1.1);
+            }
+        }
+
+        &:active {
+            color: #f00;
+            transform: scale(1.1);
+        }
+
+        &.skip-toggle-btn {
+
+            path {
+                transition: fill 0.3s ease, stroke 0.3s ease;
+            }
+
+            // OFF state (outline/line)
+            &:not(.is-active) {
+                path {
+                    fill: transparent;
+                    stroke: currentColor;
+                    stroke-width: 2;
+                    stroke-linejoin: round;
+                }
+            }
+
+            // ON state (filled)
+            &.is-active {
+                path {
+                    fill: currentColor;
+                    stroke: transparent;
+                }
+            }
+        }
+    }
+
+    .youtube-controls-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+
+        .controls-left,
+        .controls-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .yt-btn,
+        .yt-morph-btn,
+        .yt-prev-btn,
+        .yt-next-btn,
+        .yt-volume-btn,
+        .yt-fullscreen-btn {
+            box-sizing: border-box;
+            --btn-size: clamp(24px, 4vw, 38px);
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: clamp(2px, 1%, 4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.1s, color 0.2s;
+            width: var(--btn-size);
+            aspect-ratio: 1;
+            height: auto;
+            position: relative;
+
+            &[data-title]::after {
+                content: attr(data-title);
+                position: absolute;
+                bottom: 120%;
+                left: 50%;
+                transform: translateX(-50%) translateY(4px);
+                background: rgba(70, 70, 70, 0.9);
+                color: #fff;
+                padding: 5px 10px;
+                border-radius: 4px;
+                font-size: 12px;
+                white-space: nowrap;
+                pointer-events: none;
+                z-index: 100;
+                font-weight: 500;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.15s ease-out, transform 0.15s ease-out, visibility 0.15s;
+                transition-delay: 0.3s; // Wait a bit before showing tooltip
+            }
+
+            @media (hover: hover) {
+                &[data-title]:hover::after {
+                    opacity: 1;
+                    visibility: visible;
+                    transform: translateX(-50%) translateY(0);
+                }
+            }
+
+            &.yt-morph-btn,
+            &.yt-prev-btn,
+            &.yt-next-btn {
+                svg {
+                    width: 100%;
+                    height: 100%;
+                }
+            }
+
+            &.yt-volume-btn {
+                svg {
+                    width: 70%;
+                    height: 70%;
+                }
+            }
+
+            &.cc-btn,
+            &.speed-btn,
+            &.skip-toggle-btn {
+                svg {
+                    width: 40%;
+                    height: 40%;
+                }
+            }
+
+            &.yt-fullscreen-btn {
+                svg {
+                    width: 55%;
+                    height: 55%;
+                }
+            }
+
+            @media (hover: hover) {
+                &:hover {
+                    color: #f00;
+                    transform: scale(1.1);
+                }
+            }
+
+            &:active {
+                color: #f00;
+                transform: scale(1.1);
+            }
+        }
+
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            .volume-slider {
+                width: 0;
+                opacity: 0;
+                transition: width 0.2s, opacity 0.2s;
+                cursor: pointer;
+                accent-color: white;
+            }
+
+            &:hover .volume-slider {
+                width: 60px;
+                opacity: 1;
+            }
+        }
+
+        .time-display {
+            color: white;
+            font-size: clamp(11px, 2vw, 14px);
+            font-family: inherit;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+
+        @media (max-width: 600px) {
+
+            .controls-left,
+            .controls-right {
+                gap: 6px;
+            }
+
+            .volume-container {
+                display: none;
+            }
+
+            .time-display {
+                font-size: 10px;
+                margin-left: 4px;
+            }
+
+            .yt-btn,
+            .yt-morph-btn,
+            .yt-prev-btn,
+            .yt-next-btn {
+                padding: 2px;
+                transform: scale(0.9);
+            }
+        }
+    }
+}
+
+@keyframes flashArrow {
+
+    0%,
+    100% {
+        opacity: 0.3;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+::cue {
+    background: transparent !important;
+    color: white !important;
+    text-shadow:
+        0 0 2px rgba(0, 0, 0, 1),
+        0 0 2px rgba(0, 0, 0, 1),
+        0 0 3px rgba(0, 0, 0, 1),
+        0 0 4px rgba(0, 0, 0, 1) !important;
+}
+
+::cue {
+    font-family: 'Rosemary', sans-serif;
+}
+
+.skip-toast-notification {
+    position: absolute;
+    bottom: 80px;
+    left: 16px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: clamp(11px, 2vw, 14px);
+    z-index: 50;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+
+    @media (max-width: 600px) {
+        bottom: 50px;
+        left: 10px;
+        padding: 4px 6px;
+        font-size: 8px;
+    }
+
+    &.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}

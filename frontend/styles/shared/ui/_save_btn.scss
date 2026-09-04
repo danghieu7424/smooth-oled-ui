@@ -1,0 +1,73 @@
+// styles/shared/ui/_save_btn.scss
+
+.yt-save-atom {
+    .icon-slot {
+        display: inline-flex; align-items: center; justify-content: center;
+        overflow: visible !important; 
+    }
+    svg { overflow: visible !important; }
+
+    // Đóng đinh tâm thu/phóng cho dấu Cộng và dấu Tick
+    .save-plus, .save-check {
+        transform-origin: 17px 17px; 
+        will-change: transform, opacity, stroke-dashoffset;
+    }
+
+    // Ẩn dấu Tick, chuẩn bị chu vi để vẽ
+    .save-check {
+        stroke-dasharray: 20; 
+        stroke-dashoffset: 20; 
+        opacity: 0;
+    }
+
+    // ==========================================
+    // TRẠNG THÁI 1: WAITING (NẢY TO VÀ BIẾN MẤT)
+    // ==========================================
+    &.is-waiting {
+        .save-plus {
+            animation: save-plus-hide 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+    }
+
+    // ==========================================
+    // TRẠNG THÁI 2: SUCCESS (VẼ DẤU TICK)
+    // ==========================================
+    &.is-success {
+        .save-plus { 
+            transform: scale(0); // Giấu tiệt dấu +
+            opacity: 0; 
+        }
+        .save-check {
+            animation: save-check-draw 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+    }
+
+    // ==========================================
+    // TRẠNG THÁI 3: CANCELLED (MỌC LẠI DẤU +)
+    // ==========================================
+    &.is-cancelled {
+        .save-plus {
+            animation: save-plus-restore 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+    }
+}
+
+// 🎬 1. Nảy to rồi thu nhỏ về 0
+@keyframes save-plus-hide {
+    0%   { transform: scale(1); opacity: 1; }
+    40%  { transform: scale(1.4); opacity: 1; } // Phình to
+    100% { transform: scale(0); opacity: 0; }   // Tan biến
+}
+
+// 🎬 2. Vẽ nét dấu Tick mượt mà (giống status ring)
+@keyframes save-check-draw {
+    0%   { stroke-dashoffset: 20; opacity: 1; }
+    100% { stroke-dashoffset: 0; opacity: 1; }
+}
+
+// 🎬 3. Mọc lại từ 0, nảy nhẹ quá đà rồi khựng lại
+@keyframes save-plus-restore {
+    0%   { transform: scale(0); opacity: 0; }
+    60%  { transform: scale(1.2); opacity: 1; } // Nảy lố
+    100% { transform: scale(1); opacity: 1; }
+}

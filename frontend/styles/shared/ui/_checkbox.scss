@@ -1,0 +1,90 @@
+// styles/shared/_checkbox.scss
+
+.atm-checkbox-wrapper {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+
+    // 1. Giấu thẻ input thật nhưng giữ lại cho Accessibility
+    .atm-checkbox-input {
+        position: absolute;
+        opacity: 0;
+        width: 0;
+        height: 0;
+        margin: 0;
+    }
+
+    // 2. Cái hộp Neumorphism (Trạng thái mặc định: Nổi khối)
+    .atm-checkbox-box {
+        width: 24px;
+        height: 24px;
+        border-radius: 6px;
+        background-color: var(--bg-surface);
+        
+        // Đổ bóng nổi khối y hệt nút Button
+        box-shadow: 
+            inset 0 1.5px 1px var(--border-color), 
+            0 2px 4px var(--dark-a40),
+            0 4px 8px var(--dark-a30);
+            
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+        // 3. Dấu Tick (Ẩn đi, thu nhỏ)
+        svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: #ffffff;
+            stroke-width: 3px;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            // Đổ bóng cho dấu tick để nó sáng rực lên
+            filter: drop-shadow(0 2px 2px var(--dark-a50));
+        }
+    }
+
+    // 4. Trạng thái Checked (Bị lún xuống thành cái hố)
+    .atm-checkbox-input:checked ~ .atm-checkbox-box {
+        background-color: var(--border-color); // Tối đi vì nằm dưới hố
+        
+        // Đảo ngược bóng thành inset (bóng chìm)
+        box-shadow: 
+            inset 0 2px 5px var(--dark-a50),
+            inset 0 4px 10px var(--dark-a30),
+            0 1px 2px var(--border-color);
+
+        // Dấu Tick hiện ra và phóng to
+        svg {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    // 5. Trạng thái Disabled
+    .atm-checkbox-input:disabled ~ .atm-checkbox-box,
+    .atm-checkbox-input:disabled ~ .atm-checkbox-label {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .atm-checkbox-input:disabled ~ .atm-checkbox-box {
+        box-shadow: none;
+        background-color: var(--bg-surface);
+    }
+
+    .atm-checkbox-label {
+        color: var(--text-main, var(--text-main));
+        font-size: 1rem;
+        transition: opacity 0.2s ease;
+    }
+}

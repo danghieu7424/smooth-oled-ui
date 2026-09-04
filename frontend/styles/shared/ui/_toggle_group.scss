@@ -1,0 +1,51 @@
+// styles/shared/_toggle_group.scss
+
+.atm-toggle-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    
+    // Bật cuộn ngang
+    overflow-x: auto;
+    // Vuốt mượt trên iOS/Mobile
+    -webkit-overflow-scrolling: touch; 
+
+    // QUAN TRỌNG: Ẩn thanh cuộn thô kệch
+    &::-webkit-scrollbar {
+        display: none;
+    }
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.atm-chip {
+    flex-shrink: 0; // Chống bị méo/bóp chữ khi không đủ chỗ
+    height: 32px;
+    padding: 0 12px;
+    border-radius: 8px; // Bo góc nhẹ giống hệt hình
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    
+    // Trạng thái mặc định (Tắt) - Tương đương Surface Color
+    background-color: var(--bg-surface, #272727);
+    color: var(--text-secondary, #f1f1f1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+
+    &:hover:not(.active) {
+        background-color: var(--bg-hover, #3f3f3f);
+    }
+
+    // 🆕 TRẠNG THÁI BẬT (ACTIVE): Chuyển sang Nền Trắng / Chữ Đen
+    &.active {
+        // Nếu cậu dùng biến, đây là lúc lật ngược màu
+        background-color: var(--text-main, #f1f1f1); 
+        color: var(--bg-main, #0f0f0f); 
+        
+        // Nảy nhẹ một chút khi được active để tạo cảm giác phản hồi
+        transform: scale(1.02);
+    }
+}

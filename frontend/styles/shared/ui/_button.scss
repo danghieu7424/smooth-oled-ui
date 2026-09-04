@@ -1,0 +1,92 @@
+// styles/shared/_button.scss
+
+.atm-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    
+    // 1. CHUẨN HÓA VẬT LÝ ÁNH SÁNG NEUMORPHISM (Dùng chung)
+    // Ánh sáng hắt từ trên xuống (trắng mờ rgba) + Bóng đổ xuống dưới (đen rgba)
+    // Dùng rgba giúp bóng tự động "ăn" nhập với bất kỳ màu nền nào của nút
+    box-shadow: 
+        inset 0 1.5px 1px var(--dark-a20), 
+        0 2px 4px var(--dark-a40),
+        0 4px 8px var(--dark-a30);
+
+    transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+
+    // 2. TRẠNG THÁI KHÓA (Disabled)
+    &:disabled {
+        opacity: 0.75;
+        cursor: not-allowed;
+        // Xóa sạch bóng đổ để nút "chìm" hẳn xuống nền, thể hiện sự vô tác dụng
+        box-shadow: none;
+        background-color: var(--bg-surface) !important;
+        color: #777 !important;
+    }
+
+    // 3. HIỆU ỨNG NHẤN VẬT LÝ (Cực kỳ quan trọng cho Neumorphism)
+    &:active:not(:disabled) {
+        // Nút bị lún xuống 2px
+        opacity: 0.8;
+        // Đảo ngược bóng: Tắt ánh sáng đỉnh, tạo 2 lớp bóng chìm (inset) cực mạnh
+        box-shadow: 
+            inset 0 2px 5px var(--dark-a50),
+            inset 0 4px 10px var(--dark-a30);
+    }
+
+    // ==========================================
+    // CÁC BIẾN THỂ (MODIFIERS)
+    // ==========================================
+    
+    &--primary {
+        background-color: #4CAF50;
+        color: white;
+        
+        &:hover:not(:disabled) { 
+            background-color: #45a049; 
+            // Khi hover, nút sáng lên và "bay" cao hơn một chút
+            box-shadow: 
+                inset 0 1.5px 1px var(--dark-a30), 
+                0 4px 6px var(--dark-a50),
+                0 6px 12px var(--dark-a30);
+        }
+    }
+
+    &--secondary {
+        // Đã sửa lại màu: #e0e0e0 (sáng gắt) đổi thành #272727 để đồng bộ Dark Theme
+        background-color: var(--bg-surface);
+        color: var(--text-main);
+        
+        // Nút Secondary cố tình làm bóng yếu hơn một chút để nhường Spotlight cho Primary
+        box-shadow: 
+            inset 0 1.5px 1px var(--dark-a10), 
+            0 2px 4px var(--dark-a50);
+
+        &:hover:not(:disabled) { 
+            background-color: var(--border-color); 
+            box-shadow: 
+                inset 0 1.5px 1px var(--dark-a10), 
+                0 3px 5px var(--dark-a60);
+        }
+    }
+
+    &--danger {
+        background-color: #f44336;
+        color: white;
+        
+        &:hover:not(:disabled) { 
+            background-color: #da190b; 
+            box-shadow: 
+                inset 0 1.5px 1px var(--dark-a30), 
+                0 4px 6px var(--dark-a50),
+                0 6px 12px var(--dark-a30);
+        }
+    }
+}

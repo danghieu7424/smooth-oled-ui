@@ -1,0 +1,95 @@
+// styles/shared/_prev_btn.scss
+
+.yt-prev-btn {
+  --btn-size: 64px;
+  --icon-ratio: 0.7;
+  --icon-size: calc(var(--btn-size) * var(--icon-ratio));
+
+  width: var(--btn-size);
+  height: var(--btn-size);
+  background-color: transparent;
+  color: var(--text-main);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+  outline: none;
+
+  &:hover {
+    background-color: var(--bg-hover);
+  }
+  svg {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    display: block;
+    overflow: hidden;
+  }
+
+  path {
+    fill: currentColor;
+    stroke: currentColor;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    stroke-width: 1.5px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  // Magic Reset
+  &:not(.is-animating) path {
+    transition: none !important;
+  }
+
+  /* TỌA ĐỘ GỐC (Đã lật gương từ phải sang trái) */
+  .icon-line {
+    // Vạch đứng giờ nằm bên TRÁI (X từ 11 đến 13)
+    d: path("M 11 10 L 13 10 L 13 26 L 11 26 Z");
+    transform-origin: center;
+  }
+
+  .icon-triangle-main {
+    // Tam giác giữa chỉ sang TRÁI (Điểm nhọn ở X=15, Đáy ở X=25)
+    d: path("M 25 10 L 15 18 L 15 18 L 25 26 Z");
+  }
+
+  .icon-triangle-incoming {
+    d: path("M 25 10 L 15 18 L 15 18 L 25 26 Z");
+    // 🆕 ĐÃ SỬA: Trượt từ bên PHẢI vào (Dương 14px)
+    transform: translateX(14px);
+    opacity: 0;
+  }
+
+  /* TRẠNG THÁI ANIMATING (KHI CLICK) */
+  &.is-animating {
+    .icon-line {
+      transform: scaleY(0);
+      opacity: 0;
+    }
+    .icon-triangle-main {
+      // 🆕 CHỐNG XOẮN (ANTI-TWIST): Vẽ vạch từ góc trên-phải thay vì trên-trái
+      // Đảm bảo khớp 1-1 với thứ tự điểm của tam giác
+      d: path("M 13 10 L 11 10 L 11 26 L 13 26 Z");
+    }
+    .icon-triangle-incoming {
+      // Điểm kết thúc ở giữa
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.35; // Giảm độ đậm
+    cursor: not-allowed; // Đổi con trỏ chuột
+    pointer-events: none; // Chặn hover effect từ CSS
+    filter: grayscale(
+      1
+    ); // 🆕 Tuyệt chiêu: Chuyển sang đen trắng để dễ nhận diện trong Dark Mode
+
+    &:hover {
+      background-color: var(--bg-surface); // Không cho đổi màu khi hover
+      transform: none; // Không cho scale
+    }
+  }
+}
