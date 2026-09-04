@@ -272,7 +272,7 @@ async fn toggle_star(
 }
 
 async fn delete_project(
-    jar: CookieJar,
+    jar: axum_extra::extract::cookie::CookieJar,
     Path(id): Path<String>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<serde_json::Value>, axum::http::StatusCode> {
