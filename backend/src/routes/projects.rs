@@ -85,29 +85,43 @@ async fn list_projects(State(state): State<Arc<AppState>>) -> Json<Vec<Project>>
 pub struct ProjectDetailResponse {
     pub id: i64,
     pub project_id: String,
+    pub user_suid: String,
     pub name: String,
     pub active_devices: i64,
     pub latest_version: String,
     pub firmwares: Vec<serde_json::Value>,
 }
 
-async fn get_project(Path(id): Path<String>, State(state): State<Arc<AppState>>) -> Json<ProjectDetailResponse> {
+async fn get_project(
+    jar: axum_extra::extract::cookie::CookieJar,
+    Path(id): Path<String>, 
+    State(state): State<Arc<AppState>>
+) -> Json<ProjectDetailResponse> {
+    let mut user_id = 0;
+    let mut user_suid = String::new();
+    if let Some(cookie) = jar.get("auth_token") {
+        if let Ok(token_data) = crate::auth::token::verify_user_token(cookie.value()) {
+            user_id = token_data.claims.sub;
+            user_suid = token_data.claims.suid;
+        }
+    }
     let id_clone = id.clone();
+    let user_suid_clone = user_suid.clone();
     let detail = state.storage.execute_query(move |conn| {
-        let mut p_stmt = conn.prepare("SELECT id, project_id, name FROM projects WHERE project_id = ?1")?;
-        let (p_id, p_project_id, p_name): (i64, String, String) = p_stmt.query_row([&id_clone], |row| {
+        let mut p_stmt = conn.prepare("SELECT id, project_id, name FROM projects WHERE project_id = ?1 AND user_id = ?2")?;
+        let (p_id, p_project_id, p_name): (i64, String, String) = p_stmt.query_row(rusqlite::params![id_clone, user_id], |row| {
             Ok((row.get(0)?, row.get(1)?, row.get(2)?))
         })?;
 
-        let active_devices: i64 = conn.query_row("SELECT COUNT(*) FROM devices WHERE project_id = ?1", [&id_clone], |row| row.get(0)).unwrap_or(0);
-        
-        let mut fw_stmt = conn.prepare("
+        let mut d_stmt = conn.prepare("SELECT COUNT(*) FROM devices WHERE project_id = ?1")?;
+        let active_devices: i64 = d_stmt.query_row([&p_project_id], |row| row.get(0)).unwrap_or(0);
+
+        let mut f_stmt = conn.prepare("
             SELECT id, version, file_path, notes, created_at, 
                    (SELECT COUNT(*) FROM devices WHERE project_id = ?1 AND current_version = firmwares.version) as devices_count
             FROM firmwares WHERE project_id = ?1 ORDER BY id DESC
         ")?;
-
-        let fw_iter = fw_stmt.query_map([&id_clone, &id_clone], |row| {
+        let f_iter = f_stmt.query_map([&p_project_id, &p_project_id], |row| {
             Ok(serde_json::json!({
                 "id": row.get::<_, i64>(0)?,
                 "version": row.get::<_, String>(1)?,
@@ -117,17 +131,21 @@ async fn get_project(Path(id): Path<String>, State(state): State<Arc<AppState>>)
                 "devices_count": row.get::<_, i64>(5)?
             }))
         })?;
-
+        
         let mut firmwares = Vec::new();
-        for fw in fw_iter {
-            if let Ok(f) = fw { firmwares.push(f); }
+        for f in f_iter {
+            if let Ok(fv) = f { firmwares.push(fv); }
         }
 
-        let latest_version = firmwares.first().and_then(|v| v.get("version").and_then(|s| s.as_str())).unwrap_or("Chưa có").to_string();
+        let latest_version = firmwares.first()
+            .and_then(|v| v["version"].as_str())
+            .unwrap_or("N/A")
+            .to_string();
 
         Ok(ProjectDetailResponse {
             id: p_id,
             project_id: p_project_id,
+            user_suid: user_suid_clone,
             name: p_name,
             active_devices,
             latest_version,
@@ -135,7 +153,8 @@ async fn get_project(Path(id): Path<String>, State(state): State<Arc<AppState>>)
         })
     }).await.unwrap_or_else(|_| ProjectDetailResponse {
         id: 0,
-        project_id: id,
+        project_id: "".to_string(),
+        user_suid: "".to_string(),
         name: "Không tìm thấy".to_string(),
         active_devices: 0,
         latest_version: "N/A".to_string(),
@@ -203,6 +222,18 @@ async fn upload_firmware(
         }
     }
 
+    let is_owner: bool = state.storage.execute_query({
+        let p_id = project_id.clone();
+        move |conn| {
+            let res: i64 = conn.query_row("SELECT 1 FROM projects WHERE project_id = ?1 AND user_id = ?2", rusqlite::params![p_id, user_id], |row| row.get(0)).unwrap_or(0);
+            res == 1
+        }
+    }).await;
+    
+    if !is_owner {
+        return Err(axum::http::StatusCode::FORBIDDEN);
+    }
+
     let mut version = String::new();
     let mut file_data = Vec::new();
 
@@ -246,20 +277,27 @@ async fn upload_firmware(
 }
 
 async fn toggle_star(
+    jar: axum_extra::extract::cookie::CookieJar,
     Path(id): Path<String>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<serde_json::Value>, axum::http::StatusCode> {
+    let mut user_id = 0;
+    if let Some(cookie) = jar.get("auth_token") {
+        if let Ok(token_data) = crate::auth::token::verify_user_token(cookie.value()) {
+            user_id = token_data.claims.sub;
+        }
+    }
     let res = state.storage.execute_query(move |conn| {
         let current_state: bool = conn.query_row(
-            "SELECT is_starred FROM projects WHERE project_id = ?1",
-            [&id],
+            "SELECT is_starred FROM projects WHERE project_id = ?1 AND user_id = ?2",
+            rusqlite::params![id, user_id],
             |row| row.get(0),
         ).unwrap_or(false);
         
         let new_state = !current_state;
         conn.execute(
-            "UPDATE projects SET is_starred = ?1 WHERE project_id = ?2",
-            rusqlite::params![new_state, id],
+            "UPDATE projects SET is_starred = ?1 WHERE project_id = ?2 AND user_id = ?3",
+            rusqlite::params![new_state, id, user_id],
         )?;
         Ok(new_state)
     }).await;
@@ -275,24 +313,35 @@ async fn delete_project(
     Path(id): Path<String>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<serde_json::Value>, axum::http::StatusCode> {
+    let mut user_id = 0;
     let mut user_suid = String::new();
     if let Some(cookie) = jar.get("auth_token") {
         if let Ok(token_data) = crate::auth::token::verify_user_token(cookie.value()) {
+            user_id = token_data.claims.sub;
             user_suid = token_data.claims.suid;
         }
     }
 
     let p_id_clone = id.clone();
     let res = state.storage.execute_query(move |conn| {
-        conn.execute("DELETE FROM devices WHERE project_id = ?1", [&id])?;
-        conn.execute("DELETE FROM firmwares WHERE project_id = ?1", [&id])?;
-        conn.execute("DELETE FROM projects WHERE project_id = ?1", [&id])?;
-        Ok(())
+        // Validate ownership first
+        let exists: i64 = conn.query_row(
+            "SELECT 1 FROM projects WHERE project_id = ?1 AND user_id = ?2",
+            rusqlite::params![id, user_id],
+            |row| row.get(0),
+        ).unwrap_or(0);
+        
+        if exists == 1 {
+            conn.execute("DELETE FROM devices WHERE project_id = ?1", [&id])?;
+            conn.execute("DELETE FROM firmwares WHERE project_id = ?1", [&id])?;
+            conn.execute("DELETE FROM projects WHERE project_id = ?1 AND user_id = ?2", rusqlite::params![id, user_id])?;
+        }
+        Ok(exists)
     }).await;
 
     match res {
-        Ok(_) => {
-            if !user_suid.is_empty() {
+        Ok(exists) => {
+            if exists == 1 && !user_suid.is_empty() {
                 let dir_path = format!("storages/projects/{}/{}", user_suid, p_id_clone);
                 let _ = std::fs::remove_dir_all(&dir_path);
             }

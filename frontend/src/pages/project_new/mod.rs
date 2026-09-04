@@ -199,23 +199,9 @@ pub fn ProjectNewPage() -> impl IntoView {
                                 <div class="form-group">
                                     <label for="p_id">"ID Dự án (Tự động tạo)"</label>
                                     <div class="id-preview">
-                                        <span class="id-prefix">
-                                            <Suspense fallback=move || view! { "Đang tải..." }>
-                                                {move || match user_profile.get() {
-                                                    Some(profile) => {
-                                                        let mut id_str = profile.id.unwrap_or("0".to_string());
-                                                        if id_str.len() > 6 {
-                                                            id_str.truncate(6);
-                                                        }
-                                                        format!("{}-", id_str)
-                                                    },
-                                                    None => "".to_string(),
-                                                }}
-                                            </Suspense>
-                                        </span>
                                         <span>{move || project_id.get()}</span>
                                     </div>
-                                    <small class="hint">"ID dự án được tự động gán cùng với ID người dùng để đảm bảo tính duy nhất."</small>
+                                    <small class="hint">"ID dự án sẽ được dùng trong đường link cập nhật Firmware (Ví dụ: /api/firmware/esp32-tool)."</small>
                                 </div>
                                 <div class="form-actions wizard-actions">
                                     <A href="/" class="btn-cancel">"Hủy"</A>

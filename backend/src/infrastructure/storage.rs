@@ -40,13 +40,14 @@ impl TableEngine {
                 "CREATE TABLE IF NOT EXISTS projects (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
-                    project_id TEXT UNIQUE NOT NULL,
+                    project_id TEXT NOT NULL,
                     token TEXT NOT NULL,
                     name TEXT NOT NULL,
                     description TEXT,
                     is_starred BOOLEAN DEFAULT 0,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY(user_id) REFERENCES users(id)
+                    FOREIGN KEY(user_id) REFERENCES users(id),
+                    UNIQUE(user_id, project_id)
                 )",
                 [],
             )?;

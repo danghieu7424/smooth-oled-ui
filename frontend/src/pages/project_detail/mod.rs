@@ -12,10 +12,11 @@ pub struct Firmware {
     pub devices_count: i64,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Deserialize)]
 pub struct ProjectDetail {
     pub id: i64,
     pub project_id: String,
+    pub user_suid: String,
     pub name: String,
     pub active_devices: i64,
     pub latest_version: String,
@@ -104,7 +105,7 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                         <div class="title-row">
                                             <div class="main-header">
                                                 {move || {
-                                                    let api_link = format!("http://localhost:7424/api/firmware/{}", detail.project_id);
+                                                    let api_link = format!("http://localhost:7424/api/firmware/{}/{}", detail.user_suid, detail.project_id);
                                                     view! {
                                                         <div>
                                                             <h1 style="color: #fff; font-size: 1.5rem; margin-bottom: 0.5rem;">{detail.name.clone()} <span class="badge">"Pro"</span></h1>
