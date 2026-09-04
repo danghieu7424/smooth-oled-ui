@@ -163,7 +163,8 @@ async fn create_project(
         }
     }
 
-    let final_project_id = format!("{}-{}", user_suid, payload.project_id);
+    let prefix = if user_suid.len() > 6 { &user_suid[..6] } else { &user_suid };
+    let final_project_id = format!("{}-{}", prefix, payload.project_id);
     let token = crate::helpers::suid::generate_random_hex();
     
     let res = state.storage.execute_query({
