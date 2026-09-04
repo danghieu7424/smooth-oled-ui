@@ -48,16 +48,27 @@ async fn get_stats(State(state): State<Arc<AppState>>) -> Json<Stats> {
     Json(stats)
 }
 
-async fn list_projects(State(state): State<Arc<AppState>>) -> Json<Vec<Project>> {
-    let projects = state.storage.execute_query(|conn| {
+async fn list_projects(
+    jar: axum_extra::extract::cookie::CookieJar,
+    State(state): State<Arc<AppState>>
+) -> Json<Vec<Project>> {
+    let mut user_id = 0;
+    if let Some(cookie) = jar.get("auth_token") {
+        if let Ok(token_data) = crate::auth::token::verify_user_token(cookie.value()) {
+            user_id = token_data.claims.sub;
+        }
+    }
+    
+    let projects = state.storage.execute_query(move |conn| {
         let mut stmt = conn.prepare("
             SELECT p.id, p.user_id, p.project_id, p.name, p.created_at, 
                    (SELECT version FROM firmwares WHERE project_id = p.project_id ORDER BY id DESC LIMIT 1) as version,
                    p.is_starred
             FROM projects p
+            WHERE p.user_id = ?1
         ")?;
         
-        let iter = stmt.query_map([], |row| {
+        let iter = stmt.query_map(rusqlite::params![user_id], |row| {
             Ok(Project {
                 id: row.get(0)?,
                 user_id: row.get(1)?,
