@@ -42,6 +42,11 @@ pub fn ProjectDetailPage() -> impl IntoView {
     
     let (active_tab, set_active_tab) = create_signal("dashboard".to_string());
     
+    let file_input: NodeRef<html::Input> = create_node_ref();
+    let (fw_version, set_fw_version) = create_signal(String::new());
+    let (upload_status, set_upload_status) = create_signal(String::new());
+    let (is_uploading, set_is_uploading) = create_signal(false);
+    
     let project_resource = create_resource(
         move || id_str(),
         |id| async move {
@@ -78,27 +83,31 @@ pub fn ProjectDetailPage() -> impl IntoView {
                     <Suspense fallback=move || view! { <div class="loading-state">"Đang tải dữ liệu..."</div> }>
                         {move || {
                             match project_resource.get() {
-                                Some(Ok(detail)) => view! {
-                                    <div class="analytics-header">
-                                        <div class="title-row">
-                                            <div class="main-header">
-                                                {move || {
-                                                    let api_link = format!("http://localhost:7424/api/firmware/{}-{}", detail.user_suid, detail.project_id);
-                                                    view! {
-                                                        <div>
-                                                            <h1 style="color: #fff; font-size: 1.5rem; margin-bottom: 0.5rem;">{detail.name.clone()} <span class="badge">"Pro"</span></h1>
-                                                            <div class="project-info" style="color: #90a4ae; font-size: 0.9rem; font-family: monospace;">
-                                                                <div style="margin-bottom: 0.25rem;">"ID: " <span style="color: #82b1ff;">{detail.project_id.clone()}</span></div>
-                                                                <div>"Link Update: " <span style="color: #a5d6a7;">{api_link}</span></div>
-                                                            </div>
+                                Some(Ok(detail)) => {
+                                    let api_link = format!("http://localhost:7424/api/firmware/{}-{}", detail.user_suid, detail.project_id);
+                                    let d_name = detail.name.clone();
+                                    let d_project_id = detail.project_id.clone();
+                                    let detail_clone = detail.clone();
+                                    
+                                    view! {
+                                        <div class="analytics-header">
+                                            <div class="title-row">
+                                                <div class="main-header">
+                                                    <div>
+                                                        <h1 style="color: #fff; font-size: 1.5rem; margin-bottom: 0.5rem;">{d_name} <span class="badge">"Pro"</span></h1>
+                                                        <div class="project-info" style="color: #90a4ae; font-size: 0.9rem; font-family: monospace;">
+                                                            <div style="margin-bottom: 0.25rem;">"ID: " <span style="color: #82b1ff;">{d_project_id}</span></div>
+                                                            <div>"Link Update: " <span style="color: #a5d6a7;">{api_link}</span></div>
                                                         </div>
-                                                    }.into_view()
-                                                }}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {move || if active_tab.get() == "dashboard" {
+                                        {move || {
+                                            let active = active_tab.get();
+                                            let detail_inner = detail_clone.clone();
+                                            if active == "dashboard" {
                                         view! {
                                             <div class="analytics-content">
                                                 <h2>"Thống kê dữ liệu"</h2>
@@ -148,15 +157,105 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                             </div>
                                         }.into_view()
                                     } else {
+                                        let p_id_for_upload = detail_inner.project_id.clone();
                                         view! {
                                             <div class="analytics-content">
-                                                <h2>"Danh sách Phiên bản (Firmwares)"</h2>
+                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                                                    <h2 style="margin: 0;">"Danh sách Phiên bản (Firmwares)"</h2>
+                                                </div>
+                                                
+                                                <div style="background: #2a2a2c; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1.5rem; color: #fff; margin-bottom: 1.5rem;">
+                                                    <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; color: #ffca28;">"Tải lên phiên bản mới"</h3>
+                                                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                                        <div style="display: flex; gap: 1rem;">
+                                                            <div style="flex: 1;">
+                                                                <label style="display: block; font-size: 0.85rem; color: #b0bec5; margin-bottom: 0.5rem;">"Version (VD: 1.0.0)"</label>
+                                                                <input type="text" 
+                                                                    style="width: 100%; background: #1e1e1e; border: 1px solid #424242; border-radius: 6px; padding: 0.6rem 1rem; color: #fff; font-size: 0.95rem; outline: none;"
+                                                                    placeholder="e.g. 1.0.0"
+                                                                    prop:value=fw_version
+                                                                    on:input=move |ev| set_fw_version.set(event_target_value(&ev))
+                                                                />
+                                                            </div>
+                                                            <div style="flex: 2;">
+                                                                <label style="display: block; font-size: 0.85rem; color: #b0bec5; margin-bottom: 0.5rem;">"File Firmware (.bin)"</label>
+                                                                <input type="file" 
+                                                                    node_ref=file_input
+                                                                    accept=".bin"
+                                                                    style="width: 100%; background: #1e1e1e; border: 1px solid #424242; border-radius: 6px; padding: 0.5rem 1rem; color: #fff; font-size: 0.95rem; outline: none;"
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                        <div style="display: flex; align-items: center; gap: 1rem;">
+                                                            <button 
+                                                                style="background: #FFCA28; color: #000; font-weight: 600; padding: 0.6rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;"
+                                                                disabled=is_uploading
+                                                                on:click=move |_| {
+                                                                    let id = p_id_for_upload.clone();
+                                                                    let version = fw_version.get();
+                                                                    let input = file_input.get();
+                                                                    
+                                                                    if version.is_empty() {
+                                                                        set_upload_status.set("Vui lòng nhập Version".to_string());
+                                                                        return;
+                                                                    }
+                                                                    
+                                                                    let file = if let Some(input) = input {
+                                                                        if let Some(files) = input.files() {
+                                                                            if files.length() > 0 {
+                                                                                files.get(0)
+                                                                            } else { None }
+                                                                        } else { None }
+                                                                    } else { None };
+                                                                    
+                                                                    if let Some(file) = file {
+                                                                        set_is_uploading.set(true);
+                                                                        set_upload_status.set("Đang tải lên...".to_string());
+                                                                        
+                                                                        let form_data = web_sys::FormData::new().unwrap();
+                                                                        form_data.append_with_str("version", &version).unwrap();
+                                                                        form_data.append_with_blob("file", &file).unwrap();
+                                                                        
+                                                                        spawn_local(async move {
+                                                                            let res = gloo_net::http::Request::post(&format!("http://localhost:7424/api/projects/{}/firmware", id))
+                                                                                .credentials(web_sys::RequestCredentials::Include)
+                                                                                .body(form_data).unwrap()
+                                                                                .send().await;
+                                                                                
+                                                                            set_is_uploading.set(false);
+                                                                            match res {
+                                                                                Ok(r) if r.ok() => {
+                                                                                    set_upload_status.set("Tải lên thành công!".to_string());
+                                                                                    set_fw_version.set("".to_string());
+                                                                                    if let Some(input) = file_input.get() {
+                                                                                        input.set_value("");
+                                                                                    }
+                                                                                    project_resource.refetch();
+                                                                                },
+                                                                                _ => {
+                                                                                    set_upload_status.set("Lỗi tải lên!".to_string());
+                                                                                }
+                                                                            }
+                                                                        });
+                                                                    } else {
+                                                                        set_upload_status.set("Vui lòng chọn file .bin".to_string());
+                                                                    }
+                                                                }
+                                                            >
+                                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                                                {move || if is_uploading.get() { "Đang xử lý..." } else { "Upload Firmware" }}
+                                                            </button>
+                                                            <span style="font-size: 0.9rem; color: #ff8a65;">{move || upload_status.get()}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                                 <div style="background: #2a2a2c; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1.5rem; color: #fff;">
                                                     {
-                                                        if detail.firmwares.is_empty() {
+                                                        if detail_inner.firmwares.is_empty() {
                                                             view! { <div style="color: #90a4ae;">"Chưa có phiên bản nào được phát hành."</div> }.into_view()
                                                         } else {
-                                                            let fw_list = detail.firmwares.clone().into_iter().map(|fw| {
+                                                            let fw_list = detail_inner.firmwares.clone().into_iter().map(|fw| {
                                                                 view! {
                                                                     <div style="padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
                                                                         <div>
@@ -176,8 +275,10 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                                 </div>
                                             </div>
                                         }.into_view()
+                                    }
                                     }}
-                                }.into_view(),
+                                    }.into_view()
+                                },
                                 Some(Err(e)) => view! { <div class="error-state">"Lỗi: " {e}</div> }.into_view(),
                                 None => view! {}.into_view(),
                             }
