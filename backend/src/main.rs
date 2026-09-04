@@ -147,7 +147,7 @@ async fn main() {
 
     let (sse_tx, _) = tokio::sync::broadcast::channel(1000);
 
-    let app_state = crate::core::state::AppState {
+    let app_state = std::sync::Arc::new(crate::core::state::AppState {
         gemini_semaphore: std::sync::Arc::new(tokio::sync::Semaphore::new(3)),
         http_client: reqwest::Client::new(),
         server_sk_bytes: server_private_key_bytes,
@@ -156,7 +156,7 @@ async fn main() {
         sse_tx,
         forwarder_token: std::env::var("FORWARDER_TOKEN").unwrap_or_else(|_| "abc".to_string()),
         ws_sessions: std::sync::Arc::new(dashmap::DashMap::new()),
-    };
+    });
     
     let allowed_origins_str = std::env::var("ALLOWED_ORIGINS")
         .unwrap_or_else(|_| "http://localhost:8080,http://localhost:5000".to_string());
@@ -226,7 +226,8 @@ async fn main() {
 
     let app = Router::new()
         .route("/favicon.ico", axum::routing::get(favicon_handler))
-        // API OTA sẽ được mount vào đây sau
+        .nest("/api/projects", crate::routes::projects::router())
+        .nest("/api/auth", crate::routes::auth::router())
         .nest_service("/storages", spa_storages)
         .fallback(static_handler)
         .layer(DefaultBodyLimit::max(1024 * 1024 * 1024))
@@ -246,7 +247,7 @@ async fn main() {
         .unwrap();
 }
 
-async fn shutdown_signal(_state: crate::core::state::AppState) {
+async fn shutdown_signal(_state: std::sync::Arc<crate::core::state::AppState>) {
     let ctrl_c = async {
         signal::ctrl_c()
             .await

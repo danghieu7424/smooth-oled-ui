@@ -1,1 +1,4 @@
-// Các tính năng chính của dự án sẽ được đặt ở đây
+pub mod dashboard;
+pub mod project_detail;
+pub mod project_new;
+pub mod login;

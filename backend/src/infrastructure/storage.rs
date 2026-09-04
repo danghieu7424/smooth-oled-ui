@@ -1,8 +1,8 @@
 #![allow(dead_code)]
-use rusqlite::{Connection, Result, params};
+use rusqlite::{Connection, Result};
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tracing::{info, error};
+use tracing::info;
 use std::path::Path;
 
 #[derive(Clone)]

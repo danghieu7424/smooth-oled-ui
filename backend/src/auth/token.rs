@@ -12,6 +12,13 @@ pub struct VideoClaims {
     pub ip: Option<String> // optional bound IP as string
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct UserClaims {
+    pub sub: i64,          // user_id
+    pub role: String,      // role
+    pub exp: usize,        // epoch seconds
+}
+
 fn jwt_secret() -> String {
     env::var("JWT_SECRET").expect("JWT_SECRET must be set in .env")
 }
@@ -28,9 +35,19 @@ pub fn create_signed_token(file_path: &str, expiry_seconds: i64, ip: Option<Stri
     encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_bytes()))
 }
 
-/// Verify token -> trả về claims nếu đúng
 pub fn verify_token(token: &str) -> Result<TokenData<VideoClaims>, JwtError> {
     let secret = jwt_secret();
     let validation = Validation::default();
     decode::<VideoClaims>(token, &DecodingKey::from_secret(secret.as_bytes()), &validation)
+}
+
+pub fn generate_user_token(user_id: i64, role: String, _server_sk: &[u8]) -> Result<String, JwtError> {
+    let secret = jwt_secret();
+    let exp = (Utc::now() + Duration::hours(24)).timestamp() as usize;
+    let claims = UserClaims {
+        sub: user_id,
+        role,
+        exp,
+    };
+    encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_bytes()))
 }

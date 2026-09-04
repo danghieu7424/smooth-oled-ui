@@ -35,13 +35,11 @@
 @use "./shared/ui/double_tap_seek";
 @use "./shared/ui/checkbox";
 @use "./shared/ui/file_upload";
-// 5. Pages
-@use 'pages/home';
-
-// 6. Features
-@use 'features/test_card';
-@use 'features/youtube_player';
-@use '../src/features/file_browser/page';
+// Các files UI sẽ được đưa vào đây
+@use 'pages/dashboard';
+@use 'pages/project_detail';
+@use 'pages/project_new';
+@use 'pages/login';
 
 @use './shared/ui/toggle_group';
 @use './shared/ui/toggle_switch';

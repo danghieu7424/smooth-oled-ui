@@ -1,0 +1,286 @@
+.firebase-layout {
+  min-height: 100dvh;
+  background-color: #0f0f10; /* Gần giống màu Firebase Dark Mode */
+  color: #e3e3e3;
+  font-family: 'Roboto', 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+
+  /* Top Navigation */
+  .fb-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1.5rem;
+    height: 60px;
+    background-color: rgba(20, 20, 24, 0.95);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+
+    .fb-header-left {
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        
+        span {
+          font-size: 1.15rem;
+          font-weight: 500;
+          color: #fff;
+        }
+      }
+    }
+
+    .fb-header-right {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+
+      .nav-icon {
+        font-size: 1.1rem;
+        cursor: pointer;
+        opacity: 0.7;
+        &:hover { opacity: 1; }
+      }
+
+      .login-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        color: #fff;
+        font-size: 0.9rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 20px;
+        transition: background 0.2s;
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        .avatar {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+        }
+      }
+    }
+  }
+
+  /* Main Content Area */
+  .fb-main {
+    flex-grow: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 3rem 1.5rem;
+  }
+
+  .greeting-section {
+    margin-bottom: 3rem;
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 500;
+      color: #ffca28; /* Màu cam vàng Firebase */
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.5px;
+    }
+    p {
+      font-size: 1.25rem;
+      color: #b0bec5;
+    }
+  }
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+
+    @media (min-width: 900px) {
+      grid-template-columns: 3fr 4fr;
+      gap: 4rem;
+    }
+  }
+
+  /* Left Column (Actions) */
+  .actions-column {
+    .section {
+      margin-bottom: 2.5rem;
+    }
+
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #90a4ae;
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .action-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.2s, border-color 0.2s;
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+
+      &.primary-action {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        &:hover {
+          background: rgba(255, 255, 255, 0.09);
+        }
+      }
+
+      .action-icon {
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      .action-text {
+        h4 {
+          font-size: 1rem;
+          font-weight: 500;
+          color: #fff;
+          margin-bottom: 0.25rem;
+        }
+        p {
+          font-size: 0.85rem;
+          color: #90a4ae;
+          line-height: 1.4;
+        }
+      }
+    }
+  }
+
+  /* Right Column (Projects) */
+  .projects-column {
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: #90a4ae;
+      margin-bottom: 1.25rem;
+      
+      input {
+        background: transparent;
+        border: none;
+        color: #fff;
+        font-size: 0.95rem;
+        outline: none;
+        width: 100%;
+        &::placeholder { color: #546e7a; }
+      }
+    }
+
+    .project-list-container {
+      background: #1e1e20;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      overflow: hidden;
+
+      .project-list-header {
+        padding: 0.75rem 1.25rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        
+        .dropdown {
+          font-size: 0.85rem;
+          color: #b0bec5;
+          cursor: pointer;
+          &:hover { color: #fff; }
+        }
+      }
+
+      .list-wrapper {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .project-list-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 1.25rem;
+        text-decoration: none;
+        color: inherit;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        transition: background 0.2s;
+
+        &:last-child { border-bottom: none; }
+        &:hover { background: rgba(255, 255, 255, 0.04); }
+
+        .p-icon {
+          color: #b0bec5;
+        }
+
+        .p-info {
+          flex-grow: 1;
+          .p-name {
+            font-size: 0.95rem;
+            color: #82b1ff; /* Xanh nhạt Firebase cho link */
+            font-weight: 500;
+            margin-bottom: 0.15rem;
+          }
+          .p-id {
+            font-size: 0.75rem;
+            color: #78909c;
+            font-family: monospace;
+          }
+        }
+
+        .p-star {
+          color: #546e7a;
+          font-size: 1.2rem;
+          &:hover { color: #ffca28; }
+        }
+      }
+
+      .empty-state, .loading-state, .error-state {
+        padding: 2rem;
+        text-align: center;
+        color: #90a4ae;
+        font-size: 0.9rem;
+      }
+
+      .list-footer {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 0.75rem 1.25rem;
+        background: #171719;
+        font-size: 0.8rem;
+        color: #78909c;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+
+        .pagination {
+          display: flex;
+          gap: 0.5rem;
+          
+          .icon-btn {
+            background: transparent;
+            border: none;
+            color: #78909c;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            &:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+          }
+        }
+      }
+    }
+  }
+}

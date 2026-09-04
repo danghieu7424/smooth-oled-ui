@@ -82,6 +82,7 @@ features = [
     "Url",               
     "EventTarget",       
     "CustomEvent",
+    "MessageEvent",
     "RequestCredentials",
     "Notification",
     "NotificationPermission",

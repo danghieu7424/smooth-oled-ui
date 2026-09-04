@@ -1,0 +1,131 @@
+.firebase-new-project {
+  .fb-centered {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 4rem;
+  }
+
+  .create-project-card {
+    background: #1e1e20;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 3rem 2.5rem;
+    width: 100%;
+    max-width: 550px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 500;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: #90a4ae;
+      margin-bottom: 2.5rem;
+      font-size: 0.95rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+
+      label {
+        display: block;
+        color: #e0e0e0;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+      }
+
+      input {
+        width: 100%;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #fff;
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+
+        &:focus {
+          outline: none;
+          border-color: #82b1ff;
+        }
+
+        &::placeholder {
+          color: #546e7a;
+        }
+      }
+
+      .hint {
+        display: block;
+        color: #78909c;
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+      }
+    }
+
+    .error-alert {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(211, 47, 47, 0.1);
+      border: 1px solid rgba(211, 47, 47, 0.3);
+      color: #ef5350;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 1rem;
+      margin-top: 3rem;
+
+      .btn-cancel {
+        color: #b0bec5;
+        text-decoration: none;
+        font-size: 0.95rem;
+        font-weight: 500;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.05);
+          color: #fff;
+        }
+      }
+
+      .btn-submit {
+        background: #82b1ff;
+        color: #000;
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.1s;
+
+        &:hover {
+          background: #a6caff;
+        }
+
+        &:active {
+          transform: scale(0.98);
+        }
+
+        &:disabled {
+          background: #546e7a;
+          color: #90a4ae;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+}
