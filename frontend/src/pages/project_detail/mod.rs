@@ -145,47 +145,35 @@ pub fn ProjectDetailPage() -> impl IntoView {
 
                                             <div class="card-body">
                                                 <div class="chart-column">
-                                                    <h3>"Thiết bị hoạt động (Active)"</h3>
+                                                    <h3>"Daily active users"</h3>
                                                     <div class="chart-val">
-                                                        <span>{detail.active_devices}</span>
-                                                        <span class="trend">"--"</span>
+                                                        <span>"- - -"</span>
                                                     </div>
                                                     <div class="chart-area empty">
-                                                        "Chưa có dữ liệu"
-                                                        <small>"trong 14 ngày qua"</small>
+                                                        <div style="text-align: center;">
+                                                            <div>"No data"</div>
+                                                            <small>"for the last 14 days"</small>
+                                                        </div>
                                                     </div>
                                                 </div>
                                                 
                                                 <div class="chart-column">
-                                                    <h3>"Số bản phát hành (Firmwares)"</h3>
+                                                    <h3>"Day 1 retention"</h3>
                                                     <div class="chart-val">
-                                                        <span>{detail.firmwares.len()}</span>
-                                                        <span class="trend">"--"</span>
+                                                        <span>"- - -"</span>
                                                     </div>
-                                                    <div class="chart-area line-chart">
-                                                        <svg viewBox="0 0 100 40" preserveAspectRatio="none">
-                                                            // Mô phỏng biểu đồ đường dốc lên SVG
-                                                            <path d="M0,35 L20,30 L40,32 L60,15 L80,20 L100,5" fill="none" stroke="#69db7c" stroke-width="2"></path>
-                                                            <path d="M0,35 L20,30 L40,32 L60,15 L80,20 L100,5 L100,40 L0,40 Z" fill="rgba(105, 219, 124, 0.1)" stroke="none"></path>
-                                                        </svg>
-                                                    </div>
-                                                </div>
-
-                                                <div class="chart-promo">
-                                                    <div class="promo-img">
-                                                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#82b1ff" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-                                                    </div>
-                                                    <div class="promo-text">
-                                                        <p>"Tích hợp nền tảng!"</p>
-                                                        <a href="#">"Tài liệu API"</a>
-                                                        <a href="#">"Tài liệu ESP-IDF"</a>
+                                                    <div class="chart-area empty">
+                                                        <div style="text-align: center;">
+                                                            <div>"No data"</div>
+                                                            <small>"for the last 14 days"</small>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                             
                                             <div class="card-footer">
-                                                <span class="legend"><span class="color-box this-week"></span> "Tuần này"</span>
-                                                <span class="legend"><span class="color-box last-week"></span> "Tuần trước"</span>
+                                                <span class="legend"><span class="color-box this-week"></span> "This week"</span>
+                                                <span class="legend"><span class="color-box last-week"></span> "Last week"</span>
                                             </div>
                                         </div>
                                     </div>
