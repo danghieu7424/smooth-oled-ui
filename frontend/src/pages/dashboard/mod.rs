@@ -36,6 +36,7 @@ pub struct Project {
     pub name: String,
     pub created_at: String,
     pub version: Option<String>,
+    pub is_starred: bool,
 }
 
 async fn fetch_stats() -> Result<Stats, String> {
@@ -62,6 +63,7 @@ async fn fetch_projects() -> Result<Vec<Project>, String> {
 
 #[component]
 pub fn DashboardPage() -> impl IntoView {
+    let (filter_mode, set_filter_mode) = create_signal("all".to_string());
     let projects_resource = create_resource(|| (), |_| async move { fetch_projects().await });
     let me_resource = create_resource(|| (), |_| async move { fetch_me().await });
 
@@ -156,8 +158,16 @@ pub fn DashboardPage() -> impl IntoView {
                         </div>
 
                         <div class="project-list-container">
-                            <div class="project-list-header">
-                                <span class="dropdown">"Dự án ▼"</span>
+                            <div class="project-list-header" style="position: relative; display: flex; align-items: center; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                                <select 
+                                    class="dropdown" 
+                                    style="background: transparent; color: #fff; border: none; font-size: 1rem; outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; -moz-appearance: none; padding-right: 1.5rem;"
+                                    on:change=move |ev| set_filter_mode.set(event_target_value(&ev))
+                                >
+                                    <option value="all" style="background: #2a2a2c; color: #fff;">"Dự án"</option>
+                                    <option value="starred" style="background: #2a2a2c; color: #fff;">"Dự án đánh dấu"</option>
+                                </select>
+                                <span style="position: absolute; right: 0; pointer-events: none; font-size: 0.8rem; top: 0.3rem;">"▼"</span>
                             </div>
                             
                             <Suspense fallback=move || view! { <div class="loading-state">"Đang tải danh sách..."</div> }>
@@ -167,24 +177,63 @@ pub fn DashboardPage() -> impl IntoView {
                                             if projects.is_empty() {
                                                 view! { <div class="empty-state">"Bạn chưa có dự án nào."</div> }.into_view()
                                             } else {
-                                                let count = projects.len();
-                                                let list_view = projects.into_iter().map(|p| {
+                                                let filtered_projects: Vec<_> = projects.into_iter().filter(|p| {
+                                                    if filter_mode.get() == "starred" { p.is_starred } else { true }
+                                                }).collect();
+                                                
+                                                if filtered_projects.is_empty() {
+                                                    return view! { <div class="empty-state">"Không tìm thấy dự án nào."</div> }.into_view();
+                                                }
+
+                                                let count = filtered_projects.len();
+                                                let list_view = filtered_projects.into_iter().map(|p| {
+                                                    let p_id_clone_star = p.project_id.clone();
+                                                    let p_id_clone_del = p.project_id.clone();
+                                                    let is_starred = p.is_starred;
+                                                    
                                                     view! {
                                                         <A href=format!("/projects/{}", p.id) class="project-list-item">
                                                             <div class="p-icon">
                                                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2.69l5.66 4.2c.22.16.34.42.34.69v8.42c0 .27-.12.53-.34.69L12 20.89l-5.66-4.2a1.14 1.14 0 0 1-.34-.69V7.58c0-.27.12-.53.34-.69L12 2.69z"/></svg>
                                                             </div>
                                                             <div class="p-info">
-                                                                <div class="p-name">{p.name}</div>
-                                                                <div class="p-id">{p.project_id}</div>
+                                                                <div class="p-name">{p.name.clone()}</div>
+                                                                <div class="p-id">{p.project_id.clone()}</div>
                                                             </div>
-                                                            <div class="p-star">
-                                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                                            <div class="p-actions" style="display: flex; gap: 0.75rem; align-items: center;">
+                                                                <div class="p-star" on:click=move |ev| {
+                                                                    ev.prevent_default();
+                                                                    ev.stop_propagation();
+                                                                    let id = p_id_clone_star.clone();
+                                                                    spawn_local(async move {
+                                                                        let _ = gloo_net::http::Request::patch(&format!("http://localhost:7424/api/projects/{}/star", id))
+                                                                            .credentials(web_sys::RequestCredentials::Include)
+                                                                            .send().await;
+                                                                        projects_resource.refetch();
+                                                                    });
+                                                                }>
+                                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill=if is_starred { "#ffca28" } else { "none" } stroke=if is_starred { "#ffca28" } else { "currentColor" } stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                                                </div>
+                                                                <div class="p-del" style="color: #ef5350; cursor: pointer; transition: color 0.2s;" on:click=move |ev| {
+                                                                    ev.prevent_default();
+                                                                    ev.stop_propagation();
+                                                                    let id = p_id_clone_del.clone();
+                                                                    if web_sys::window().unwrap().confirm_with_message("Bạn có chắc chắn muốn xóa dự án này? Thao tác không thể hoàn tác!").unwrap_or(false) {
+                                                                        spawn_local(async move {
+                                                                            let _ = gloo_net::http::Request::delete(&format!("http://localhost:7424/api/projects/{}", id))
+                                                                                .credentials(web_sys::RequestCredentials::Include)
+                                                                                .send().await;
+                                                                            projects_resource.refetch();
+                                                                        });
+                                                                    }
+                                                                }>
+                                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                                                </div>
                                                             </div>
                                                         </A>
                                                     }
                                                 }).collect_view();
-
+                                                
                                                 view! {
                                                     <div class="list-wrapper">
                                                         {list_view}

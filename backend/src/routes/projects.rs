@@ -14,6 +14,7 @@ pub struct Project {
     pub name: String,
     pub created_at: String,
     pub version: Option<String>,
+    pub is_starred: bool,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -26,7 +27,8 @@ pub struct Stats {
 pub fn router() -> Router<Arc<AppState>> {
     Router::new()
         .route("/stats", get(get_stats))
-        .route("/:id", get(get_project))
+        .route("/:id", get(get_project).delete(delete_project))
+        .route("/:id/star", axum::routing::patch(toggle_star))
         .route("/:id/firmware", axum::routing::post(upload_firmware))
         .route("/", get(list_projects).post(create_project))
 }
@@ -50,7 +52,8 @@ async fn list_projects(State(state): State<Arc<AppState>>) -> Json<Vec<Project>>
     let projects = state.storage.execute_query(|conn| {
         let mut stmt = conn.prepare("
             SELECT p.id, p.user_id, p.project_id, p.name, p.created_at, 
-                   (SELECT version FROM firmwares WHERE project_id = p.project_id ORDER BY id DESC LIMIT 1) as version
+                   (SELECT version FROM firmwares WHERE project_id = p.project_id ORDER BY id DESC LIMIT 1) as version,
+                   p.is_starred
             FROM projects p
         ")?;
         
@@ -62,6 +65,7 @@ async fn list_projects(State(state): State<Arc<AppState>>) -> Json<Vec<Project>>
                 name: row.get(3)?,
                 created_at: row.get(4)?,
                 version: row.get(5).unwrap_or(None),
+                is_starred: row.get(6).unwrap_or(false),
             })
         })?;
         
@@ -238,6 +242,48 @@ async fn upload_firmware(
 
     match res {
         Ok(_) => Ok(Json(serde_json::json!({"status": "success", "version": version}))),
+        Err(_) => Err(axum::http::StatusCode::INTERNAL_SERVER_ERROR),
+    }
+}
+
+async fn toggle_star(
+    Path(id): Path<String>,
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<serde_json::Value>, axum::http::StatusCode> {
+    let res = state.storage.execute_query(move |conn| {
+        let current_state: bool = conn.query_row(
+            "SELECT is_starred FROM projects WHERE project_id = ?1",
+            [&id],
+            |row| row.get(0),
+        ).unwrap_or(false);
+        
+        let new_state = !current_state;
+        conn.execute(
+            "UPDATE projects SET is_starred = ?1 WHERE project_id = ?2",
+            rusqlite::params![new_state, id],
+        )?;
+        Ok(new_state)
+    }).await;
+
+    match res {
+        Ok(state) => Ok(Json(serde_json::json!({"status": "success", "is_starred": state}))),
+        Err(_) => Err(axum::http::StatusCode::INTERNAL_SERVER_ERROR),
+    }
+}
+
+async fn delete_project(
+    Path(id): Path<String>,
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<serde_json::Value>, axum::http::StatusCode> {
+    let res = state.storage.execute_query(move |conn| {
+        conn.execute("DELETE FROM devices WHERE project_id = ?1", [&id])?;
+        conn.execute("DELETE FROM firmwares WHERE project_id = ?1", [&id])?;
+        conn.execute("DELETE FROM projects WHERE project_id = ?1", [&id])?;
+        Ok(())
+    }).await;
+
+    match res {
+        Ok(_) => Ok(Json(serde_json::json!({"status": "success"}))),
         Err(_) => Err(axum::http::StatusCode::INTERNAL_SERVER_ERROR),
     }
 }

@@ -21,6 +21,7 @@ impl TableEngine {
             let _ = conn.execute("ALTER TABLE users ADD COLUMN suid TEXT", []);
             let _ = conn.execute("ALTER TABLE users ADD COLUMN name TEXT", []);
             let _ = conn.execute("ALTER TABLE users ADD COLUMN picture TEXT", []);
+            let _ = conn.execute("ALTER TABLE projects ADD COLUMN is_starred BOOLEAN DEFAULT 0", []);
 
             // Khởi tạo bảng cho OTA System
             conn.execute(
@@ -43,6 +44,7 @@ impl TableEngine {
                     token TEXT NOT NULL,
                     name TEXT NOT NULL,
                     description TEXT,
+                    is_starred BOOLEAN DEFAULT 0,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY(user_id) REFERENCES users(id)
                 )",
