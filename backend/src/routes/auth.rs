@@ -82,11 +82,20 @@ async fn login_with_token(
             let _ = state.storage.execute_query({
                 let email = user_info.email.clone();
                 let google_id = user_info.id.clone();
+                
+                // Parse a substring of google_id into u64 to ensure it's stable and fits in u64
+                let hash_val = google_id.chars().take(18).collect::<String>().parse::<u64>().unwrap_or(0);
+                let new_suid = crate::helpers::suid::to_base62_ordered(hash_val);
+                
+                let name = user_info.name.clone();
+                let picture = user_info.picture.clone();
+                
                 move |conn| {
                     conn.execute(
-                        "INSERT OR IGNORE INTO users (email, google_id, role, is_verified) VALUES (?1, ?2, 'user', 1)",
-                        [&email, &google_id]
+                        "INSERT OR IGNORE INTO users (email, google_id, role, is_verified, suid, name, picture) VALUES (?1, ?2, 'user', 1, ?3, ?4, ?5)",
+                        [&email, &google_id, &new_suid, &name, &picture]
                     )?;
+                    conn.execute("UPDATE users SET suid = ?1, name = ?3, picture = ?4 WHERE email = ?2", [&new_suid, &email, &name, &picture])?;
                     Ok(())
                 }
             }).await;
@@ -98,7 +107,14 @@ async fn login_with_token(
                 }
             }).await.unwrap_or(1);
 
-            let token = crate::auth::token::generate_user_token(user_id, "user".to_string(), &state.server_sk_bytes).unwrap_or_default();
+            let user_suid: String = state.storage.execute_query({
+                let email = user_info.email.clone();
+                move |conn| {
+                    conn.query_row("SELECT suid FROM users WHERE email = ?1", [&email], |r| r.get(0))
+                }
+            }).await.unwrap_or_else(|_| crate::helpers::suid::suid());
+
+            let token = crate::auth::token::generate_user_token(user_id, user_suid.clone(), "user".to_string(), &state.server_sk_bytes).unwrap_or_default();
             
             let cookie = Cookie::build(("auth_token", token))
                 .path("/")
@@ -106,27 +122,41 @@ async fn login_with_token(
                 .same_site(SameSite::Lax)
                 .build();
 
-            let user_cookie = Cookie::build(("user_info", format!("{}|{}", user_info.name, user_info.picture)))
-                .path("/")
-                .http_only(false)
-                .same_site(SameSite::Lax)
-                .build();
-            
-            return (jar.add(cookie).add(user_cookie), axum::response::Json(serde_json::json!({"success": true}))).into_response();
+            // We no longer need the user_info cookie, just auth_token is enough
+            return (jar.add(cookie), axum::response::Json(serde_json::json!({"success": true}))).into_response();
         }
     }
     
     (axum::http::StatusCode::UNAUTHORIZED, jar, axum::response::Json(serde_json::json!({"error": "Invalid token"}))).into_response()
 }
 
-async fn get_me(jar: CookieJar) -> axum::response::Json<serde_json::Value> {
-    if let Some(user_cookie) = jar.get("user_info") {
-        let parts: Vec<&str> = user_cookie.value().split('|').collect();
-        if parts.len() == 2 {
-            return axum::response::Json(serde_json::json!({
-                "name": parts[0],
-                "picture": parts[1]
-            }));
+async fn get_me(
+    State(state): State<Arc<AppState>>,
+    jar: CookieJar
+) -> axum::response::Json<serde_json::Value> {
+    if let Some(cookie) = jar.get("auth_token") {
+        if let Ok(token_data) = crate::auth::token::verify_user_token(cookie.value()) {
+            let suid = token_data.claims.suid;
+            
+            let user_data: Result<(String, String), _> = state.storage.execute_query({
+                let s = suid.clone();
+                move |conn| {
+                    conn.query_row("SELECT name, picture FROM users WHERE suid = ?1", [&s], |r| {
+                        Ok((
+                            r.get::<_, Option<String>>(0)?.unwrap_or_else(|| "User".to_string()),
+                            r.get::<_, Option<String>>(1)?.unwrap_or_default()
+                        ))
+                    })
+                }
+            }).await;
+
+            if let Ok((name, picture)) = user_data {
+                return axum::response::Json(serde_json::json!({
+                    "name": name,
+                    "picture": picture,
+                    "id": suid
+                }));
+            }
         }
     }
     

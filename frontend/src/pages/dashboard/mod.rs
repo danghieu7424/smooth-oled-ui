@@ -4,12 +4,13 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct UserProfile {
+    pub id: Option<i64>,
     pub name: Option<String>,
     pub picture: Option<String>,
     pub error: Option<String>,
 }
 
-async fn fetch_me() -> Result<UserProfile, String> {
+pub async fn fetch_me() -> Result<UserProfile, String> {
     gloo_net::http::Request::get("http://localhost:7424/api/auth/me")
         .credentials(web_sys::RequestCredentials::Include)
         .send()
@@ -80,7 +81,7 @@ pub fn DashboardPage() -> impl IntoView {
                     </div>
                     <Suspense fallback=move || view! { <div></div> }>
                         {move || {
-                            let me = me_resource.get().unwrap_or(Ok(UserProfile { name: None, picture: None, error: Some("Not loaded".to_string()) })).unwrap_or(UserProfile { name: None, picture: None, error: Some("Not loaded".to_string()) });
+                            let me = me_resource.get().unwrap_or(Ok(UserProfile { id: None, name: None, picture: None, error: Some("Not loaded".to_string()) })).unwrap_or(UserProfile { id: None, name: None, picture: None, error: Some("Not loaded".to_string()) });
                             if me.error.is_none() && me.name.is_some() {
                                 view! {
                                     <div class="user-menu" style="display: flex; align-items: center; gap: 0.5rem; color: #fff;">
@@ -106,7 +107,7 @@ pub fn DashboardPage() -> impl IntoView {
                 <div class="greeting-section">
                     <Suspense fallback=move || view! { <h1>"Xin chào"</h1> }>
                         {move || {
-                            let me = me_resource.get().unwrap_or(Ok(UserProfile { name: None, picture: None, error: Some("Not loaded".to_string()) })).unwrap_or(UserProfile { name: None, picture: None, error: Some("Not loaded".to_string()) });
+                            let me = me_resource.get().unwrap_or(Ok(UserProfile { id: None, name: None, picture: None, error: Some("Not loaded".to_string()) })).unwrap_or(UserProfile { id: None, name: None, picture: None, error: Some("Not loaded".to_string()) });
                             if me.error.is_none() && me.name.is_some() {
                                 view! { <h1>"Xin chào " {me.name.unwrap_or_default()}</h1> }.into_view()
                             } else {

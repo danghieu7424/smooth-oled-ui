@@ -18,6 +18,9 @@ impl TableEngine {
             let conn = Connection::open(&path_str)?;
             
             let _ = conn.execute("ALTER TABLE projects ADD COLUMN description TEXT", []);
+            let _ = conn.execute("ALTER TABLE users ADD COLUMN suid TEXT UNIQUE", []);
+            let _ = conn.execute("ALTER TABLE users ADD COLUMN name TEXT", []);
+            let _ = conn.execute("ALTER TABLE users ADD COLUMN picture TEXT", []);
 
             // Khởi tạo bảng cho OTA System
             conn.execute(

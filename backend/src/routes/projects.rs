@@ -155,13 +155,15 @@ async fn create_project(
 ) -> Result<Json<serde_json::Value>, axum::http::StatusCode> {
     
     let mut user_id = 1;
+    let mut user_suid = "0".to_string();
     if let Some(cookie) = jar.get("auth_token") {
         if let Ok(token_data) = crate::auth::token::verify_user_token(cookie.value()) {
             user_id = token_data.claims.sub;
+            user_suid = token_data.claims.suid;
         }
     }
 
-    let final_project_id = format!("{}-{}", user_id, payload.project_id);
+    let final_project_id = format!("{}-{}", user_suid, payload.project_id);
     let token = crate::helpers::suid::generate_random_hex();
     
     let res = state.storage.execute_query({
@@ -185,8 +187,18 @@ async fn create_project(
 async fn upload_firmware(
     Path(project_id): Path<String>,
     State(state): State<Arc<AppState>>,
+    jar: axum_extra::extract::cookie::CookieJar,
     mut multipart: axum::extract::Multipart,
 ) -> Result<Json<serde_json::Value>, axum::http::StatusCode> {
+    let mut user_id = 1;
+    let mut user_suid = "0".to_string();
+    if let Some(cookie) = jar.get("auth_token") {
+        if let Ok(token_data) = crate::auth::token::verify_user_token(cookie.value()) {
+            user_id = token_data.claims.sub;
+            user_suid = token_data.claims.suid;
+        }
+    }
+
     let mut version = String::new();
     let mut file_data = Vec::new();
 
@@ -204,8 +216,8 @@ async fn upload_firmware(
         return Err(axum::http::StatusCode::BAD_REQUEST);
     }
 
-    // Save firmware file (mock path for now, in real app save to storage)
-    let file_path = format!("storages/firmwares/{}_{}.bin", project_id, version);
+    // Save firmware file matching the draft_plan.md structure: storages/user_id_X/project_id_Y/firmware_vZ.bin
+    let file_path = format!("storages/user_id_{}/{}/firmware_{}.bin", user_suid, project_id, version);
     if let Some(parent) = std::path::Path::new(&file_path).parent() {
         std::fs::create_dir_all(parent).ok();
     }

@@ -25,12 +25,17 @@ pub fn LoginPage() -> impl IntoView {
                 if !access_token.is_empty() {
                     spawn_local(async move {
                         let req_body = serde_json::json!({ "access_token": access_token });
-                        let _ = gloo_net::http::Request::post("http://localhost:7424/api/auth/login_with_token")
+                        let res = gloo_net::http::Request::post("http://localhost:7424/api/auth/login_with_token")
                             .credentials(web_sys::RequestCredentials::Include)
                             .json(&req_body).unwrap()
                             .send()
                             .await;
-                        nav2("/", Default::default());
+                            
+                        if let Ok(resp) = res {
+                            if resp.ok() {
+                                let _ = web_sys::window().unwrap().location().set_href("/");
+                            }
+                        }
                     });
                 }
             }

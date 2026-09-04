@@ -15,6 +15,7 @@ pub struct VideoClaims {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserClaims {
     pub sub: i64,          // user_id
+    pub suid: String,      // suid
     pub role: String,      // role
     pub exp: usize,        // epoch seconds
 }
@@ -41,11 +42,12 @@ pub fn verify_token(token: &str) -> Result<TokenData<VideoClaims>, JwtError> {
     decode::<VideoClaims>(token, &DecodingKey::from_secret(secret.as_bytes()), &validation)
 }
 
-pub fn generate_user_token(user_id: i64, role: String, _server_sk: &[u8]) -> Result<String, JwtError> {
+pub fn generate_user_token(user_id: i64, suid: String, role: String, _server_sk: &[u8]) -> Result<String, JwtError> {
     let secret = jwt_secret();
     let exp = (Utc::now() + Duration::hours(24)).timestamp() as usize;
     let claims = UserClaims {
         sub: user_id,
+        suid,
         role,
         exp,
     };
