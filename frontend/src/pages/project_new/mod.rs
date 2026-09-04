@@ -1,6 +1,7 @@
 use leptos::*;
 use leptos_router::*;
 use serde::{Deserialize, Serialize};
+use crate::shared::ui::file_upload::FileUploadDropzone;
 
 #[derive(Clone, Serialize, Deserialize)]
 struct CreateProjectReq {
@@ -44,12 +45,20 @@ pub fn ProjectNewPage() -> impl IntoView {
     
     let navigate = use_navigate();
 
-    // Derived version name based on checkboxes
+    let (custom_version, set_custom_version) = create_signal(String::new());
+
+    // Derived version name based on checkboxes and project name
     let derived_version = move || {
+        let cv = custom_version.get();
+        if !cv.is_empty() {
+            return cv;
+        }
+        let n = name.get();
+        let base_name = if n.is_empty() { "firmware".to_string() } else { n.replace(" ", "_") };
         let major = if is_major.get() { 1 } else { 0 };
         let minor = if is_minor.get() { 1 } else { 0 };
         let patch = if is_patch.get() { 1 } else { 0 };
-        format!("firmware_V{}.{}.{}", major, minor, patch)
+        format!("{}_V{}.{}.{}", base_name, major, minor, patch)
     };
 
     let go_next = move |_| {
@@ -248,23 +257,39 @@ pub fn ProjectNewPage() -> impl IntoView {
                                 <h2>"Khởi tạo Firmware"</h2>
                             </div>
                             <div class="step-content" style=move || if step.get() == 3 { "display: block;" } else { "display: none;" }>
-                                <div class="form-group">
-                                    <label>"Tải lên Firmware khởi tạo (Có thể bỏ qua)"</label>
-                                    <div class="file-drop-zone">
-                                        <input type="file" id="fw_upload" accept=".bin" on:change=on_file_change class="file-input-hidden" />
-                                        <label for="fw_upload" class="file-label">
-                                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFCA28" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                                            <span>{move || if let Some(f) = file.get() { format!("Đã chọn: {}", f.name()) } else { "Click để chọn file .bin".to_string() }}</span>
-                                        </label>
-                                    </div>
+                                <div class="form-group mb-4">
+                                    <FileUploadDropzone 
+                                        on_files_select={move |files: Vec<web_sys::File>| {
+                                            if let Some(f) = files.into_iter().next() {
+                                                set_file.set(Some(f));
+                                            }
+                                        }}
+                                        on_clear={move |_| set_file.set(None)}
+                                        title="Tải lên Firmware khởi tạo (Có thể bỏ qua)".to_string()
+                                        description="Kéo thả hoặc click để chọn file .bin".to_string()
+                                        accept=".bin".to_string()
+                                    />
                                 </div>
                                 
                                 {move || if file.get().is_some() {
                                     view! {
                                         <div class="version-generator">
-                                            <label>"Phiên bản tự động:"</label>
-                                            <div class="version-preview">
-                                                {move || derived_version()}
+                                            <label>"Tên phiên bản:"</label>
+                                            <div class="version-preview" style="padding: 0; background: transparent; border: none; margin-bottom: 1rem;">
+                                                <input 
+                                                    type="text" 
+                                                    style="width: 100%; background: #1e1e20; border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; padding: 0.75rem 1rem; border-radius: 6px; font-size: 1rem; font-family: monospace;"
+                                                    placeholder=move || {
+                                                        let n = name.get();
+                                                        let base_name = if n.is_empty() { "firmware".to_string() } else { n.replace(" ", "_") };
+                                                        let major = if is_major.get() { 1 } else { 0 };
+                                                        let minor = if is_minor.get() { 1 } else { 0 };
+                                                        let patch = if is_patch.get() { 1 } else { 0 };
+                                                        format!("{}_V{}.{}.{}", base_name, major, minor, patch)
+                                                    }
+                                                    prop:value=custom_version
+                                                    on:input=move |ev| set_custom_version.set(event_target_value(&ev))
+                                                />
                                             </div>
                                             <div class="version-checkboxes">
                                                 <label class="cb-label">
