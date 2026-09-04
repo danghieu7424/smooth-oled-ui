@@ -23,9 +23,7 @@ pub fn ProjectNewPage() -> impl IntoView {
     
     // Step 3
     let (file, set_file) = create_signal(None::<web_sys::File>);
-    let (is_major, set_is_major) = create_signal(false);
-    let (is_minor, set_is_minor) = create_signal(false);
-    let (is_patch, set_is_patch) = create_signal(true);
+    let (update_type, set_update_type) = create_signal("patch".to_string());
 
     // Fetch user profile to get ID
     let user_profile = create_resource(
@@ -47,7 +45,7 @@ pub fn ProjectNewPage() -> impl IntoView {
 
     let (custom_version, set_custom_version) = create_signal(String::new());
 
-    // Derived version name based on checkboxes and project name
+    // Derived version name based on update type and project name
     let derived_version = move || {
         let cv = custom_version.get();
         if !cv.is_empty() {
@@ -55,9 +53,11 @@ pub fn ProjectNewPage() -> impl IntoView {
         }
         let n = name.get();
         let base_name = if n.is_empty() { "firmware".to_string() } else { n.replace(" ", "_") };
-        let major = if is_major.get() { 1 } else { 0 };
-        let minor = if is_minor.get() { 1 } else { 0 };
-        let patch = if is_patch.get() { 1 } else { 0 };
+        let (major, minor, patch) = match update_type.get().as_str() {
+            "major" => (1, 0, 0),
+            "minor" => (0, 1, 0),
+            _ => (0, 0, 1),
+        };
         format!("{}_V{}.{}.{}", base_name, major, minor, patch)
     };
 
@@ -282,26 +282,28 @@ pub fn ProjectNewPage() -> impl IntoView {
                                                     placeholder=move || {
                                                         let n = name.get();
                                                         let base_name = if n.is_empty() { "firmware".to_string() } else { n.replace(" ", "_") };
-                                                        let major = if is_major.get() { 1 } else { 0 };
-                                                        let minor = if is_minor.get() { 1 } else { 0 };
-                                                        let patch = if is_patch.get() { 1 } else { 0 };
+                                                        let (major, minor, patch) = match update_type.get().as_str() {
+                                                            "major" => (1, 0, 0),
+                                                            "minor" => (0, 1, 0),
+                                                            _ => (0, 0, 1),
+                                                        };
                                                         format!("{}_V{}.{}.{}", base_name, major, minor, patch)
                                                     }
                                                     prop:value=custom_version
                                                     on:input=move |ev| set_custom_version.set(event_target_value(&ev))
                                                 />
                                             </div>
-                                            <div class="version-checkboxes">
+                                            <div class="version-checkboxes" style="display: flex; gap: 1.5rem;">
                                                 <label class="cb-label">
-                                                    <input type="checkbox" prop:checked=is_major on:change=move |ev| set_is_major.set(event_target_checked(&ev)) />
+                                                    <input type="radio" name="v_type" prop:checked=move || update_type.get() == "major" on:change=move |_| { set_update_type.set("major".to_string()); set_custom_version.set(String::new()); } />
                                                     <span>"Bản chính thức"</span>
                                                 </label>
                                                 <label class="cb-label">
-                                                    <input type="checkbox" prop:checked=is_minor on:change=move |ev| set_is_minor.set(event_target_checked(&ev)) />
+                                                    <input type="radio" name="v_type" prop:checked=move || update_type.get() == "minor" on:change=move |_| { set_update_type.set("minor".to_string()); set_custom_version.set(String::new()); } />
                                                     <span>"Bản bổ sung"</span>
                                                 </label>
                                                 <label class="cb-label">
-                                                    <input type="checkbox" prop:checked=is_patch on:change=move |ev| set_is_patch.set(event_target_checked(&ev)) />
+                                                    <input type="radio" name="v_type" prop:checked=move || update_type.get() == "patch" on:change=move |_| { set_update_type.set("patch".to_string()); set_custom_version.set(String::new()); } />
                                                     <span>"Bản vá lỗi"</span>
                                                 </label>
                                             </div>
