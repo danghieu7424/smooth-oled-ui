@@ -221,8 +221,8 @@ async fn upload_firmware(
         return Err(axum::http::StatusCode::BAD_REQUEST);
     }
 
-    // Save firmware file matching the draft_plan.md structure: storages/user_id_X/project_id_Y/firmware_vZ.bin
-    let file_path = format!("storages/user_id_{}/{}/firmware_{}.bin", user_suid, project_id, version);
+    // Save firmware file matching the draft_plan.md structure: storages/projects/X/project_id_Y/firmware_vZ.bin
+    let file_path = format!("storages/projects/{}/{}/firmware_{}.bin", user_suid, project_id, version);
     if let Some(parent) = std::path::Path::new(&file_path).parent() {
         std::fs::create_dir_all(parent).ok();
     }
@@ -272,9 +272,18 @@ async fn toggle_star(
 }
 
 async fn delete_project(
+    jar: CookieJar,
     Path(id): Path<String>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<serde_json::Value>, axum::http::StatusCode> {
+    let mut user_suid = String::new();
+    if let Some(cookie) = jar.get("auth_token") {
+        if let Ok(token_data) = crate::auth::token::verify_user_token(cookie.value()) {
+            user_suid = token_data.claims.suid;
+        }
+    }
+
+    let p_id_clone = id.clone();
     let res = state.storage.execute_query(move |conn| {
         conn.execute("DELETE FROM devices WHERE project_id = ?1", [&id])?;
         conn.execute("DELETE FROM firmwares WHERE project_id = ?1", [&id])?;
@@ -283,7 +292,13 @@ async fn delete_project(
     }).await;
 
     match res {
-        Ok(_) => Ok(Json(serde_json::json!({"status": "success"}))),
+        Ok(_) => {
+            if !user_suid.is_empty() {
+                let dir_path = format!("storages/projects/{}/{}", user_suid, p_id_clone);
+                let _ = std::fs::remove_dir_all(&dir_path);
+            }
+            Ok(Json(serde_json::json!({"status": "success"})))
+        },
         Err(_) => Err(axum::http::StatusCode::INTERNAL_SERVER_ERROR),
     }
 }
