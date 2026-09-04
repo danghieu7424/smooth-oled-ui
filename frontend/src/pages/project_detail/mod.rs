@@ -55,13 +55,6 @@ pub fn ProjectDetailPage() -> impl IntoView {
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFA000"><path d="M11.64 5.93h.01L15.8 13.5l1.83-3.19a.53.53 0 0 1 .9 0l4.31 7.5a.51.51 0 0 1-.44.78H1.61a.51.51 0 0 1-.45-.77l6.83-11.96a.53.53 0 0 1 .9 0l1.43 2.5 1.32-2.43a.52.52 0 0 1 .9 0z"/></svg>
                         <span>"OTA Hub"</span>
                     </div>
-                    <span class="header-divider"></span>
-                    <span class="project-name-header">
-                        {move || match project_resource.get() {
-                            Some(Ok(p)) => format!("{} ▼", p.name),
-                            _ => "Đang tải...".to_string()
-                        }}
-                    </span>
                 </div>
                 <div class="fb-header-right">
                     <div class="nav-icon">
