@@ -280,9 +280,19 @@ async fn upload_firmware(
         let path = file_path.clone();
         let n = notes.clone();
         move |conn| {
+            // Extract pure version for the ESP to check against
+            let core_version = ver.split("_V")
+                .last()
+                .unwrap_or(&ver)
+                .split("_v")
+                .last()
+                .unwrap_or(&ver)
+                .trim()
+                .to_string();
+                
             conn.execute(
-                "INSERT INTO firmwares (project_id, version, file_path, notes) VALUES (?1, ?2, ?3, ?4)",
-                rusqlite::params![p_id, ver, path, n],
+                "INSERT INTO firmwares (project_id, version, core_version, file_path, notes) VALUES (?1, ?2, ?3, ?4, ?5)",
+                rusqlite::params![p_id, ver, core_version, path, n],
             )
         }
     }).await;
@@ -370,14 +380,23 @@ pub async fn download_latest_firmware(
         move |conn| {
             use rusqlite::OptionalExtension;
             conn.query_row(
-                "SELECT file_path, version FROM firmwares WHERE project_id = ?1 ORDER BY id DESC LIMIT 1",
+                "SELECT file_path, core_version, version FROM firmwares WHERE project_id = ?1 ORDER BY id DESC LIMIT 1",
                 rusqlite::params![project_id],
-                |row| Ok((row.get(0)?, row.get(1)?))
+                |row| {
+                    let path: String = row.get(0)?;
+                    let core_version: Option<String> = row.get(1)?;
+                    let version: String = row.get(2)?;
+                    
+                    let final_version = core_version.unwrap_or_else(|| {
+                        version.split("_V").last().unwrap_or(&version).split("_v").last().unwrap_or(&version).trim().to_string()
+                    });
+                    Ok((path, final_version))
+                }
             ).optional()
         }
     }).await.unwrap_or(None);
 
-    if let Some((path, latest_version)) = latest_fw {
+    if let Some((path, latest_core_version)) = latest_fw {
         // Check if ESP32 sent its current version
         let device_version = headers.get("x-ESP32-version")
             .or_else(|| headers.get("x-ESP8266-version"))
@@ -386,13 +405,8 @@ pub async fn download_latest_firmware(
             .trim()
             .trim_start_matches(|c| c == 'v' || c == 'V');
             
-        // Web tự động tạo tên "esp32 tool_V1.0.0", ta tách lấy phần cuối sau dấu '_' và bỏ chữ V
-        let normalized_latest = latest_version
-            .split('_')
-            .last()
-            .unwrap_or(&latest_version)
-            .trim()
-            .trim_start_matches(|c| c == 'v' || c == 'V');
+        // latest_version bây giờ chính là core_version được lấy trực tiếp từ DB
+        let normalized_latest = latest_core_version.trim().trim_start_matches(|c| c == 'v' || c == 'V');
             
         if device_version.eq_ignore_ascii_case(normalized_latest) {
             return Ok(axum::response::Response::builder()

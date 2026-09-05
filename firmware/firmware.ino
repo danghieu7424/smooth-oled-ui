@@ -17,7 +17,7 @@
 // CẤU HÌNH DỰ ÁN TỪ OTA HUB DASHBOARD
 // ==========================================
 const char* PROJECT_ID = "007Rlq30Q2vU-esp32-tool";
-const char* PROJECT_TOKEN = "57c510c895b69f432be01fd9a8bc9d51";
+const char* PROJECT_TOKEN = "fc11b225f325609bb7309ad70f090a78";
 const char* CURRENT_VERSION = "1.0.0";
 const char* API_HOST = "192.168.7.7";
 const uint16_t API_PORT = 7424;
