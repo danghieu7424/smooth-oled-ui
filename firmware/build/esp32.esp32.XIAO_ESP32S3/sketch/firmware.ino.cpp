@@ -19,35 +19,24 @@
 // ==========================================
 const char* PROJECT_ID = "007Rlq30Q2vU-esp32-tool";
 const char* PROJECT_TOKEN = "57c510c895b69f432be01fd9a8bc9d51";
-const char* CURRENT_VERSION = "1.0.0";
+const char* CURRENT_VERSION = "1.0.1";
 const char* MQTT_BROKER = "192.168.7.7";
 const uint16_t MQTT_PORT = 7424;
 
 OLED_OTA ota(PROJECT_ID, PROJECT_TOKEN, CURRENT_VERSION);
 
 int saved_brightness = 20;
-int saved_pc_viewer = 1;
 
-enum ActiveSlider { SLIDER_NONE, SLIDER_BRIGHTNESS, SLIDER_PC_VIEWER };
+#define LED_PIN 2
+int saved_led_state = 0;
+
+enum ActiveSlider { SLIDER_NONE, SLIDER_BRIGHTNESS, SLIDER_LED_SWITCH };
 ActiveSlider active_slider = SLIDER_NONE;
 
 // Clock State variables moved down
 
 // Clock State variables moved down
 
-#line 37 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void save_wifi_credentials(String ssid, String pwd);
-#line 43 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-bool load_wifi_credentials(String &ssid, String &pwd);
-#line 162 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void on_restart();
-#line 166 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void on_power_off();
-#line 329 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void setup();
-#line 407 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void loop();
-#line 37 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void save_wifi_credentials(String ssid, String pwd) {
     extEEPROM.writeString(0x0010, ssid);
     extEEPROM.writeString(0x0040, pwd);
@@ -128,8 +117,8 @@ static const unsigned char icon_esp_now[] U8X8_PROGMEM = {
   0x00, 0x7e, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-// [MỚI] Icon pc viewer - Vẽ trên khung 24x24 px
-static const unsigned char icon_pc_viewer[] U8X8_PROGMEM = {
+// [MỚI] Icon LED - Vẽ trên khung 24x24 px
+static const unsigned char icon_led_switch[] U8X8_PROGMEM = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
   0xf8, 0xff, 0x1f, 0xfc, 0xff, 0x3f, 0x0c, 0x00, 0x30, 0x0c, 0x00, 0x30, 
   0x0c, 0x00, 0x30, 0x8c, 0x01, 0x30, 0x8c, 0x03, 0x30, 0x0c, 0x07, 0x30, 
@@ -141,8 +130,8 @@ static const unsigned char icon_pc_viewer[] U8X8_PROGMEM = {
 // --- KHAI BÁO CÁC HÀM XỬ LÝ SỰ KIỆN (CALLBACKS) ---
 void open_settings_menu();
 void open_brightness_slider();
-void open_pc_viewer_switch();
-void on_pc_viewer_change(int val);
+void open_led_switch();
+void on_led_change(int val);
 void on_brightness_change(int val);
 void on_enter_wifi();
 void on_wifi_password_submit(const char* pwd);
@@ -160,7 +149,7 @@ const int TOTAL_MAIN_ITEMS = 3;
 const MenuItem settings_items[] = {
     {"WiFi", icon_wifi, on_enter_wifi},
     {"ESP NOW", icon_esp_now, nullptr},
-    {"PC Viewer", icon_pc_viewer, open_pc_viewer_switch},
+    {"LED Switch", icon_led_switch, open_led_switch},
     {"Brightness", icon_brightness, open_brightness_slider}
 };
 const int TOTAL_SETTINGS_ITEMS = 4;
@@ -260,15 +249,14 @@ void on_brightness_change(int val) {
   u8g2.setContrast(current_brightness); // Lệnh phần cứng đổi độ sáng OLED trực tiếp
 }
 
-void open_pc_viewer_switch() {
-  active_slider = SLIDER_PC_VIEWER;
-  ui.openSlider("PC Viewer", saved_pc_viewer, 1, on_pc_viewer_change);
+void open_led_switch() {
+  active_slider = SLIDER_LED_SWITCH;
+  ui.openSlider("LED Switch", saved_led_state, 1, on_led_change);
 }
 
-void on_pc_viewer_change(int val) {
-  // Chỉ cập nhật biến nội bộ của giao diện để thanh gạt không bị trôi ngược,
-  // chứ KHÔNG bật/tắt PC Viewer thực tế nữa!
-  saved_pc_viewer = val;
+void on_led_change(int val) {
+  saved_led_state = val;
+  digitalWrite(LED_PIN, val == 1 ? HIGH : LOW);
 }
 
 char text_input_title_buf[64];
@@ -343,7 +331,7 @@ void on_wifi_password_submit(const char* pwd) {
 void setup() {
   Serial.begin(921600);
   
-  // Tự động khôi phục phân vùng NVS bị hỏng (Lý do cốt lõi khiến Flash không lưu được)
+  // Tự động khôi phục phân vùng NVS bị hỏng (Lý do cốt lý khiến Flash không lưu được)
   esp_err_t err = nvs_flash_init();
   if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
       nvs_flash_erase();
@@ -352,6 +340,8 @@ void setup() {
   
   Wire.begin(47, 48);
   Wire.setClock(400000); 
+  
+  pinMode(LED_PIN, OUTPUT);
 
   // --- Khởi tạo và kiểm tra RTC & EEPROM ---
   if (rtc.begin()) {
@@ -411,6 +401,10 @@ void setup() {
   if (rtc.begin()) {
       timeSync.syncFromRTC();
   }
+  
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, saved_led_state == 1 ? HIGH : LOW);
+  
   open_home_clock();
 
   // 5. Khởi tạo OTA Service (Nó sẽ tự kết nối MQTT khi WiFi sẵn sàng ở loop)
@@ -465,8 +459,8 @@ void loop() {
                 if (active_slider == SLIDER_BRIGHTNESS) {
                     current_brightness = saved_brightness;
                     u8g2.setContrast(current_brightness);
-                } else if (active_slider == SLIDER_PC_VIEWER) {
-                    // Trả lại trạng thái switch dummy cũ
+                } else if (active_slider == SLIDER_LED_SWITCH) {
+                  open_led_switch();
                 }
                 active_slider = SLIDER_NONE;
                 ui.closeOverlay(); // Đóng Slider, trả về Level trước đó
@@ -504,8 +498,8 @@ void loop() {
                   if (active_slider == SLIDER_BRIGHTNESS) {
                       saved_brightness = current_brightness; // Lấy từ biến cục bộ đã được callback cập nhật
                       extEEPROM.writeByte(0x0000, (uint8_t)saved_brightness);
-                  } else if (active_slider == SLIDER_PC_VIEWER) {
-                      // Không lưu EEPROM cho tính năng này nữa
+                  } else if (active_slider == SLIDER_LED_SWITCH) {
+                      on_led_change(saved_led_state);
                   }
                   active_slider = SLIDER_NONE;
                   ui.closeOverlay(); // Đóng Slider, xác nhận lưu
