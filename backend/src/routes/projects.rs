@@ -288,25 +288,7 @@ async fn upload_firmware(
     }).await;
 
     match res {
-        Ok(_) => {
-            if let Some(client) = &state.mqtt_client {
-                let base_url = std::env::var("BASE_URL").unwrap_or_else(|_| "http://localhost:7424".to_string());
-                let download_url = format!("{}/api/firmware/{}", base_url, project_id);
-                let payload = serde_json::json!({
-                    "version": version,
-                    "url": download_url
-                }).to_string();
-                
-                let topic = format!("projects/{}/ota", project_id);
-                if let Err(e) = client.publish(topic.clone(), rumqttc::QoS::AtLeastOnce, false, payload.clone()).await {
-                    tracing::error!("Lỗi khi publish MQTT OTA {}: {}", topic, e);
-                } else {
-                    tracing::info!("Đã Publish tín hiệu MQTT cập nhật OTA tới {}", topic);
-                }
-            }
-            
-            Ok(Json(serde_json::json!({"status": "success", "version": version})))
-        },
+        Ok(_) => Ok(Json(serde_json::json!({"status": "success", "version": version}))),
         Err(_) => Err(axum::http::StatusCode::INTERNAL_SERVER_ERROR),
     }
 }

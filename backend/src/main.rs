@@ -146,32 +146,6 @@ async fn main() {
 
     let (sse_tx, _) = tokio::sync::broadcast::channel(1000);
 
-    let mut mqtt_client_opt = None;
-    if let Ok(mqtt_url) = std::env::var("MQTT_BROKER_URL") {
-        if mqtt_url.starts_with("mqtt://") {
-            let host_port = mqtt_url.trim_start_matches("mqtt://");
-            let mut parts = host_port.split(':');
-            let host = parts.next().unwrap_or("localhost").to_string();
-            let port: u16 = parts.next().unwrap_or("1883").parse().unwrap_or(1883);
-
-            let mut mqttoptions = rumqttc::MqttOptions::new(format!("backend_rust_ota_{}", crate::helpers::suid::generate_random_hex()[..8].to_string()), host, port);
-            mqttoptions.set_keep_alive(std::time::Duration::from_secs(5));
-
-            let (client, mut eventloop) = rumqttc::AsyncClient::new(mqttoptions, 10);
-            mqtt_client_opt = Some(client);
-
-            tokio::spawn(async move {
-                loop {
-                    if let Err(e) = eventloop.poll().await {
-                        tracing::error!("MQTT connection lost/error: {:?}", e);
-                        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
-                    }
-                }
-            });
-            tracing::info!(category = "System", "Khởi tạo MQTT Client kết nối tới {}", mqtt_url);
-        }
-    }
-
     let app_state = std::sync::Arc::new(crate::core::state::AppState {
         gemini_semaphore: std::sync::Arc::new(tokio::sync::Semaphore::new(3)),
         http_client: reqwest::Client::new(),
@@ -181,7 +155,6 @@ async fn main() {
         sse_tx,
         forwarder_token: std::env::var("FORWARDER_TOKEN").unwrap_or_else(|_| "abc".to_string()),
         ws_sessions: std::sync::Arc::new(dashmap::DashMap::new()),
-        mqtt_client: mqtt_client_opt,
     });
     
     let allowed_origins_str = std::env::var("ALLOWED_ORIGINS")
