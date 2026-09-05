@@ -67,6 +67,7 @@ void OLED_OTA::_checkUpdate() {
  * 
  * Quy trình mới:
  *   1. esp_partition_erase_range() - Xóa sạch partition đích
+ ****/
 void OLED_OTA::_performUpdate(String url, String newVersion) {
     if (url.indexOf("?") == -1) {
         url += "?token=" + _projectToken;
@@ -142,38 +143,5 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
     }
     
     http.end();
-    
-    if (writeError || written != (size_t)contentLength) {
-        Serial.printf("[OLED_OTA] Tải/ghi thất bại. Đã ghi: %u/%d\n", written, contentLength);
-        delete client;
-        return;
-    }
-
-    /****
-     * BƯỚC 4: Verify 16 byte cuối cùng trên Flash
-     ****/
-    Serial.println("[OLED_OTA] Đã ghi đủ. Verify 16 byte đầu trên Flash...");
-    err = esp_partition_read(update_partition, 0, verify_buf, 16);
-    Serial.printf("[OLED_OTA] Flash byte đầu: ");
-    for (int i = 0; i < 16; i++) {
-        Serial.printf("%02X ", verify_buf[i]);
-    }
-    Serial.println();
-
-    /****
-     * BƯỚC 5: Đổi cờ khởi động sang partition mới
-     * Không dùng esp_ota_end() vì chúng ta không dùng esp_ota_begin()
-     ****/
-    Serial.println("[OLED_OTA] Đang đổi Boot partition...");
-    err = esp_ota_set_boot_partition(update_partition);
-    if (err != ESP_OK) {
-        Serial.printf("[OLED_OTA] LỖI esp_ota_set_boot_partition: %s (0x%x)\n", esp_err_to_name(err), err);
-        delete client;
-        return;
-    }
-    
-    Serial.println("[OLED_OTA] OTA Hoàn tất! Đang khởi động lại...");
     delete client;
-    delay(1000);
-    ESP.restart();
 }
