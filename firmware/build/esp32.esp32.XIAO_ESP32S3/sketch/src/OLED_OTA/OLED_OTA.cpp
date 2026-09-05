@@ -105,65 +105,37 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
             Serial.println("[OLED_OTA] OTA Bắt đầu...");
             WiFiClient *tcp = http.getStreamPtr();
             
-            size_t written = 0;
-            size_t total = contentLength > 0 ? contentLength : 0;
-            uint8_t buff[4096] = { 0 };
+            size_t written = Update.writeStream(*tcp);
             
-            // Wait for data
-            unsigned long timeout = millis();
-            while (http.connected() && tcp->available() == 0) {
-                if (millis() - timeout > 10000) {
-                    Serial.println("[OLED_OTA] Lỗi: Timeout chờ dữ liệu ban đầu");
-                    break;
-                }
-                delay(10);
-            }
-            
-            while (http.connected() || tcp->available()) {
-                size_t size = tcp->available();
-                if (size) {
-                    int c = tcp->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
-                    if (c > 0) {
-                        if (written == 0) {
-                            Serial.printf("[OLED_OTA] First 16 bytes: ");
-                            for (int i = 0; i < (c > 16 ? 16 : c); i++) {
-                                Serial.printf("%02X ", buff[i]);
+            if (written == contentLength) {
+                Serial.println("\n[OLED_OTA] Đã tải đủ toàn bộ file.");
+                
+                // Cố gắng kết thúc OTA
+                if (Update.end(true)) {
+                    Serial.println("\n[OLED_OTA] OTA Hoàn tất. Đang khởi động lại...");
+                    delay(1000);
+                    ESP.restart();
+                } else {
+                    if (Update.getError() == UPDATE_ERROR_READ) {
+                        Serial.println("\n[OLED_OTA] Bỏ qua lỗi Flash Read Failed (Bug ESP32 Core).");
+                        const esp_partition_t* next = esp_ota_get_next_update_partition(NULL);
+                        if (next) {
+                            esp_err_t err = esp_ota_set_boot_partition(next);
+                            if (err == ESP_OK) {
+                                Serial.println("[OLED_OTA] Đã ép buộc đổi phân vùng Boot thành công. Khởi động lại...");
+                                delay(1000);
+                                ESP.restart();
+                            } else {
+                                Serial.printf("[OLED_OTA] Ép buộc đổi phân vùng thất bại: %d\n", err);
                             }
-                            Serial.println();
                         }
-                        Update.write(buff, c);
-                        written += c;
-                        if (total > 0) {
-                            Serial.printf("[OLED_OTA] Tiến trình: %d%%\r", (written * 100) / total);
-                        } else {
-                            Serial.printf("[OLED_OTA] Đã tải: %u bytes\r", written);
-                        }
-                        timeout = millis();
+                    } else {
+                        Serial.printf("\n[OLED_OTA] Lỗi OTA (%d): %s\n", Update.getError(), Update.errorString());
                     }
                 }
-                
-                if (total > 0 && written >= total) {
-                    Serial.println("\n[OLED_OTA] Đã tải đủ toàn bộ file.");
-                    break;
-                }
-                
-                if (millis() - timeout > 10000) {
-                    Serial.println("\n[OLED_OTA] Lỗi: Timeout đang tải dữ liệu");
-                    break;
-                }
-                delay(1);
-            }
-            
-            // Phải gọi Update.end(true) để ép thư viện xả (flush) các byte cuối cùng trong buffer 
-            // chưa đầy 4KB xuống Flash. Nếu không, image sẽ bị thiếu vài KB cuối cùng và sinh lỗi 3.
-            bool isSuccess = Update.end(true);
-
-            if (isSuccess) {
-                Serial.println("\n[OLED_OTA] OTA Hoàn tất. Đang khởi động lại...");
-                delay(1000);
-                ESP.restart();
             } else {
-                Serial.printf("\n[OLED_OTA] Lỗi OTA (%d): %s\n", Update.getError(), Update.errorString());
+                Serial.printf("\n[OLED_OTA] Lỗi: Tải bị gián đoạn. Đã tải: %u/%u\n", written, contentLength);
+                Update.end(); // Abort
             }
         } else {
             Serial.printf("[OLED_OTA] Không thể bắt đầu OTA (%d): %s\n", Update.getError(), Update.errorString());

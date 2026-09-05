@@ -104,7 +104,6 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
             Serial.println("[OLED_OTA] OTA Bắt đầu...");
             WiFiClient *tcp = http.getStreamPtr();
             
-            size_t written = 0;
             size_t written = Update.writeStream(*tcp);
             
             if (written == contentLength) {
