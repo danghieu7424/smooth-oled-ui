@@ -9,9 +9,10 @@
  ****/
 
 #include <Arduino.h>
-#include <esp_spi_flash.h>
 #include <esp_flash.h>
+#include <esp_flash_spi_init.h>
 #include <esp_partition.h>
+#include <esp32s3/rom/spi_flash.h>
 #include <esp_ota_ops.h>
 #include <esp_efuse.h>
 #include <esp_efuse_table.h>
@@ -99,7 +100,7 @@ void setup() {
     
     // Đọc Status Register 1 (SR1)
     uint32_t sr1 = 0;
-    esp_err_t err = esp_flash_read_reg(esp_flash_default_chip, SPI_FLASH_REG_STATUS, &sr1);
+    esp_err_t err = (esp_rom_spiflash_read_status(&g_rom_flashchip, &sr1) == ESP_ROM_SPIFLASH_RESULT_OK) ? ESP_OK : ESP_FAIL;
     if (err == ESP_OK) {
         Serial.printf("  Status Register 1: 0x%02X\n", sr1 & 0xFF);
         Serial.printf("    SRP0 (Status Register Protect 0): %d\n", (sr1 >> 7) & 1);
@@ -165,20 +166,20 @@ void setup() {
      ****/
     Serial.println("\n=== 5. FLASH WRITE/READ TESTS ===");
     
-    // Test 1: Cuối vùng app0 (gần 0x340000) - offset 0x33F000
-    bool t1 = testFlashAddress(0x0033F000, "Cuoi app0 (0x33F000)");
+    // Test 1: BỎ QUA
+    bool t1 = false;
     
-    // Test 2: Đầu vùng app1 (0x340000) - đây là vùng bị lỗi
-    bool t2 = testFlashAddress(0x00340000, "Dau app1 (0x340000)");
+    // Test 2: Đầu vùng app1 của 4MB scheme (0x150000)
+    bool t2 = testFlashAddress(0x00150000, "Dau app1 (0x150000)");
     
-    // Test 3: Giữa vùng app1 (0x400000)
-    bool t3 = testFlashAddress(0x00400000, "Giua app1 (0x400000)");
+    // Test 3: Giữa vùng app1 của 4MB scheme (0x200000)
+    bool t3 = testFlashAddress(0x00200000, "Giua app1 (0x200000)");
     
-    // Test 4: Vùng spiffs (0x670000)
-    bool t4 = testFlashAddress(0x00670000, "Dau spiffs (0x670000)");
+    // Test 4: Vùng spiffs của 4MB scheme (0x290000)
+    bool t4 = testFlashAddress(0x00290000, "Dau spiffs (0x290000)");
     
-    // Test 5: Gần cuối Flash (0x700000)
-    bool t5 = testFlashAddress(0x00700000, "Cuoi flash (0x700000)");
+    // Test 5: Cuối 4MB Flash (0x3F0000)
+    bool t5 = testFlashAddress(0x003F0000, "Cuoi flash 4MB (0x3F0000)");
 
     /****
      * PHẦN 6: Tổng kết

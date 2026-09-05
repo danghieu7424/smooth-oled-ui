@@ -178,14 +178,4 @@ D:\all_projects\rust\rust\display_oled\firmware\flash_diag\build\esp32.esp32.XIA
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_hw_support/include/soc/esp32/spiram.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/io_pin_remap.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/Arduino.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/spi_flash/include/esp_spi_flash.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/app_update/include/esp_ota_ops.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/bootloader_support/include/esp_image_format.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/bootloader_support/include/esp_flash_partitions.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/bootloader_support/include/esp_app_format.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/efuse/include/esp_efuse.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/efuse/esp32s3/include/esp_efuse.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_rom/include/esp32s3/rom/secure_boot.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_rom/include/esp32s3/rom/rsa_pss.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/efuse/esp32s3/include/esp_efuse_table.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/soc/esp32s3/include/soc/efuse_reg.h
+ C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_rom/include/esp32s3/rom/spi_flash.h
