@@ -4854,6 +4854,17 @@ html.dark .text-preview-container .markdown-body table tr:nth-child(2n) {
   height: 0;
   border-top: 2px dashed #546e7a;
 }
+.firebase-project-detail .fw-row {
+  transition: all 0.2s ease;
+  border-radius: 0;
+  padding: 1rem 0;
+  border: 1px solid transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.firebase-project-detail .fw-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
 
 @media (max-width: 768px) {
   .firebase-project-detail .detail-container {
@@ -5322,5 +5333,3 @@ body {
 }
 
 /*# sourceMappingURL=main.css.map */
-
-.fw-row { transition: all 0.2s ease; padding: 1rem 0; border: 1px solid transparent; border-bottom: 1px solid rgba(255,255,255,0.1); } .fw-row:hover { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 4px; }
