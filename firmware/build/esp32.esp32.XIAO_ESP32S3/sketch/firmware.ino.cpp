@@ -20,8 +20,8 @@
 const char* PROJECT_ID = "007Rlq30Q2vU-esp32-tool";
 const char* PROJECT_TOKEN = "57c510c895b69f432be01fd9a8bc9d51";
 const char* CURRENT_VERSION = "1.0.1";
-const char* MQTT_BROKER = "192.168.7.7";
-const uint16_t MQTT_PORT = 1883;
+const char* API_HOST = "192.168.7.7";
+const uint16_t API_PORT = 7424;
 
 OLED_OTA ota(PROJECT_ID, PROJECT_TOKEN, CURRENT_VERSION);
 
@@ -37,19 +37,6 @@ ActiveSlider active_slider = SLIDER_NONE;
 
 // Clock State variables moved down
 
-#line 39 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void save_wifi_credentials(String ssid, String pwd);
-#line 45 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-bool load_wifi_credentials(String &ssid, String &pwd);
-#line 164 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void on_restart();
-#line 168 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void on_power_off();
-#line 330 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void setup();
-#line 414 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void loop();
-#line 39 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void save_wifi_credentials(String ssid, String pwd) {
     extEEPROM.writeString(0x0010, ssid);
     extEEPROM.writeString(0x0040, pwd);
@@ -420,8 +407,8 @@ void setup() {
   
   open_home_clock();
 
-  // 5. Khởi tạo OTA Service (Nó sẽ tự kết nối MQTT khi WiFi sẵn sàng ở loop)
-  ota.setMqttBroker(MQTT_BROKER, MQTT_PORT);
+  // 5. Khởi tạo OTA Service (Cơ chế HTTP Polling tự động check mỗi 60s)
+  ota.setApiEndpoint(API_HOST, API_PORT);
   ota.begin();
 }
 

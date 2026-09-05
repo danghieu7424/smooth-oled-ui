@@ -356,8 +356,9 @@ async fn delete_firmware(
 
 pub async fn download_latest_firmware(
     Path(suid_pid): Path<String>,
+    headers: axum::http::HeaderMap,
     State(state): State<Arc<AppState>>,
-) -> Result<impl axum::response::IntoResponse, axum::http::StatusCode> {
+) -> Result<axum::response::Response, axum::http::StatusCode> {
     // suid_pid format: "007Rlq30Q2vU-esp32-tool"
     let parts: Vec<&str> = suid_pid.splitn(2, '-').collect();
     if parts.len() != 2 {
@@ -365,25 +366,38 @@ pub async fn download_latest_firmware(
     }
     let project_id = parts[1].to_string();
 
-    let file_path: Option<String> = state.storage.execute_query({
+    let latest_fw: Option<(String, String)> = state.storage.execute_query({
         move |conn| {
             use rusqlite::OptionalExtension;
             conn.query_row(
-                "SELECT file_path FROM firmwares WHERE project_id = ?1 ORDER BY id DESC LIMIT 1",
+                "SELECT file_path, version FROM firmwares WHERE project_id = ?1 ORDER BY id DESC LIMIT 1",
                 rusqlite::params![project_id],
-                |row| row.get(0)
+                |row| Ok((row.get(0)?, row.get(1)?))
             ).optional()
         }
     }).await.unwrap_or(None);
 
-    if let Some(path) = file_path {
+    if let Some((path, latest_version)) = latest_fw {
+        // Check if ESP32 sent its current version
+        let device_version = headers.get("x-ESP32-version")
+            .or_else(|| headers.get("x-ESP8266-version"))
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("");
+            
+        if device_version == latest_version {
+            return Ok(axum::response::Response::builder()
+                .status(axum::http::StatusCode::NOT_MODIFIED)
+                .body(axum::body::Body::empty())
+                .unwrap());
+        }
         if let Ok(bytes) = std::fs::read(&path) {
             let filename = std::path::Path::new(&path).file_name().and_then(|n| n.to_str()).unwrap_or("firmware.bin");
-            let headers = [
-                (axum::http::header::CONTENT_TYPE, "application/octet-stream".to_string()),
-                (axum::http::header::CONTENT_DISPOSITION, format!("attachment; filename=\"{}\"", filename)),
-            ];
-            return Ok((headers, bytes));
+            let resp = axum::response::Response::builder()
+                .header(axum::http::header::CONTENT_TYPE, "application/octet-stream")
+                .header(axum::http::header::CONTENT_DISPOSITION, format!("attachment; filename=\"{}\"", filename))
+                .body(axum::body::Body::from(bytes))
+                .unwrap();
+            return Ok(resp);
         }
     }
     

@@ -5,7 +5,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
-#include <PubSubClient.h>
+#include <WiFiClient.h>
 #include <HTTPClient.h>
 #include <HTTPUpdate.h>
 #include <ArduinoJson.h>
@@ -15,13 +15,13 @@ public:
     // Khởi tạo thư viện với ID dự án, Token bảo mật và Phiên bản hiện tại
     OLED_OTA(const char* projectId, const char* projectToken, const char* currentVersion);
     
-    // Cấu hình MQTT Broker
-    void setMqttBroker(const char* broker, uint16_t port, const char* user = "", const char* pass = "");
+    // Cấu hình URL HTTP Server (Thay cho MQTT)
+    void setApiEndpoint(const char* host, uint16_t port);
     
-    // Khởi động dịch vụ (Connect MQTT, đăng ký topic)
+    // Khởi động dịch vụ
     void begin();
     
-    // Gọi hàm này trong loop() của Arduino để duy trì kết nối MQTT
+    // Gọi hàm này trong loop() của Arduino để kiểm tra cập nhật định kỳ
     void loop();
 
 private:
@@ -29,21 +29,16 @@ private:
     String _projectToken;
     String _currentVersion;
     
-    String _mqttBroker;
-    uint16_t _mqttPort;
-    String _mqttUser;
-    String _mqttPass;
+    String _apiHost;
+    uint16_t _apiPort;
     
     String _deviceId;
-    String _otaTopic;
     
     WiFiClient _wifiClient;
-    PubSubClient* _mqttClient;
     
-    unsigned long _lastReconnectAttempt;
+    unsigned long _lastCheckAttempt;
     
-    bool _connectMqtt();
-    void _mqttCallback(char* topic, byte* payload, unsigned int length);
+    void _checkUpdate();
     void _performUpdate(String url, String newVersion);
 };
 
