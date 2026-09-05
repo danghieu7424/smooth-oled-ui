@@ -44,6 +44,12 @@ async fn fetch_project_detail(id: String) -> Result<ProjectDetail, String> {
         .map_err(|e| e.to_string())
 }
 
+#[derive(Clone, PartialEq)]
+struct ToastItem {
+    id: usize,
+    msg: String,
+}
+
 #[component]
 pub fn ProjectDetailPage() -> impl IntoView {
     let params = use_params_map();
@@ -59,21 +65,25 @@ pub fn ProjectDetailPage() -> impl IntoView {
     let (upload_status, set_upload_status) = create_signal(String::new());
     let (is_uploading, set_is_uploading) = create_signal(false);
     
-    let (toast_msg, set_toast_msg) = create_signal(String::new());
-    let (show_toast, set_show_toast) = create_signal(false);
-    let toast_timer = store_value(None::<gloo_timers::callback::Timeout>);
+    let (toasts, set_toasts) = create_signal::<Vec<ToastItem>>(Vec::new());
+    let next_toast_id = store_value(0usize);
     
     let trigger_toast = move |msg: &str| {
-        set_toast_msg.set(msg.to_string());
-        set_show_toast.set(true);
-        toast_timer.update_value(|t| {
-            if let Some(timeout) = t.take() {
-                timeout.cancel();
-            }
-            *t = Some(gloo_timers::callback::Timeout::new(2500, move || {
-                set_show_toast.set(false);
-            }));
+        let current_id = next_toast_id.get_value();
+        next_toast_id.set_value(current_id + 1);
+        
+        set_toasts.update(move |t| {
+            t.push(ToastItem {
+                id: current_id,
+                msg: msg.to_string(),
+            });
         });
+        
+        gloo_timers::callback::Timeout::new(2500, move || {
+            set_toasts.update(move |t| {
+                t.retain(|item| item.id != current_id);
+            });
+        }).forget();
     };
     
     let project_resource = create_resource(
@@ -87,9 +97,19 @@ pub fn ProjectDetailPage() -> impl IntoView {
     view! {
         <div class="firebase-layout firebase-project-detail">
 
-            <div class={move || if show_toast.get() { "copy-toast show" } else { "copy-toast" }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"></path></svg>
-                {move || toast_msg.get()}
+            <div class="toast-container">
+                <For
+                    each=move || toasts.get()
+                    key=|t| t.id
+                    children=move |t| {
+                        view! {
+                            <div class="copy-toast show">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"></path></svg>
+                                {t.msg}
+                            </div>
+                        }
+                    }
+                />
             </div>
 
             <div class="detail-container">

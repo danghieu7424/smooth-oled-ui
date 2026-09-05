@@ -1,7 +1,15 @@
-.copy-toast {
+.toast-container {
     position: fixed;
-    bottom: -100px;
+    bottom: 20px;
     left: 20px;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 10px;
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.copy-toast {
     background: rgba(40, 44, 52, 0.95);
     color: #fff;
     padding: 12px 24px;
@@ -10,20 +18,23 @@
     font-weight: 500;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    z-index: 9999;
     display: flex;
     align-items: center;
     gap: 12px;
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
-    opacity: 0;
-    pointer-events: none;
-    
-    &.show {
-        transform: translateY(-130px);
-        opacity: 1;
-    }
+    animation: slideUpToast 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 
     svg {
         color: #4caf50;
+    }
+}
+
+@keyframes slideUpToast {
+    from {
+        transform: translateY(100px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
     }
 }
