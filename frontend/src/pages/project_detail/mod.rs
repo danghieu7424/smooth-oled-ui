@@ -3,6 +3,13 @@ use leptos_router::*;
 use serde::{Deserialize, Serialize};
 use crate::pages::dashboard::fetch_me;
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum UpdateType {
+    Major,
+    Minor,
+    Patch,
+}
+
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
 pub struct Firmware {
     pub id: i64,
@@ -41,9 +48,9 @@ pub fn ProjectDetailPage() -> impl IntoView {
     let id_str = move || params.with(|p| p.get("id").cloned().unwrap_or_default());
     
     let (active_tab, set_active_tab) = create_signal("dashboard".to_string());
+    let (update_type, set_update_type) = create_signal(UpdateType::Patch);
     
     let file_input: NodeRef<html::Input> = create_node_ref();
-    let (fw_version, set_fw_version) = create_signal(String::new());
     let (upload_status, set_upload_status) = create_signal(String::new());
     let (is_uploading, set_is_uploading) = create_signal(false);
     
@@ -158,6 +165,36 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                         }.into_view()
                                     } else {
                                         let p_id_for_upload = detail_inner.project_id.clone();
+                                        
+                                        let base_name = detail_inner.name.clone();
+                                        let firmwares_for_calc = detail_inner.firmwares.clone();
+                                        
+                                        let calculated_version = move || {
+                                            let mut major = 0;
+                                            let mut minor = 0;
+                                            let mut patch = 0;
+                                            
+                                            if let Some(latest) = firmwares_for_calc.first() {
+                                                if let Some(idx) = latest.version.rfind('V').or_else(|| latest.version.rfind('v')) {
+                                                    let num_str = &latest.version[idx + 1..];
+                                                    let parts: Vec<&str> = num_str.split('.').collect();
+                                                    if parts.len() == 3 {
+                                                        major = parts[0].parse().unwrap_or(0);
+                                                        minor = parts[1].parse().unwrap_or(0);
+                                                        patch = parts[2].parse().unwrap_or(0);
+                                                    }
+                                                }
+                                            }
+                                            
+                                            match update_type.get() {
+                                                UpdateType::Major => { major += 1; minor = 0; patch = 0; },
+                                                UpdateType::Minor => { minor += 1; patch = 0; },
+                                                UpdateType::Patch => { patch += 1; },
+                                            }
+                                            
+                                            format!("{}_V{}.{}.{}", base_name, major, minor, patch)
+                                        };
+
                                         view! {
                                             <div class="analytics-content">
                                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -169,13 +206,28 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                                     <div style="display: flex; flex-direction: column; gap: 1rem;">
                                                         <div style="display: flex; gap: 1rem;">
                                                             <div style="flex: 1;">
-                                                                <label style="display: block; font-size: 0.85rem; color: #b0bec5; margin-bottom: 0.5rem;">"Version (VD: 1.0.0)"</label>
-                                                                <input type="text" 
-                                                                    style="width: 100%; background: #1e1e1e; border: 1px solid #424242; border-radius: 6px; padding: 0.6rem 1rem; color: #fff; font-size: 0.95rem; outline: none;"
-                                                                    placeholder="e.g. 1.0.0"
-                                                                    prop:value=fw_version
-                                                                    on:input=move |ev| set_fw_version.set(event_target_value(&ev))
-                                                                />
+                                                                <label style="display: block; font-size: 0.85rem; color: #b0bec5; margin-bottom: 0.5rem;">"Tên phiên bản:"</label>
+                                                                <div style="width: 100%; background: #1e1e1e; border: 1px solid #424242; border-radius: 6px; padding: 0.6rem 1rem; color: #90a4ae; font-size: 0.95rem; user-select: none;">
+                                                                    {{
+                                                                        let calc_for_view = calculated_version.clone();
+                                                                        move || calc_for_view()
+                                                                    }}
+                                                                </div>
+                                                                
+                                                                <div style="display: flex; gap: 1rem; margin-top: 0.8rem; font-size: 0.85rem; color: #fff;">
+                                                                    <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                                                                        <input type="radio" name="update_type" prop:checked=move || update_type.get() == UpdateType::Major on:click=move |_| set_update_type.set(UpdateType::Major) />
+                                                                        "Bản chính thức"
+                                                                    </label>
+                                                                    <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                                                                        <input type="radio" name="update_type" prop:checked=move || update_type.get() == UpdateType::Minor on:click=move |_| set_update_type.set(UpdateType::Minor) />
+                                                                        "Bản bổ sung"
+                                                                    </label>
+                                                                    <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                                                                        <input type="radio" name="update_type" prop:checked=move || update_type.get() == UpdateType::Patch on:click=move |_| set_update_type.set(UpdateType::Patch) />
+                                                                        "Bản vá lỗi"
+                                                                    </label>
+                                                                </div>
                                                             </div>
                                                             <div style="flex: 2;">
                                                                 <label style="display: block; font-size: 0.85rem; color: #b0bec5; margin-bottom: 0.5rem;">"File Firmware (.bin)"</label>
@@ -192,7 +244,7 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                                                 disabled=is_uploading
                                                                 on:click=move |_| {
                                                                     let id = p_id_for_upload.clone();
-                                                                    let version = fw_version.get();
+                                                                    let version = calculated_version();
                                                                     let input = file_input.get();
                                                                     
                                                                     if version.is_empty() {
@@ -226,7 +278,6 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                                                             match res {
                                                                                 Ok(r) if r.ok() => {
                                                                                     set_upload_status.set("Tải lên thành công!".to_string());
-                                                                                    set_fw_version.set("".to_string());
                                                                                     if let Some(input) = file_input.get() {
                                                                                         input.set_value("");
                                                                                     }
