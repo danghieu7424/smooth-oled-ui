@@ -264,8 +264,8 @@ async fn upload_firmware(
         return Err(axum::http::StatusCode::BAD_REQUEST);
     }
 
-    // Save firmware file matching the draft_plan.md structure: storages/projects/X-project_id_Y/firmware_vZ.bin
-    let file_path = format!("storages/projects/{}-{}/firmware_{}.bin", user_suid, project_id, version);
+    // Save firmware file matching the draft_plan.md structure: storages/user_id_01/project_id_01/version_firmware_v1.0.0.bin
+    let file_path = format!("storages/{}/{}/firmware_{}.bin", user_suid, project_id, version);
     if let Some(parent) = std::path::Path::new(&file_path).parent() {
         std::fs::create_dir_all(parent).ok();
     }
@@ -335,7 +335,7 @@ async fn delete_firmware(
     }
     
     // Delete file
-    let file_path = format!("storages/projects/{}-{}/firmware_{}.bin", user_suid, project_id, version);
+    let file_path = format!("storages/{}/{}/firmware_{}.bin", user_suid, project_id, version);
     let _ = std::fs::remove_file(&file_path);
 
     let res = state.storage.execute_query(move |conn| {
