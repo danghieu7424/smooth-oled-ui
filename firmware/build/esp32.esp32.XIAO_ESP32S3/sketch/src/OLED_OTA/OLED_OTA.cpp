@@ -61,13 +61,6 @@ void OLED_OTA::_checkUpdate() {
     _performUpdate(url, "unknown");
 }
 
-/****
- * OTA bằng esp_partition_write() trực tiếp - bypass hoàn toàn esp_ota_write()
- * Lý do: esp_ota_write() trên ESP32-S3 + Arduino Core 2.0.11 bị bug
- *        trả về ESP_OK nhưng KHÔNG ghi gì xuống Flash (toàn 0xFF)
- * 
- * Quy trình mới:
- *   1. esp_partition_erase_range() - Xóa sạch partition đích
 void OLED_OTA::_performUpdate(String url, String newVersion) {
     if (url.indexOf("?") == -1) {
         url += "?token=" + _projectToken;
