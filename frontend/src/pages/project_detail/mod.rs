@@ -64,15 +64,16 @@ pub fn ProjectDetailPage() -> impl IntoView {
     let toast_timer = store_value(None::<gloo_timers::callback::Timeout>);
     
     let trigger_toast = move |msg: &str| {
-        set_toast_msg(msg.to_string());
-        set_show_toast(true);
-        if let Some(t) = toast_timer.get_value() {
-            t.cancel();
-        }
-        let timer = gloo_timers::callback::Timeout::new(2500, move || {
-            set_show_toast(false);
+        set_toast_msg.set(msg.to_string());
+        set_show_toast.set(true);
+        toast_timer.update_value(|t| {
+            if let Some(timeout) = t.take() {
+                timeout.cancel();
+            }
+            *t = Some(gloo_timers::callback::Timeout::new(2500, move || {
+                set_show_toast.set(false);
+            }));
         });
-        toast_timer.set_value(Some(timer));
     };
     
     let project_resource = create_resource(
@@ -86,9 +87,9 @@ pub fn ProjectDetailPage() -> impl IntoView {
     view! {
         <div class="firebase-layout firebase-project-detail">
 
-            <div class={move || if show_toast() { "copy-toast show" } else { "copy-toast" }}>
+            <div class={move || if show_toast.get() { "copy-toast show" } else { "copy-toast" }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"></path></svg>
-                {move || toast_msg()}
+                {move || toast_msg.get()}
             </div>
 
             <div class="detail-container">
