@@ -69,6 +69,7 @@ pub fn App() -> impl IntoView {
                             <Route path="" view=DashboardPage />
                             <Route path="projects/new" view=ProjectNewPage />
                             <Route path="projects/:id" view=ProjectDetailPage />
+                            <Route path="projects/:id/:tab" view=ProjectDetailPage />
                         </Route>
                         <Route path="/login" view=LoginPage />
                         <Route

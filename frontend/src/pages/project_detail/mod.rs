@@ -48,7 +48,8 @@ pub fn ProjectDetailPage() -> impl IntoView {
     let params = use_params_map();
     let id_str = move || params.with(|p| p.get("id").cloned().unwrap_or_default());
     
-    let (active_tab, set_active_tab) = create_signal("dashboard".to_string());
+    let active_tab = move || params.with(|p| p.get("tab").cloned().unwrap_or_else(|| "dashboard".to_string()));
+    let navigate = use_navigate();
     let (update_type, set_update_type) = create_signal(UpdateType::Patch);
     let (show_upload_modal, set_show_upload_modal) = create_signal(false);
     
@@ -73,7 +74,15 @@ pub fn ProjectDetailPage() -> impl IntoView {
                 // Sidebar
                 <aside class="fb-sidebar">
                     <div class="sidebar-group">
-                        <div class=move || if active_tab.get() == "dashboard" { "sidebar-item active" } else { "sidebar-item" } on:click=move |_| set_active_tab.set("dashboard".to_string())>
+                        <div class={
+                            let nav = navigate.clone();
+                            let id = id_str.clone();
+                            move || if active_tab() == "dashboard" { "sidebar-item active" } else { "sidebar-item" } 
+                        } on:click={
+                            let nav = navigate.clone();
+                            let id = id_str.clone();
+                            move |_| nav(&format!("/projects/{}/dashboard", id()), Default::default())
+                        }>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                             <span>"Dashboard"</span>
                         </div>
@@ -81,7 +90,15 @@ pub fn ProjectDetailPage() -> impl IntoView {
                     
                     <div class="sidebar-title">"QUẢN LÝ"</div>
                     <div class="sidebar-group">
-                        <div class=move || if active_tab.get() == "versions" { "sidebar-item active" } else { "sidebar-item" } on:click=move |_| set_active_tab.set("versions".to_string())>
+                        <div class={
+                            let nav = navigate.clone();
+                            let id = id_str.clone();
+                            move || if active_tab() == "versions" { "sidebar-item active" } else { "sidebar-item" } 
+                        } on:click={
+                            let nav = navigate.clone();
+                            let id = id_str.clone();
+                            move |_| nav(&format!("/projects/{}/versions", id()), Default::default())
+                        }>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"></path></svg>
                             <span>"Các phiên bản"</span>
                         </div>
@@ -115,7 +132,7 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                         </div>
 
                                         {move || {
-                                            let active = active_tab.get();
+                                            let active = active_tab();
                                             let detail_inner = detail_clone.clone();
                                             if active == "dashboard" {
                                         view! {
