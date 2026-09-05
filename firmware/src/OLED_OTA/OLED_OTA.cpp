@@ -39,7 +39,12 @@ void OLED_OTA::loop() {
 }
 
 void OLED_OTA::_checkUpdate() {
-    String url = "http://" + _apiHost + ":" + String(_apiPort) + "/api/firmware/" + _projectId;
+    String protocol = (_apiPort == 443) ? "https://" : "http://";
+    String url = protocol + _apiHost;
+    if (_apiPort != 80 && _apiPort != 443) {
+        url += ":" + String(_apiPort);
+    }
+    url += "/api/firmware/" + _projectId;
     
     Serial.println("[OLED_OTA] Đang kiểm tra cập nhật tại: " + url);
     _performUpdate(url, "unknown");
@@ -55,7 +60,16 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
 
     Serial.println("[OLED_OTA] Đang tiến hành cài đặt firmware mới...");
     
-    WiFiClient client;
+    bool isHttps = url.startsWith("https");
+    WiFiClient* client = nullptr;
+    
+    if (isHttps) {
+        WiFiClientSecure* secureClient = new WiFiClientSecure();
+        secureClient->setInsecure(); // Bỏ qua xác thực chứng chỉ SSL
+        client = secureClient;
+    } else {
+        client = new WiFiClient();
+    }
     
     httpUpdate.onStart([]() { Serial.println("[OLED_OTA] OTA Bắt đầu..."); });
     httpUpdate.onEnd([]() { Serial.println("\n[OLED_OTA] OTA Hoàn tất. Đang khởi động lại..."); });
@@ -68,7 +82,7 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
     
     httpUpdate.rebootOnUpdate(true); // Automatically reboot after successful update
     
-    t_httpUpdate_return ret = httpUpdate.update(client, url, _currentVersion);
+    t_httpUpdate_return ret = httpUpdate.update(*client, url, _currentVersion);
     
     switch (ret) {
         case HTTP_UPDATE_FAILED:
@@ -81,4 +95,6 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
             Serial.println("[OLED_OTA] Cập nhật thành công!");
             break;
     }
+    
+    delete client;
 }
