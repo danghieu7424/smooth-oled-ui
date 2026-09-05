@@ -46,6 +46,8 @@ features = [
     # ✅ ĐƯA VÀO ĐÂY:
     "Window",
     "Storage",
+    "Navigator",
+    "Clipboard",
 
     # Các thẻ HTML
     "HtmlVideoElement",

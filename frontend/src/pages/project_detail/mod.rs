@@ -115,6 +115,14 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                     let d_name = detail.name.clone();
                                     let d_project_id = detail.project_id.clone();
                                     let detail_clone = detail.clone();
+                                    let full_id_copy = format!("{}-{}", detail.user_suid, detail.project_id);
+                                    let copy_id = move |_| {
+                                        if let Some(window) = web_sys::window() {
+                                            if let Some(clipboard) = window.navigator().clipboard() {
+                                                let _ = clipboard.write_text(&full_id_copy);
+                                            }
+                                        }
+                                    };
                                     
                                     view! {
                                         <div class="analytics-header">
@@ -123,7 +131,12 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                                     <div>
                                                         <h1 style="color: #fff; font-size: 1.5rem; margin-bottom: 0.5rem;">{d_name} <span class="badge">"Pro"</span></h1>
                                                         <div class="project-info" style="color: #90a4ae; font-size: 0.9rem; font-family: monospace;">
-                                                            <div style="margin-bottom: 0.25rem;">"ID: " <span style="color: #82b1ff;">{d_project_id}</span></div>
+                                                            <div style="margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                                                                <div>"ID: " <span style="color: #82b1ff;">{d_project_id}</span></div>
+                                                                <button title="Copy Full ID" on:click=copy_id style="background: none; border: none; color: #90a4ae; cursor: pointer; padding: 0.2rem; display: flex; align-items: center; border-radius: 4px;" class="fw-delete-btn">
+                                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                                                </button>
+                                                            </div>
                                                             <div>"Link Update: " <span style="color: #a5d6a7;">{api_link}</span></div>
                                                         </div>
                                                     </div>
