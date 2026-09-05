@@ -122,7 +122,11 @@ do mô hình khá nhỏ tôi phân vân có nên dùng các cơ sở dữ liệu
   - light-dark
   - các atom đã tạo trong shared
 
+# MQTT Broker (Khuyến nghị số 1 cho IoT)
 
+- Cách hoạt động: ESP giữ 1 kết nối TCP nhẹ qua MQTT Broker và subscribe vào topic devices/{device_id}/ota. Khi upload firmware mới lên Web Server (Axum), server publish payload JSON chứa URL tải file và mã SHA-256 vào topic này.
+
+- Ưu điểm: Độ trễ tính bằng mili-giây, cực nhẹ (heartbeat Keep-Alive chỉ 2 bytes), hỗ trợ hàng trăm nghìn thiết bị đồng thời.
 
 
 

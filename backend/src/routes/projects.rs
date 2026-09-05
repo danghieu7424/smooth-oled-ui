@@ -30,6 +30,7 @@ pub fn router() -> Router<Arc<AppState>> {
         .route("/:id", get(get_project).delete(delete_project))
         .route("/:id/star", axum::routing::patch(toggle_star))
         .route("/:id/firmware", axum::routing::post(upload_firmware))
+        .route("/:id/firmware/:version", axum::routing::delete(delete_firmware))
         .route("/", get(list_projects).post(create_project))
 }
 
@@ -245,6 +246,7 @@ async fn upload_firmware(
 
     let mut version = String::new();
     let mut file_data = Vec::new();
+    let mut notes = String::new();
 
     while let Some(field) = multipart.next_field().await.unwrap_or(None) {
         if let Some(name) = field.name() {
@@ -252,6 +254,8 @@ async fn upload_firmware(
                 version = field.text().await.unwrap_or_default();
             } else if name == "file" {
                 file_data = field.bytes().await.unwrap_or_default().to_vec();
+            } else if name == "notes" {
+                notes = field.text().await.unwrap_or_default();
             }
         }
     }
@@ -271,10 +275,11 @@ async fn upload_firmware(
         let p_id = project_id.clone();
         let ver = version.clone();
         let path = file_path.clone();
+        let n = notes.clone();
         move |conn| {
             conn.execute(
-                "INSERT INTO firmwares (project_id, version, file_path) VALUES (?1, ?2, ?3)",
-                rusqlite::params![p_id, ver, path],
+                "INSERT INTO firmwares (project_id, version, file_path, notes) VALUES (?1, ?2, ?3, ?4)",
+                rusqlite::params![p_id, ver, path, n],
             )
         }
     }).await;
@@ -313,6 +318,35 @@ async fn toggle_star(
 
     match res {
         Ok(state) => Ok(Json(serde_json::json!({"status": "success", "is_starred": state}))),
+        Err(_) => Err(axum::http::StatusCode::INTERNAL_SERVER_ERROR),
+    }
+}
+
+async fn delete_firmware(
+    jar: axum_extra::extract::cookie::CookieJar,
+    Path((project_id, version)): Path<(String, String)>,
+    State(state): State<Arc<AppState>>,
+) -> Result<Json<serde_json::Value>, axum::http::StatusCode> {
+    let mut user_suid = String::new();
+    if let Some(cookie) = jar.get("auth_token") {
+        if let Ok(token_data) = crate::auth::token::verify_user_token(cookie.value()) {
+            user_suid = token_data.claims.suid;
+        }
+    }
+    
+    // Delete file
+    let file_path = format!("storages/projects/{}-{}/firmware_{}.bin", user_suid, project_id, version);
+    let _ = std::fs::remove_file(&file_path);
+
+    let res = state.storage.execute_query(move |conn| {
+        conn.execute(
+            "DELETE FROM firmwares WHERE project_id = ?1 AND version = ?2",
+            rusqlite::params![project_id, version]
+        )
+    }).await;
+    
+    match res {
+        Ok(_) => Ok(Json(serde_json::json!({"status": "success"}))),
         Err(_) => Err(axum::http::StatusCode::INTERNAL_SERVER_ERROR),
     }
 }

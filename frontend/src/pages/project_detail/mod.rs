@@ -53,6 +53,7 @@ pub fn ProjectDetailPage() -> impl IntoView {
     let (show_upload_modal, set_show_upload_modal) = create_signal(false);
     
     let (fw_file, set_fw_file) = create_signal(None::<web_sys::File>);
+    let (fw_notes, set_fw_notes) = create_signal(String::new());
     let (upload_status, set_upload_status) = create_signal(String::new());
     let (is_uploading, set_is_uploading) = create_signal(false);
     
@@ -243,6 +244,17 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                                                 </div>
                                                                 
                                                                 <div style="margin-bottom: 1.5rem;">
+                                                                    <label style="display: block; font-size: 0.85rem; color: #b0bec5; margin-bottom: 0.5rem;">"Ghi chú (Có thể bỏ qua):"</label>
+                                                                    <textarea 
+                                                                        style="width: 100%; background: #1e1e1e; border: 1px solid #424242; border-radius: 6px; padding: 0.6rem 1rem; color: #fff; font-size: 0.95rem; outline: none; font-family: inherit; resize: vertical;"
+                                                                        rows="2"
+                                                                        placeholder="VD: Sửa lỗi kết nối, cập nhật giao diện..."
+                                                                        prop:value=move || fw_notes.get()
+                                                                        on:input=move |ev| set_fw_notes.set(event_target_value(&ev))
+                                                                    ></textarea>
+                                                                </div>
+                                                                
+                                                                <div style="margin-bottom: 1.5rem;">
                                                                     <FileUploadDropzone 
                                                                         on_files_select={move |files: Vec<web_sys::File>| {
                                                                             if let Some(f) = files.into_iter().next() {
@@ -262,6 +274,7 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                                                             set_show_upload_modal.set(false);
                                                                             set_upload_status.set("".to_string());
                                                                             set_fw_file.set(None);
+                                                                            set_fw_notes.set("".to_string());
                                                                         }
                                                                         style="background: transparent; border: 1px solid #90a4ae; color: #90a4ae; padding: 0.6rem 1.5rem; border-radius: 6px; cursor: pointer;"
                                                                     >
@@ -276,6 +289,7 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                                                                 let id = id_for_upload.clone();
                                                                                 let version = calc_for_upload();
                                                                                 let file = fw_file.get();
+                                                                                let notes = fw_notes.get();
                                                                                 
                                                                                 if let Some(file) = file {
                                                                                     set_is_uploading.set(true);
@@ -284,6 +298,7 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                                                                     let form_data = web_sys::FormData::new().unwrap();
                                                                                     form_data.append_with_str("version", &version).unwrap();
                                                                                     form_data.append_with_blob("file", &file).unwrap();
+                                                                                    form_data.append_with_str("notes", &notes).unwrap();
                                                                                     
                                                                                     spawn_local(async move {
                                                                                         let res = gloo_net::http::Request::post(&format!("http://localhost:7424/api/projects/{}/firmware", id))
@@ -296,6 +311,7 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                                                                             Ok(r) if r.ok() => {
                                                                                                 set_upload_status.set("Tải lên thành công!".to_string());
                                                                                                 set_fw_file.set(None);
+                                                                                                set_fw_notes.set("".to_string());
                                                                                                 set_show_upload_modal.set(false);
                                                                                                 project_resource.refetch();
                                                                                             },
@@ -326,10 +342,38 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                                             view! { <div style="color: #90a4ae;">"Chưa có phiên bản nào được phát hành."</div> }.into_view()
                                                         } else {
                                                             let fw_list = detail_inner.firmwares.clone().into_iter().map(|fw| {
+                                                                let fw_version_for_delete = fw.version.clone();
+                                                                let p_id_for_delete = p_id_for_upload.clone();
                                                                 view! {
                                                                     <div style="padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
                                                                         <div>
-                                                                            <div style="font-weight: 500; font-size: 1.1rem; color: #82b1ff;">{fw.version}</div>
+                                                                            <div style="font-weight: 500; font-size: 1.1rem; color: #82b1ff; display: flex; align-items: center; gap: 0.8rem;">
+                                                                                {fw.version}
+                                                                                <button
+                                                                                    title="Xóa phiên bản này"
+                                                                                    style="background: transparent; border: none; color: #ef5350; cursor: pointer; display: flex; align-items: center; padding: 0.2rem; border-radius: 4px; transition: background 0.2s;"
+                                                                                    on:click=move |_| {
+                                                                                        if window().confirm_with_message("Bạn có chắc chắn muốn xóa phiên bản này không?").unwrap_or(false) {
+                                                                                            let pid = p_id_for_delete.clone();
+                                                                                            let ver = fw_version_for_delete.clone();
+                                                                                            spawn_local(async move {
+                                                                                                let res = gloo_net::http::Request::delete(&format!("http://localhost:7424/api/projects/{}/firmware/{}", pid, ver))
+                                                                                                    .credentials(web_sys::RequestCredentials::Include)
+                                                                                                    .send().await;
+                                                                                                if let Ok(r) = res {
+                                                                                                    if r.ok() {
+                                                                                                        project_resource.refetch();
+                                                                                                    } else {
+                                                                                                        window().alert_with_message("Lỗi khi xóa phiên bản.").unwrap();
+                                                                                                    }
+                                                                                                }
+                                                                                            });
+                                                                                        }
+                                                                                    }
+                                                                                >
+                                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                                                                </button>
+                                                                            </div>
                                                                             <div style="font-size: 0.85rem; color: #90a4ae; margin-top: 0.25rem;">"Ghi chú: " {fw.notes.clone().unwrap_or_else(|| "Không có".to_string())}</div>
                                                                         </div>
                                                                         <div style="text-align: right;">
