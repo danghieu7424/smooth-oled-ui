@@ -40,7 +40,7 @@ void OLED_OTA::loop() {
 }
 
 void OLED_OTA::_checkUpdate() {
-    String url = "http://" + _apiHost + ":" + String(_apiPort) + "/api/firmware/guest-" + _projectId;
+    String url = "http://" + _apiHost + ":" + String(_apiPort) + "/api/firmware/" + _projectId;
     
     Serial.println("[OLED_OTA] Đang kiểm tra cập nhật tại: " + url);
     _performUpdate(url, "unknown");
