@@ -8,21 +8,19 @@
 #include <HTTPClient.h>
 #include <esp_ota_ops.h>
 #include <esp_partition.h>
-#include <ArduinoJson.h>
-#include <Update.h>
 
+/****
+ * OLED_OTA — OTA Service dùng ESP-IDF OTA API trực tiếp
+ * Lý do KHÔNG dùng Arduino Update.h:
+ *   esp_partition_write() trên ESP32-S3 bị "silent fail" — trả OK nhưng không ghi Flash.
+ *   esp_ota_write() dùng đường ghi OTA chuyên dụng, bypass lỗi này.
+ ****/
 class OLED_OTA {
 public:
-    // Khởi tạo thư viện với ID dự án, Token bảo mật và Phiên bản hiện tại
     OLED_OTA(const char* projectId, const char* projectToken, const char* currentVersion);
     
-    // Cấu hình URL HTTP Server (Thay cho MQTT)
     void setApiEndpoint(const char* host, uint16_t port);
-    
-    // Khởi động dịch vụ
     void begin();
-    
-    // Gọi hàm này trong loop() của Arduino để kiểm tra cập nhật định kỳ
     void loop();
 
 private:
@@ -34,8 +32,6 @@ private:
     uint16_t _apiPort;
     
     String _deviceId;
-    
-    WiFiClient _wifiClient;
     
     unsigned long _lastCheckAttempt;
     
