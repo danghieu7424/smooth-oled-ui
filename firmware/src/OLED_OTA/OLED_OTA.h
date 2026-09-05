@@ -6,8 +6,8 @@
 #include <WiFiClient.h>
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
-#include <Update.h>
 #include <esp_ota_ops.h>
+#include <esp_partition.h>
 #include <ArduinoJson.h>
 
 class OLED_OTA {
