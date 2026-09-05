@@ -4,6 +4,7 @@ cd /d "%~dp0"
 
 REM [CHÚ THÍCH] Khai báo các biến cục bộ trỏ đến công cụ và thư mục dự án
 set CLI_PATH="C:\Users\dangh\AppData\Local\Programs\Arduino IDE\resources\app\lib\backend\resources\arduino-cli.exe"
+set ARDUINO_DIRECTORIES_DATA=D:\.AppData\Arduino15
 set BUILD_DIR=.\build\esp32.esp32.XIAO_ESP32S3
 set ELF_FILE=%BUILD_DIR%\firmware.ino.elf
 
