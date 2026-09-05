@@ -41,7 +41,7 @@ private:
     
     unsigned long _lastReconnectAttempt;
     
-    void _connectMqtt();
+    bool _connectMqtt();
     void _mqttCallback(char* topic, byte* payload, unsigned int length);
     void _performUpdate(String url, String newVersion);
 };
