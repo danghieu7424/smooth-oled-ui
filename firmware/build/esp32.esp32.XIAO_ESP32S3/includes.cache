@@ -46,6 +46,11 @@
   },
   {
     "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\firmware.ino.cpp",
+    "Include": "Update.h",
+    "Includepath": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\Update\\src"
+  },
+  {
+    "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\firmware.ino.cpp",
     "Include": "",
     "Includepath": null
   },
@@ -821,6 +826,16 @@
   },
   {
     "Sourcefile": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\WiFiClientSecure\\src\\ssl_client.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\Update\\src\\HttpsOTAUpdate.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\libraries\\Update\\src\\Updater.cpp",
     "Include": "",
     "Includepath": null
   },

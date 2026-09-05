@@ -133,6 +133,24 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
                 ESP.restart();
             } else {
                 Serial.printf("[OLED_OTA] Lỗi Update.end(): %s\n", Update.errorString());
+                
+                // WORKAROUND CHO LỖI ESP32-S3 CORE 2.0.11: 
+                // Khi Update.end() trả về "Flash Read Failed" do bộ đệm cache chưa đồng bộ, 
+                // nhưng thực tế dữ liệu đã được ghi thành công, ta sẽ chủ động ép đổi boot partition.
+                if (String(Update.errorString()) == "Flash Read Failed") {
+                    Serial.println("[OLED_OTA] Kích hoạt Workaround cho lỗi Flash Read...");
+                    const esp_partition_t* update_partition = esp_ota_get_next_update_partition(NULL);
+                    if (update_partition) {
+                        esp_err_t err = esp_ota_set_boot_partition(update_partition);
+                        if (err == ESP_OK) {
+                            Serial.println("[OLED_OTA] Ép đổi Boot Partition thành công! Đang khởi động lại...");
+                            delay(1000);
+                            ESP.restart();
+                        } else {
+                            Serial.printf("[OLED_OTA] Ép đổi Boot thất bại: %s\n", esp_err_to_name(err));
+                        }
+                    }
+                }
             }
         } else {
             Serial.printf("[OLED_OTA] Ghi thiếu dữ liệu: %d/%d bytes\n", written, contentLength);

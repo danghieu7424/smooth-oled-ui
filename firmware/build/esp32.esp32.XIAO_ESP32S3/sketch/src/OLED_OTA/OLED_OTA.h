@@ -10,6 +10,7 @@
 #include <esp_ota_ops.h>
 #include <esp_partition.h>
 #include <ArduinoJson.h>
+#include <Update.h>
 
 class OLED_OTA {
 public:
