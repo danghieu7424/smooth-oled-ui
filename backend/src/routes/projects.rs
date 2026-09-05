@@ -101,6 +101,7 @@ pub struct ProjectDetailResponse {
     pub name: String,
     pub active_devices: i64,
     pub latest_version: String,
+    pub token: String,
     pub firmwares: Vec<serde_json::Value>,
 }
 
@@ -120,9 +121,9 @@ async fn get_project(
     let id_clone = id.clone();
     let user_suid_clone = user_suid.clone();
     let detail = state.storage.execute_query(move |conn| {
-        let mut p_stmt = conn.prepare("SELECT id, project_id, name FROM projects WHERE project_id = ?1 AND user_id = ?2")?;
-        let (p_id, p_project_id, p_name): (i64, String, String) = p_stmt.query_row(rusqlite::params![id_clone, user_id], |row| {
-            Ok((row.get(0)?, row.get(1)?, row.get(2)?))
+        let mut p_stmt = conn.prepare("SELECT id, project_id, name, token FROM projects WHERE project_id = ?1 AND user_id = ?2")?;
+        let (p_id, p_project_id, p_name, p_token): (i64, String, String, String) = p_stmt.query_row(rusqlite::params![id_clone, user_id], |row| {
+            Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?))
         })?;
 
         let mut d_stmt = conn.prepare("SELECT COUNT(*) FROM devices WHERE project_id = ?1")?;
@@ -161,6 +162,7 @@ async fn get_project(
             name: p_name,
             active_devices,
             latest_version,
+            token: p_token,
             firmwares,
         })
     }).await.unwrap_or_else(|_| ProjectDetailResponse {
@@ -170,6 +172,7 @@ async fn get_project(
         name: "Không tìm thấy".to_string(),
         active_devices: 0,
         latest_version: "N/A".to_string(),
+        token: "".to_string(),
         firmwares: vec![],
     });
 

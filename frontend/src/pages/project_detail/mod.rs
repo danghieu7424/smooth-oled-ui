@@ -29,6 +29,7 @@ pub struct ProjectDetail {
     pub name: String,
     pub active_devices: i64,
     pub latest_version: String,
+    pub token: String,
     pub firmwares: Vec<Firmware>,
 }
 
@@ -123,6 +124,14 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                             }
                                         }
                                     };
+                                    let token_copy = detail.token.clone();
+                                    let copy_token = move |_| {
+                                        if let Some(window) = web_sys::window() {
+                                            if let Some(clipboard) = window.navigator().clipboard() {
+                                                let _ = clipboard.write_text(&token_copy);
+                                            }
+                                        }
+                                    };
                                     
                                     view! {
                                         <div class="analytics-header">
@@ -134,6 +143,12 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                                             <div style="margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;">
                                                                 <div>"ID: " <span style="color: #82b1ff;">{d_project_id}</span></div>
                                                                 <button title="Copy Full ID" on:click=copy_id style="background: none; border: none; color: #90a4ae; cursor: pointer; padding: 0.2rem; display: flex; align-items: center; border-radius: 4px;" class="fw-delete-btn">
+                                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                                                </button>
+                                                            </div>
+                                                            <div style="margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                                                                <div>"Token: " <span style="color: #ffb74d;">"••••••••••••••••"</span></div>
+                                                                <button title="Copy Token" on:click=copy_token style="background: none; border: none; color: #90a4ae; cursor: pointer; padding: 0.2rem; display: flex; align-items: center; border-radius: 4px;" class="fw-delete-btn">
                                                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                                                                 </button>
                                                             </div>

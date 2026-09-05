@@ -12,6 +12,18 @@
 #include "src/TimeSyncAPI/TimeSyncAPI.h"
 #include "src/HardwareRTC/HardwareRTC.h"
 #include "src/ExternalEEPROM/ExternalEEPROM.h"
+#include "src/OLED_OTA/OLED_OTA.h"
+
+// ==========================================
+// CẤU HÌNH DỰ ÁN TỪ OTA HUB DASHBOARD
+// ==========================================
+const char* PROJECT_ID = "007Rlq30Q2vU-esp32-tool";
+const char* PROJECT_TOKEN = "YOUR_SECRET_TOKEN";
+const char* CURRENT_VERSION = "1.0.0";
+const char* MQTT_BROKER = "broker.hivemq.com";
+const uint16_t MQTT_PORT = 1883;
+
+OLED_OTA ota(PROJECT_ID, PROJECT_TOKEN, CURRENT_VERSION);
 
 int saved_brightness = 20;
 int saved_pc_viewer = 1;
@@ -23,19 +35,6 @@ ActiveSlider active_slider = SLIDER_NONE;
 
 // Clock State variables moved down
 
-#line 25 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void save_wifi_credentials(String ssid, String pwd);
-#line 31 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-bool load_wifi_credentials(String &ssid, String &pwd);
-#line 150 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void on_restart();
-#line 154 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void on_power_off();
-#line 316 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void setup();
-#line 390 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void loop();
-#line 25 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void save_wifi_credentials(String ssid, String pwd) {
     extEEPROM.writeString(0x0010, ssid);
     extEEPROM.writeString(0x0040, pwd);
@@ -399,6 +398,10 @@ void setup() {
       timeSync.syncFromRTC();
   }
   open_home_clock();
+
+  // 5. Khởi tạo OTA Service (Nó sẽ tự kết nối MQTT khi WiFi sẵn sàng ở loop)
+  ota.setMqttBroker(MQTT_BROKER, MQTT_PORT);
+  ota.begin();
 }
 
 void loop() {
@@ -607,6 +610,9 @@ void loop() {
   if (timeSync.tick()) {
       ui.updateClock(timeSync.current_hour, timeSync.current_minute, timeSync.current_second, timeSync.solar_date_str.c_str(), timeSync.lunar_date_str.c_str(), timeSync.current_temp_str.c_str());
   }
+  
+  // --- DUY TRÌ KẾT NỐI OTA ---
+  ota.loop();
   
   if (timeSync.api_synced) {
       // Đồng bộ lại với API mỗi 1 giờ để bù sai số và cập nhật ngày
