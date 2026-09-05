@@ -3,7 +3,7 @@
   "compiler.optimization_flags": "-Os",
   "customBuildProperties": "build.warn_data_percentage=75",
   "fqbn": "esp32:esp32:XIAO_ESP32S3:PartitionScheme=default_8MB",
-  "hardwareFolders": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages",
+  "hardwareFolders": "D:\\.AppData\\Arduino15\\packages",
   "otherLibrariesFolders": "C:\\Users\\dangh\\Documents\\Arduino\\libraries",
   "sketchLocation": "D:\\all_projects\\rust\\rust\\display_oled\\firmware"
 }

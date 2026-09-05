@@ -37,19 +37,6 @@ ActiveSlider active_slider = SLIDER_NONE;
 
 // Clock State variables moved down
 
-#line 39 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void save_wifi_credentials(String ssid, String pwd);
-#line 45 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-bool load_wifi_credentials(String &ssid, String &pwd);
-#line 164 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void on_restart();
-#line 168 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void on_power_off();
-#line 331 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void setup();
-#line 415 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void loop();
-#line 39 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void save_wifi_credentials(String ssid, String pwd) {
     extEEPROM.writeString(0x0010, ssid);
     extEEPROM.writeString(0x0040, pwd);
