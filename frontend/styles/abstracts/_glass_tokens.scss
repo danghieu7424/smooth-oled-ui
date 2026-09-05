@@ -5,7 +5,7 @@
   --ease-power3-out: cubic-bezier(0.215, 0.61, 0.355, 1);
   --ease-power4-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-expo-out: cubic-bezier(0.19, 1, 0.22, 1);
-  
+
   /* --- Thời lượng --- */
   --duration-fast: 300ms;
   --duration-normal: 600ms;
@@ -45,7 +45,7 @@
 
 /* Biến động được FSD Context kiểm soát (Phục vụ Graceful Degradation) */
 :root {
-  --current-glass-blur: 16px; 
+  --current-glass-blur: 16px;
   --current-glass-saturate: 180%;
 }
 
@@ -60,29 +60,30 @@ body.is-animating {
   --theme-canvas: var(--color-light-canvas);
   --theme-text-color: var(--color-light-text-primary);
   --theme-text-muted: var(--color-light-text-muted);
-  
+
   --glass-tint-base: var(--color-light-glass-base);
   --glass-tint-hover: var(--color-light-glass-hover);
-  
+
   --glass-border-light: var(--color-light-edge-refract);
   --glass-border-dark: var(--color-light-edge-occlude);
-  
+
   --glass-shadow-ambient: var(--color-light-shadow);
   --text-protect-shadow: 0px 1px 3px rgba(255, 255, 255, 0.8), 0px 2px 8px rgba(255, 255, 255, 0.5);
 }
 
 /* Ánh xạ Dark Theme */
-:root.dark, :root {
+:root.dark,
+:root {
   --theme-canvas: var(--color-dark-canvas);
   --theme-text-color: var(--color-dark-text-primary);
   --theme-text-muted: var(--color-dark-text-muted);
-  
+
   --glass-tint-base: var(--color-dark-glass-base);
   --glass-tint-hover: var(--color-dark-glass-hover);
-  
+
   --glass-border-light: var(--color-dark-edge-refract);
   --glass-border-dark: var(--color-dark-edge-occlude);
-  
+
   --glass-shadow-ambient: var(--color-dark-shadow);
   --text-protect-shadow: 0px 1px 3px rgba(0, 0, 0, 0.8), 0px 2px 8px rgba(0, 0, 0, 0.5);
 }

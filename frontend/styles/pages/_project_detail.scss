@@ -299,12 +299,27 @@
     transition: all 0.2s ease;
     border-radius: 0;
     padding: 1rem 0;
-    border: 1px solid transparent;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 
-    &:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+    .fw-delete-btn {
+      background: transparent;
+      border: none;
+      color: #ef5350;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      padding: 0.5rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+
+      &:hover:not(:disabled) {
+        background: rgba(239, 83, 80, 0.15);
+      }
+      
+      &:disabled {
+        color: #757575;
+        cursor: not-allowed;
+      }
     }
   }
 }
