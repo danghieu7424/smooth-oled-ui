@@ -119,17 +119,15 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                     let full_id_copy = format!("{}-{}", detail.user_suid, detail.project_id);
                                     let copy_id = move |_| {
                                         if let Some(window) = web_sys::window() {
-                                            if let Some(clipboard) = window.navigator().clipboard() {
-                                                let _ = clipboard.write_text(&full_id_copy);
-                                            }
+                                            let clipboard = window.navigator().clipboard();
+                                            let _ = clipboard.write_text(&full_id_copy);
                                         }
                                     };
                                     let token_copy = detail.token.clone();
                                     let copy_token = move |_| {
                                         if let Some(window) = web_sys::window() {
-                                            if let Some(clipboard) = window.navigator().clipboard() {
-                                                let _ = clipboard.write_text(&token_copy);
-                                            }
+                                            let clipboard = window.navigator().clipboard();
+                                            let _ = clipboard.write_text(&token_copy);
                                         }
                                     };
                                     

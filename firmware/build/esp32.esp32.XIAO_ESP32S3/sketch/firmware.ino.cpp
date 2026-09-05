@@ -20,8 +20,8 @@
 const char* PROJECT_ID = "007Rlq30Q2vU-esp32-tool";
 const char* PROJECT_TOKEN = "YOUR_SECRET_TOKEN";
 const char* CURRENT_VERSION = "1.0.0";
-const char* MQTT_BROKER = "broker.hivemq.com";
-const uint16_t MQTT_PORT = 1883;
+const char* MQTT_BROKER = "192.168.7.7";
+const uint16_t MQTT_PORT = 7424;
 
 OLED_OTA ota(PROJECT_ID, PROJECT_TOKEN, CURRENT_VERSION);
 
@@ -174,8 +174,8 @@ const MenuItem side_items[] = {
 };
 const int TOTAL_SIDE_ITEMS = 2;
 
-const char* about_items[7];
-char about_buf[7][64];
+const char* about_items[8];
+char about_buf[8][64];
 
 void open_about_menu() {
     snprintf(about_buf[0], sizeof(about_buf[0]), "Chip: ESP32-S3");
@@ -185,12 +185,13 @@ void open_about_menu() {
     snprintf(about_buf[4], sizeof(about_buf[4]), "RAM: %d KB", ESP.getHeapSize() / 1024);
     snprintf(about_buf[5], sizeof(about_buf[5]), "MAC: %s", WiFi.macAddress().c_str());
     snprintf(about_buf[6], sizeof(about_buf[6]), "SDK: %s", ESP.getSdkVersion());
+    snprintf(about_buf[7], sizeof(about_buf[7]), "Ver: %s", CURRENT_VERSION);
 
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < 8; i++) {
         about_items[i] = about_buf[i];
     }
     
-    ui.openFullList("About MCU", about_items, 7, nullptr);
+    ui.openFullList("About MCU", about_items, 8, nullptr);
 }
 
 // =======================================================================
