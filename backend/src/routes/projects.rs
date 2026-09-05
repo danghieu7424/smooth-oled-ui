@@ -386,7 +386,13 @@ pub async fn download_latest_firmware(
             .trim()
             .trim_start_matches(|c| c == 'v' || c == 'V');
             
-        let normalized_latest = latest_version.trim().trim_start_matches(|c| c == 'v' || c == 'V');
+        // Web tự động tạo tên "esp32 tool_V1.0.0", ta tách lấy phần cuối sau dấu '_' và bỏ chữ V
+        let normalized_latest = latest_version
+            .split('_')
+            .last()
+            .unwrap_or(&latest_version)
+            .trim()
+            .trim_start_matches(|c| c == 'v' || c == 'V');
             
         if device_version.eq_ignore_ascii_case(normalized_latest) {
             return Ok(axum::response::Response::builder()
