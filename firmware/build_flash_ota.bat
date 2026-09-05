@@ -22,8 +22,4 @@ if %ERRORLEVEL% NEQ 0 (
     exit /b %ERRORLEVEL%
 )
 
-@REM REM [CHÚ THÍCH] BƯỚC 3: NẠP FLASH VÀ MỞ MONITOR
-@REM echo [INFO] Bien dich thanh cong. Bat dau nap Flash qua espflash...
-@REM espflash flash --chip esp32s3 --erase-parts otadata --partition-table "%BUILD_DIR%\firmware.ino.partitions.bin" "%ELF_FILE%"
-
 endlocal

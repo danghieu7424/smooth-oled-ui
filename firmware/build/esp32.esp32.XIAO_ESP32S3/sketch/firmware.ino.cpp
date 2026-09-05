@@ -19,7 +19,7 @@
 // ==========================================
 const char* PROJECT_ID = "007Rlq30Q2vU-esp32-tool";
 const char* PROJECT_TOKEN = "fc11b225f325609bb7309ad70f090a78";
-const char* CURRENT_VERSION = "1.0.0";
+const char* CURRENT_VERSION = "1.1.0";
 const char* API_HOST = "192.168.7.7";
 const uint16_t API_PORT = 7424;
 
@@ -37,6 +37,19 @@ ActiveSlider active_slider = SLIDER_NONE;
 
 // Clock State variables moved down
 
+#line 39 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+void save_wifi_credentials(String ssid, String pwd);
+#line 45 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+bool load_wifi_credentials(String &ssid, String &pwd);
+#line 164 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+void on_restart();
+#line 168 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+void on_power_off();
+#line 331 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+void setup();
+#line 415 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+void loop();
+#line 39 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void save_wifi_credentials(String ssid, String pwd) {
     extEEPROM.writeString(0x0010, ssid);
     extEEPROM.writeString(0x0040, pwd);
@@ -149,10 +162,10 @@ const int TOTAL_MAIN_ITEMS = 3;
 const MenuItem settings_items[] = {
     {"WiFi", icon_wifi, on_enter_wifi},
     {"ESP NOW", icon_esp_now, nullptr},
-    // {"LED Switch", icon_led_switch, open_led_switch},
+    {"LED Switch", icon_led_switch, open_led_switch},
     {"Brightness", icon_brightness, open_brightness_slider}
 };
-const int TOTAL_SETTINGS_ITEMS = 3;
+const int TOTAL_SETTINGS_ITEMS = 4;
 
 const char* popup_items[] = {
     "ScreenOff",
