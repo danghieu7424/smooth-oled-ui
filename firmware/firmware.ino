@@ -18,7 +18,7 @@
 // ==========================================
 const char* PROJECT_ID = "007Rlq30Q2vU-esp32-tool";
 const char* PROJECT_TOKEN = "57c510c895b69f432be01fd9a8bc9d51";
-const char* CURRENT_VERSION = "1.0.0";
+const char* CURRENT_VERSION = "1.1.0";
 const char* API_HOST = "192.168.7.7";
 const uint16_t API_PORT = 7424;
 
@@ -148,7 +148,7 @@ const int TOTAL_MAIN_ITEMS = 3;
 const MenuItem settings_items[] = {
     {"WiFi", icon_wifi, on_enter_wifi},
     {"ESP NOW", icon_esp_now, nullptr},
-    // {"LED Switch", icon_led_switch, open_led_switch},
+    {"LED Switch", icon_led_switch, open_led_switch},
     {"Brightness", icon_brightness, open_brightness_slider}
 };
 const int TOTAL_SETTINGS_ITEMS = 4;
@@ -175,8 +175,8 @@ const MenuItem side_items[] = {
 };
 const int TOTAL_SIDE_ITEMS = 2;
 
-const char* about_items[8];
-char about_buf[8][64];
+const char* about_items[9];
+char about_buf[9][64];
 
 void open_about_menu() {
     snprintf(about_buf[0], sizeof(about_buf[0]), "Chip: ESP32-S3");
@@ -185,14 +185,15 @@ void open_about_menu() {
     snprintf(about_buf[3], sizeof(about_buf[3]), "Flash: %d MB", ESP.getFlashChipSize() / (1024 * 1024));
     snprintf(about_buf[4], sizeof(about_buf[4]), "RAM: %d KB", ESP.getHeapSize() / 1024);
     snprintf(about_buf[5], sizeof(about_buf[5]), "MAC: %s", WiFi.macAddress().c_str());
-    snprintf(about_buf[6], sizeof(about_buf[6]), "SDK: %s", ESP.getSdkVersion());
-    snprintf(about_buf[7], sizeof(about_buf[7]), "Ver: %s", CURRENT_VERSION);
+    snprintf(about_buf[6], sizeof(about_buf[6]), "IP: %s", WiFi.localIP().toString().c_str());
+    snprintf(about_buf[7], sizeof(about_buf[7]), "SDK: %s", ESP.getSdkVersion());
+    snprintf(about_buf[8], sizeof(about_buf[8]), "Ver: %s", CURRENT_VERSION);
 
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 9; i++) {
         about_items[i] = about_buf[i];
     }
     
-    ui.openFullList("About MCU", about_items, 8, nullptr);
+    ui.openFullList("About MCU", about_items, 9, nullptr);
 }
 
 // =======================================================================
