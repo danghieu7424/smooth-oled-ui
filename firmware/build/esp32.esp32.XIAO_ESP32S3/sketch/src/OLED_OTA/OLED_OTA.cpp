@@ -124,6 +124,13 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
                 if (size) {
                     int c = tcp->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
                     if (c > 0) {
+                        if (written == 0) {
+                            Serial.printf("[OLED_OTA] First 16 bytes: ");
+                            for (int i = 0; i < (c > 16 ? 16 : c); i++) {
+                                Serial.printf("%02X ", buff[i]);
+                            }
+                            Serial.println();
+                        }
                         Update.write(buff, c);
                         written += c;
                         if (total > 0) {
@@ -147,11 +154,14 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
                 delay(1);
             }
             
-            if (Update.end()) {
+            // Phải gọi Update.end(true) để ép thư viện xả (flush) các byte cuối cùng trong buffer 
+            // chưa đầy 4KB xuống Flash. Nếu không, image sẽ bị thiếu vài KB cuối cùng và sinh lỗi 3.
+            bool isSuccess = Update.end(true);
+
+            if (isSuccess) {
                 Serial.println("\n[OLED_OTA] OTA Hoàn tất. Đang khởi động lại...");
-                if (Update.isFinished()) {
-                    ESP.restart();
-                }
+                delay(1000);
+                ESP.restart();
             } else {
                 Serial.printf("\n[OLED_OTA] Lỗi OTA (%d): %s\n", Update.getError(), Update.errorString());
             }
