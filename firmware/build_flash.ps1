@@ -1,4 +1,6 @@
 # [CHÚ THÍCH] Khai báo các biến cục bộ
+Set-Location -Path $PSScriptRoot
+
 $cli_path = "C:\Users\dangh\AppData\Local\Programs\Arduino IDE\resources\app\lib\backend\resources\arduino-cli.exe"
 $build_dir = ".\build\esp32.esp32.XIAO_ESP32S3"
 $elf_file = "$build_dir\firmware.ino.elf"
