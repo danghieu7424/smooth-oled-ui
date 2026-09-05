@@ -2,6 +2,7 @@ use leptos::*;
 use leptos_router::*;
 use serde::{Deserialize, Serialize};
 use crate::pages::dashboard::fetch_me;
+use crate::shared::ui::file_upload::FileUploadDropzone;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum UpdateType {
@@ -49,8 +50,9 @@ pub fn ProjectDetailPage() -> impl IntoView {
     
     let (active_tab, set_active_tab) = create_signal("dashboard".to_string());
     let (update_type, set_update_type) = create_signal(UpdateType::Patch);
+    let (show_upload_modal, set_show_upload_modal) = create_signal(false);
     
-    let file_input: NodeRef<html::Input> = create_node_ref();
+    let (fw_file, set_fw_file) = create_signal(None::<web_sys::File>);
     let (upload_status, set_upload_status) = create_signal(String::new());
     let (is_uploading, set_is_uploading) = create_signal(false);
     
@@ -199,107 +201,124 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                             <div class="analytics-content">
                                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                                                     <h2 style="margin: 0;">"Danh sách Phiên bản (Firmwares)"</h2>
+                                                    <button 
+                                                        on:click=move |_| set_show_upload_modal.set(true)
+                                                        style="background: #FFCA28; color: #000; font-weight: 600; padding: 0.6rem 1.2rem; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;"
+                                                    >
+                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                                        "Tải lên phiên bản mới"
+                                                    </button>
                                                 </div>
-                                                
-                                                <div style="background: #2a2a2c; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1.5rem; color: #fff; margin-bottom: 1.5rem;">
-                                                    <h3 style="margin-top: 0; margin-bottom: 1rem; font-size: 1.1rem; color: #ffca28;">"Tải lên phiên bản mới"</h3>
-                                                    <div style="display: flex; flex-direction: column; gap: 1rem;">
-                                                        <div style="display: flex; gap: 1rem;">
-                                                            <div style="flex: 1;">
-                                                                <label style="display: block; font-size: 0.85rem; color: #b0bec5; margin-bottom: 0.5rem;">"Tên phiên bản:"</label>
-                                                                <div style="width: 100%; background: #1e1e1e; border: 1px solid #424242; border-radius: 6px; padding: 0.6rem 1rem; color: #90a4ae; font-size: 0.95rem; user-select: none;">
-                                                                    {{
-                                                                        let calc_for_view = calculated_version.clone();
-                                                                        move || calc_for_view()
-                                                                    }}
+
+                                                {move || if show_upload_modal.get() {
+                                                    let calc_for_view = calculated_version.clone();
+                                                    let calc_for_upload = calculated_version.clone();
+                                                    let id_for_upload = p_id_for_upload.clone();
+                                                    
+                                                    view! {
+                                                        <div class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px);">
+                                                            <div class="modal-content" style="background: #2a2a2c; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 2rem; width: 500px; max-width: 90vw;">
+                                                                <h3 style="margin-top: 0; margin-bottom: 1.5rem; font-size: 1.2rem; color: #ffca28; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">"Tải lên phiên bản mới"</h3>
+                                                                
+                                                                <div style="margin-bottom: 1.5rem;">
+                                                                    <label style="display: block; font-size: 0.85rem; color: #b0bec5; margin-bottom: 0.5rem;">"Tên phiên bản:"</label>
+                                                                    <div style="width: 100%; background: #1e1e1e; border: 1px solid #424242; border-radius: 6px; padding: 0.6rem 1rem; color: #90a4ae; font-size: 0.95rem; user-select: none;">
+                                                                        {move || calc_for_view()}
+                                                                    </div>
+                                                                    
+                                                                    <div style="display: flex; gap: 1rem; margin-top: 0.8rem; font-size: 0.85rem; color: #fff;">
+                                                                        <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                                                                            <input type="radio" name="update_type_modal" prop:checked=move || update_type.get() == UpdateType::Major on:click=move |_| set_update_type.set(UpdateType::Major) />
+                                                                            "Bản chính thức"
+                                                                        </label>
+                                                                        <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                                                                            <input type="radio" name="update_type_modal" prop:checked=move || update_type.get() == UpdateType::Minor on:click=move |_| set_update_type.set(UpdateType::Minor) />
+                                                                            "Bản bổ sung"
+                                                                        </label>
+                                                                        <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+                                                                            <input type="radio" name="update_type_modal" prop:checked=move || update_type.get() == UpdateType::Patch on:click=move |_| set_update_type.set(UpdateType::Patch) />
+                                                                            "Bản vá lỗi"
+                                                                        </label>
+                                                                    </div>
                                                                 </div>
                                                                 
-                                                                <div style="display: flex; gap: 1rem; margin-top: 0.8rem; font-size: 0.85rem; color: #fff;">
-                                                                    <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
-                                                                        <input type="radio" name="update_type" prop:checked=move || update_type.get() == UpdateType::Major on:click=move |_| set_update_type.set(UpdateType::Major) />
-                                                                        "Bản chính thức"
-                                                                    </label>
-                                                                    <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
-                                                                        <input type="radio" name="update_type" prop:checked=move || update_type.get() == UpdateType::Minor on:click=move |_| set_update_type.set(UpdateType::Minor) />
-                                                                        "Bản bổ sung"
-                                                                    </label>
-                                                                    <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
-                                                                        <input type="radio" name="update_type" prop:checked=move || update_type.get() == UpdateType::Patch on:click=move |_| set_update_type.set(UpdateType::Patch) />
-                                                                        "Bản vá lỗi"
-                                                                    </label>
+                                                                <div style="margin-bottom: 1.5rem;">
+                                                                    <FileUploadDropzone 
+                                                                        on_files_select={move |files: Vec<web_sys::File>| {
+                                                                            if let Some(f) = files.into_iter().next() {
+                                                                                set_fw_file.set(Some(f));
+                                                                            }
+                                                                        }}
+                                                                        on_clear={move |_| set_fw_file.set(None)}
+                                                                        title="Tải lên Firmware".to_string()
+                                                                        description="Kéo thả hoặc click để chọn file .bin".to_string()
+                                                                        accept=".bin".to_string()
+                                                                    />
                                                                 </div>
-                                                            </div>
-                                                            <div style="flex: 2;">
-                                                                <label style="display: block; font-size: 0.85rem; color: #b0bec5; margin-bottom: 0.5rem;">"File Firmware (.bin)"</label>
-                                                                <input type="file" 
-                                                                    node_ref=file_input
-                                                                    accept=".bin"
-                                                                    style="width: 100%; background: #1e1e1e; border: 1px solid #424242; border-radius: 6px; padding: 0.5rem 1rem; color: #fff; font-size: 0.95rem; outline: none;"
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                        <div style="display: flex; align-items: center; gap: 1rem;">
-                                                            <button 
-                                                                style="background: #FFCA28; color: #000; font-weight: 600; padding: 0.6rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;"
-                                                                disabled=is_uploading
-                                                                on:click=move |_| {
-                                                                    let id = p_id_for_upload.clone();
-                                                                    let version = calculated_version();
-                                                                    let input = file_input.get();
-                                                                    
-                                                                    if version.is_empty() {
-                                                                        set_upload_status.set("Vui lòng nhập Version".to_string());
-                                                                        return;
-                                                                    }
-                                                                    
-                                                                    let file = if let Some(input) = input {
-                                                                        if let Some(files) = input.files() {
-                                                                            if files.length() > 0 {
-                                                                                files.get(0)
-                                                                            } else { None }
-                                                                        } else { None }
-                                                                    } else { None };
-                                                                    
-                                                                    if let Some(file) = file {
-                                                                        set_is_uploading.set(true);
-                                                                        set_upload_status.set("Đang tải lên...".to_string());
-                                                                        
-                                                                        let form_data = web_sys::FormData::new().unwrap();
-                                                                        form_data.append_with_str("version", &version).unwrap();
-                                                                        form_data.append_with_blob("file", &file).unwrap();
-                                                                        
-                                                                        spawn_local(async move {
-                                                                            let res = gloo_net::http::Request::post(&format!("http://localhost:7424/api/projects/{}/firmware", id))
-                                                                                .credentials(web_sys::RequestCredentials::Include)
-                                                                                .body(form_data).unwrap()
-                                                                                .send().await;
+                                                                
+                                                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                                                    <button 
+                                                                        on:click=move |_| {
+                                                                            set_show_upload_modal.set(false);
+                                                                            set_upload_status.set("".to_string());
+                                                                            set_fw_file.set(None);
+                                                                        }
+                                                                        style="background: transparent; border: 1px solid #90a4ae; color: #90a4ae; padding: 0.6rem 1.5rem; border-radius: 6px; cursor: pointer;"
+                                                                    >
+                                                                        "Quay lại"
+                                                                    </button>
+                                                                    <div style="display: flex; align-items: center; gap: 1rem;">
+                                                                        <span style="font-size: 0.9rem; color: #ff8a65;">{move || upload_status.get()}</span>
+                                                                        <button 
+                                                                            style="background: #82b1ff; color: #000; font-weight: 600; padding: 0.6rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;"
+                                                                            disabled=is_uploading
+                                                                            on:click=move |_| {
+                                                                                let id = id_for_upload.clone();
+                                                                                let version = calc_for_upload();
+                                                                                let file = fw_file.get();
                                                                                 
-                                                                            set_is_uploading.set(false);
-                                                                            match res {
-                                                                                Ok(r) if r.ok() => {
-                                                                                    set_upload_status.set("Tải lên thành công!".to_string());
-                                                                                    if let Some(input) = file_input.get() {
-                                                                                        input.set_value("");
-                                                                                    }
-                                                                                    project_resource.refetch();
-                                                                                },
-                                                                                _ => {
-                                                                                    set_upload_status.set("Lỗi tải lên!".to_string());
+                                                                                if let Some(file) = file {
+                                                                                    set_is_uploading.set(true);
+                                                                                    set_upload_status.set("Đang tải lên...".to_string());
+                                                                                    
+                                                                                    let form_data = web_sys::FormData::new().unwrap();
+                                                                                    form_data.append_with_str("version", &version).unwrap();
+                                                                                    form_data.append_with_blob("file", &file).unwrap();
+                                                                                    
+                                                                                    spawn_local(async move {
+                                                                                        let res = gloo_net::http::Request::post(&format!("http://localhost:7424/api/projects/{}/firmware", id))
+                                                                                            .credentials(web_sys::RequestCredentials::Include)
+                                                                                            .body(form_data).unwrap()
+                                                                                            .send().await;
+                                                                                            
+                                                                                        set_is_uploading.set(false);
+                                                                                        match res {
+                                                                                            Ok(r) if r.ok() => {
+                                                                                                set_upload_status.set("Tải lên thành công!".to_string());
+                                                                                                set_fw_file.set(None);
+                                                                                                set_show_upload_modal.set(false);
+                                                                                                project_resource.refetch();
+                                                                                            },
+                                                                                            _ => {
+                                                                                                set_upload_status.set("Lỗi tải lên!".to_string());
+                                                                                            }
+                                                                                        }
+                                                                                    });
+                                                                                } else {
+                                                                                    set_upload_status.set("Vui lòng chọn file .bin".to_string());
                                                                                 }
                                                                             }
-                                                                        });
-                                                                    } else {
-                                                                        set_upload_status.set("Vui lòng chọn file .bin".to_string());
-                                                                    }
-                                                                }
-                                                            >
-                                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                                                                {move || if is_uploading.get() { "Đang xử lý..." } else { "Upload Firmware" }}
-                                                            </button>
-                                                            <span style="font-size: 0.9rem; color: #ff8a65;">{move || upload_status.get()}</span>
+                                                                        >
+                                                                            {move || if is_uploading.get() { "Đang xử lý..." } else { "Hoàn tất" }}
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </div>
+                                                    }.into_view()
+                                                } else {
+                                                    view!{}.into_view()
+                                                }}
 
                                                 <div style="background: #2a2a2c; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1.5rem; color: #fff;">
                                                     {
