@@ -364,13 +364,14 @@ pub async fn download_latest_firmware(
 
     let file_path: Option<String> = state.storage.execute_query({
         move |conn| {
+            use rusqlite::OptionalExtension;
             conn.query_row(
                 "SELECT file_path FROM firmwares WHERE project_id = ?1 ORDER BY id DESC LIMIT 1",
                 rusqlite::params![project_id],
                 |row| row.get(0)
-            ).ok()
+            ).optional()
         }
-    }).await;
+    }).await.unwrap_or(None);
 
     if let Some(path) = file_path {
         if let Ok(bytes) = std::fs::read(&path) {
