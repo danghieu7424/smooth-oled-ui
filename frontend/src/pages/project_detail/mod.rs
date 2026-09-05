@@ -48,6 +48,7 @@ async fn fetch_project_detail(id: String) -> Result<ProjectDetail, String> {
 struct ToastItem {
     id: usize,
     msg: String,
+    closing: bool,
 }
 
 #[component]
@@ -76,13 +77,21 @@ pub fn ProjectDetailPage() -> impl IntoView {
             t.push(ToastItem {
                 id: current_id,
                 msg: msg.to_string(),
+                closing: false,
             });
         });
         
         gloo_timers::callback::Timeout::new(2500, move || {
             set_toasts.update(move |t| {
-                t.retain(|item| item.id != current_id);
+                if let Some(item) = t.iter_mut().find(|x| x.id == current_id) {
+                    item.closing = true;
+                }
             });
+            gloo_timers::callback::Timeout::new(400, move || {
+                set_toasts.update(move |t| {
+                    t.retain(|item| item.id != current_id);
+                });
+            }).forget();
         }).forget();
     };
     
@@ -103,9 +112,9 @@ pub fn ProjectDetailPage() -> impl IntoView {
                     key=|t| t.id
                     children=move |t| {
                         view! {
-                            <div class="copy-toast show">
+                            <div class=move || if t.closing { "copy-toast closing" } else { "copy-toast" }>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"></path></svg>
-                                {t.msg}
+                                {t.msg.clone()}
                             </div>
                         }
                     }

@@ -21,20 +21,44 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    overflow: hidden;
     animation: slideUpToast 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 
     svg {
         color: #4caf50;
     }
+
+    &.closing {
+        animation: slideDownToast 0.4s ease forwards;
+    }
 }
 
 @keyframes slideUpToast {
     from {
-        transform: translateY(100px);
+        transform: translateY(50px);
         opacity: 0;
     }
     to {
         transform: translateY(0);
         opacity: 1;
+    }
+}
+
+@keyframes slideDownToast {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+        max-height: 100px;
+        padding: 12px 24px;
+        margin-bottom: 0;
+        border-width: 1px;
+    }
+    to {
+        transform: translateY(30px) scale(0.9);
+        opacity: 0;
+        max-height: 0;
+        padding: 0 24px;
+        margin-bottom: -10px; /* offset the flex gap */
+        border-width: 0;
     }
 }
