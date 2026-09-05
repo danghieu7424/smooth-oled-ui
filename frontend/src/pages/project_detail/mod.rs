@@ -344,11 +344,12 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                                         if detail_inner.firmwares.is_empty() {
                                                             view! { <div style="color: #90a4ae;">"Chưa có phiên bản nào được phát hành."</div> }.into_view()
                                                         } else {
+                                                            let total_fws = detail_inner.firmwares.len();
                                                             let fw_list = detail_inner.firmwares.clone().into_iter().map(|fw| {
                                                                 let fw_version_for_delete = fw.version.clone();
                                                                 let p_id_for_delete = p_id_for_upload.clone();
                                                                 view! {
-                                                                    <div style="padding: 1rem 0; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+                                                                    <div class="fw-row" style="display: flex; justify-content: space-between; align-items: center;">
                                                                         <div>
                                                                             <div style="font-weight: 500; font-size: 1.1rem; color: #82b1ff;">
                                                                                 {fw.version}
@@ -360,30 +361,46 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                                                                 <div style="font-size: 0.9rem;">{fw.created_at}</div>
                                                                                 <div style="font-size: 0.8rem; color: #a5d6a7; margin-top: 0.25rem;">{fw.devices_count} " thiết bị"</div>
                                                                             </div>
-                                                                            <button
-                                                                                title="Xóa phiên bản này"
-                                                                                style="background: transparent; border: none; color: #ef5350; cursor: pointer; display: flex; align-items: center; padding: 0.4rem; border-radius: 4px; transition: background 0.2s;"
-                                                                                on:click=move |_| {
-                                                                                    if window().confirm_with_message("Bạn có chắc chắn muốn xóa phiên bản này không?").unwrap_or(false) {
-                                                                                        let pid = p_id_for_delete.clone();
-                                                                                        let ver = fw_version_for_delete.clone();
-                                                                                        spawn_local(async move {
-                                                                                            let res = gloo_net::http::Request::delete(&format!("http://localhost:7424/api/projects/{}/firmware/{}", pid, ver))
-                                                                                                .credentials(web_sys::RequestCredentials::Include)
-                                                                                                .send().await;
-                                                                                            if let Ok(r) = res {
-                                                                                                if r.ok() {
-                                                                                                    project_resource.refetch();
-                                                                                                } else {
-                                                                                                    window().alert_with_message("Lỗi khi xóa phiên bản.").unwrap();
+                                                                            {
+                                                                                if total_fws > 1 {
+                                                                                    view! {
+                                                                                        <button
+                                                                                            title="Xóa phiên bản này"
+                                                                                            style="background: transparent; border: none; color: #ef5350; cursor: pointer; display: flex; align-items: center; padding: 0.4rem; border-radius: 4px; transition: background 0.2s;"
+                                                                                            on:click=move |_| {
+                                                                                                if window().confirm_with_message("Bạn có chắc chắn muốn xóa phiên bản này không?").unwrap_or(false) {
+                                                                                                    let pid = p_id_for_delete.clone();
+                                                                                                    let ver = fw_version_for_delete.clone();
+                                                                                                    spawn_local(async move {
+                                                                                                        let res = gloo_net::http::Request::delete(&format!("http://localhost:7424/api/projects/{}/firmware/{}", pid, ver))
+                                                                                                            .credentials(web_sys::RequestCredentials::Include)
+                                                                                                            .send().await;
+                                                                                                        if let Ok(r) = res {
+                                                                                                            if r.ok() {
+                                                                                                                project_resource.refetch();
+                                                                                                            } else {
+                                                                                                                window().alert_with_message("Lỗi khi xóa phiên bản.").unwrap();
+                                                                                                            }
+                                                                                                        }
+                                                                                                    });
                                                                                                 }
                                                                                             }
-                                                                                        });
-                                                                                    }
+                                                                                        >
+                                                                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                                                                        </button>
+                                                                                    }.into_view()
+                                                                                } else {
+                                                                                    view! {
+                                                                                        <button
+                                                                                            title="Không thể xóa khi chỉ còn 1 phiên bản"
+                                                                                            style="background: transparent; border: none; color: #757575; cursor: not-allowed; display: flex; align-items: center; padding: 0.4rem; border-radius: 4px;"
+                                                                                            disabled=true
+                                                                                        >
+                                                                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                                                                        </button>
+                                                                                    }.into_view()
                                                                                 }
-                                                                            >
-                                                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                                                            </button>
+                                                                            }
                                                                         </div>
                                                                     </div>
                                                                 }
