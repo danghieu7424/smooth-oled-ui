@@ -24,8 +24,8 @@ void OLED_OTA::begin() {
     sprintf(macStr, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     _deviceId = String(macStr);
 
-    // Topic format: projects/{project_id}/devices/{device_id}/ota
-    _otaTopic = "projects/" + _projectId + "/devices/" + _deviceId + "/ota";
+    // Topic format: projects/{project_id}/ota
+    _otaTopic = "projects/" + _projectId + "/ota";
     
     Serial.println("\n[OLED_OTA] Khởi tạo OTA Service");
     Serial.println("[OLED_OTA] Device ID: " + _deviceId);

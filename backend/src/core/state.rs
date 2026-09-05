@@ -19,4 +19,5 @@ pub struct AppState {
     pub sse_tx: tokio::sync::broadcast::Sender<(String, String)>,
     pub forwarder_token: String,
     pub ws_sessions: Arc<DashMap<String, tokio::sync::mpsc::Sender<String>>>,
+    pub mqtt_client: Option<rumqttc::AsyncClient>,
 }
