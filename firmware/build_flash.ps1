@@ -20,4 +20,4 @@ if ($LASTEXITCODE -ne 0) {
 
 # [CHÚ THÍCH] BƯỚC 3: NẠP FLASH VÀ MỞ MONITOR
 # Write-Host "[INFO] Biên dịch thành công. Bắt đầu nạp Flash qua espflash..." -ForegroundColor Green
-# espflash flash --chip esp32s3 --partition-table "$build_dir\firmware.ino.partitions.bin" $elf_file
+# espflash flash --chip esp32s3 -E --partition-table "$build_dir\firmware.ino.partitions.bin" $elf_file
