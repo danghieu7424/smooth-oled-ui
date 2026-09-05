@@ -1,0 +1,17 @@
+[
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\cores\\esp32"
+  },
+  {
+    "Sourcefile": null,
+    "Include": "",
+    "Includepath": "C:\\Users\\dangh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\2.0.11\\variants\\XIAO_ESP32S3"
+  },
+  {
+    "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\flash_diag\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\flash_diag.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  }
+]
