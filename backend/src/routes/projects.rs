@@ -382,9 +382,13 @@ pub async fn download_latest_firmware(
         let device_version = headers.get("x-ESP32-version")
             .or_else(|| headers.get("x-ESP8266-version"))
             .and_then(|v| v.to_str().ok())
-            .unwrap_or("");
+            .unwrap_or("")
+            .trim()
+            .trim_start_matches(|c| c == 'v' || c == 'V');
             
-        if device_version == latest_version {
+        let normalized_latest = latest_version.trim().trim_start_matches(|c| c == 'v' || c == 'V');
+            
+        if device_version.eq_ignore_ascii_case(normalized_latest) {
             return Ok(axum::response::Response::builder()
                 .status(axum::http::StatusCode::NOT_MODIFIED)
                 .body(axum::body::Body::empty())
