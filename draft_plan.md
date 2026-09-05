@@ -103,6 +103,7 @@ do mô hình khá nhỏ tôi phân vân có nên dùng các cơ sở dữ liệu
 > Hiện tại ESP chỉ dùng `project_id` để tải firmware. Như vậy ai vô tình biết `project_id` cũng có thể lấy cắp file `.bin` của bạn hoặc spam request làm sập server. Bạn có muốn thêm cơ chế **Tạo Token/API Key** riêng cho từng thiết bị, hoặc cho phép gán danh sách địa chỉ MAC hợp lệ không?
 
 >> cái này ok đấy thư viện trong firmware/src cũng thêm một thư viện để khi khởi tạo chỉ cần nhập id dự án và token để xác nhận dự án.
+>> cơ chế token cho 1 project và cho copy ở dưới id trong dashboarth
 
 > **[Câu hỏi phản biện từ AI] Về Phiên bản (Versioning):**
 > ESP32 sẽ so sánh phiên bản như thế nào? Chúng ta nên quy định dùng *Semantic Versioning* (ví dụ: `1.0.1`) kết hợp chuẩn thư viện `HTTPUpdate` (Gửi version hiện tại qua Header, server trả về file `.bin` nếu có bản cao hơn, hoặc trả về mã `304 Not Modified` nếu đã mới nhất). Bạn thấy cơ chế này ổn chứ?
