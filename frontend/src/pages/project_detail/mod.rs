@@ -48,7 +48,7 @@ async fn fetch_project_detail(id: String) -> Result<ProjectDetail, String> {
 struct ToastItem {
     id: usize,
     msg: String,
-    closing: bool,
+    closing: RwSignal<bool>,
 }
 
 #[component]
@@ -73,20 +73,18 @@ pub fn ProjectDetailPage() -> impl IntoView {
         let current_id = next_toast_id.get_value();
         next_toast_id.set_value(current_id + 1);
         
+        let closing_sig = create_rw_signal(false);
+        
         set_toasts.update(move |t| {
             t.push(ToastItem {
                 id: current_id,
                 msg: msg.to_string(),
-                closing: false,
+                closing: closing_sig,
             });
         });
         
         gloo_timers::callback::Timeout::new(2500, move || {
-            set_toasts.update(move |t| {
-                if let Some(item) = t.iter_mut().find(|x| x.id == current_id) {
-                    item.closing = true;
-                }
-            });
+            closing_sig.set(true);
             gloo_timers::callback::Timeout::new(400, move || {
                 set_toasts.update(move |t| {
                     t.retain(|item| item.id != current_id);
@@ -112,7 +110,7 @@ pub fn ProjectDetailPage() -> impl IntoView {
                     key=|t| t.id
                     children=move |t| {
                         view! {
-                            <div class=move || if t.closing { "copy-toast closing" } else { "copy-toast" }>
+                            <div class=move || if t.closing.get() { "copy-toast closing" } else { "copy-toast" }>
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"></path></svg>
                                 {t.msg.clone()}
                             </div>
