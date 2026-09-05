@@ -35,6 +35,7 @@
 @use "./shared/ui/double_tap_seek";
 @use "./shared/ui/checkbox";
 @use "./shared/ui/file_upload";
+@use "./shared/ui/toast";
 // Các files UI sẽ được đưa vào đây
 @use 'pages/dashboard';
 @use 'pages/project_detail';

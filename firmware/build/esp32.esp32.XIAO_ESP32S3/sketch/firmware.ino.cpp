@@ -18,7 +18,7 @@
 // CẤU HÌNH DỰ ÁN TỪ OTA HUB DASHBOARD
 // ==========================================
 const char* PROJECT_ID = "007Rlq30Q2vU-esp32-tool";
-const char* PROJECT_TOKEN = "YOUR_SECRET_TOKEN";
+const char* PROJECT_TOKEN = "57c510c895b69f432be01fd9a8bc9d51";
 const char* CURRENT_VERSION = "1.0.0";
 const char* MQTT_BROKER = "192.168.7.7";
 const uint16_t MQTT_PORT = 7424;
@@ -35,6 +35,19 @@ ActiveSlider active_slider = SLIDER_NONE;
 
 // Clock State variables moved down
 
+#line 37 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+void save_wifi_credentials(String ssid, String pwd);
+#line 43 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+bool load_wifi_credentials(String &ssid, String &pwd);
+#line 162 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+void on_restart();
+#line 166 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+void on_power_off();
+#line 329 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+void setup();
+#line 407 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+void loop();
+#line 37 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void save_wifi_credentials(String ssid, String pwd) {
     extEEPROM.writeString(0x0010, ssid);
     extEEPROM.writeString(0x0040, pwd);

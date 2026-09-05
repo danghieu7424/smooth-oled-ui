@@ -17,7 +17,7 @@
 // CẤU HÌNH DỰ ÁN TỪ OTA HUB DASHBOARD
 // ==========================================
 const char* PROJECT_ID = "007Rlq30Q2vU-esp32-tool";
-const char* PROJECT_TOKEN = "YOUR_SECRET_TOKEN";
+const char* PROJECT_TOKEN = "57c510c895b69f432be01fd9a8bc9d51";
 const char* CURRENT_VERSION = "1.0.0";
 const char* MQTT_BROKER = "192.168.7.7";
 const uint16_t MQTT_PORT = 7424;

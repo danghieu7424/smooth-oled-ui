@@ -59,6 +59,22 @@ pub fn ProjectDetailPage() -> impl IntoView {
     let (upload_status, set_upload_status) = create_signal(String::new());
     let (is_uploading, set_is_uploading) = create_signal(false);
     
+    let (toast_msg, set_toast_msg) = create_signal(String::new());
+    let (show_toast, set_show_toast) = create_signal(false);
+    let toast_timer = store_value(None::<gloo_timers::callback::Timeout>);
+    
+    let trigger_toast = move |msg: &str| {
+        set_toast_msg(msg.to_string());
+        set_show_toast(true);
+        if let Some(t) = toast_timer.get_value() {
+            t.cancel();
+        }
+        let timer = gloo_timers::callback::Timeout::new(2500, move || {
+            set_show_toast(false);
+        });
+        toast_timer.set_value(Some(timer));
+    };
+    
     let project_resource = create_resource(
         move || id_str(),
         |id| async move {
@@ -70,6 +86,10 @@ pub fn ProjectDetailPage() -> impl IntoView {
     view! {
         <div class="firebase-layout firebase-project-detail">
 
+            <div class={move || if show_toast() { "copy-toast show" } else { "copy-toast" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"></path></svg>
+                {move || toast_msg()}
+            </div>
 
             <div class="detail-container">
                 // Sidebar
@@ -121,6 +141,7 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                         if let Some(window) = web_sys::window() {
                                             let clipboard = window.navigator().clipboard();
                                             let _ = clipboard.write_text(&full_id_copy);
+                                            trigger_toast("Đã copy toàn bộ ID!");
                                         }
                                     };
                                     let token_copy = detail.token.clone();
@@ -128,6 +149,7 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                         if let Some(window) = web_sys::window() {
                                             let clipboard = window.navigator().clipboard();
                                             let _ = clipboard.write_text(&token_copy);
+                                            trigger_toast("Đã copy Token bí mật!");
                                         }
                                     };
                                     
