@@ -3,6 +3,7 @@
 #define TIMESYNCAPI_H
 
 #include <Arduino.h>
+#include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
