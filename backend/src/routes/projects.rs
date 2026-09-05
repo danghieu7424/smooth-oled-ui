@@ -395,6 +395,7 @@ pub async fn download_latest_firmware(
             let resp = axum::response::Response::builder()
                 .header(axum::http::header::CONTENT_TYPE, "application/octet-stream")
                 .header(axum::http::header::CONTENT_DISPOSITION, format!("attachment; filename=\"{}\"", filename))
+                .header(axum::http::header::CONTENT_LENGTH, bytes.len().to_string())
                 .body(axum::body::Body::from(bytes))
                 .unwrap();
             return Ok(resp);
