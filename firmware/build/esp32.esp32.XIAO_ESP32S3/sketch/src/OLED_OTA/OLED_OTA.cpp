@@ -72,6 +72,10 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
         client = new WiFiClient();
     }
     
+    // Tăng timeout để tránh lỗi Stream Read Failed (lỗi 3)
+    client->setTimeout(10000);
+
+    
     httpUpdate.onStart([]() { Serial.println("[OLED_OTA] OTA Bắt đầu..."); });
     httpUpdate.onEnd([]() { Serial.println("\n[OLED_OTA] OTA Hoàn tất. Đang khởi động lại..."); });
     httpUpdate.onProgress([](int cur, int total) {
