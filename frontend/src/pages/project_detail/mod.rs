@@ -66,6 +66,9 @@ pub fn ProjectDetailPage() -> impl IntoView {
     let (upload_status, set_upload_status) = create_signal(String::new());
     let (is_uploading, set_is_uploading) = create_signal(false);
     
+    let (show_chart_menu, set_show_chart_menu) = create_signal(false);
+    let (chart_type, set_chart_type) = create_signal("Line Chart".to_string());
+    
     let (toasts, set_toasts) = create_signal::<Vec<ToastItem>>(Vec::new());
     let next_toast_id = store_value(0usize);
     
@@ -219,9 +222,18 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                                     <div class="card-header">
                                                         <div class="card-title">
                                                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="18" y="3" width="4" height="18"></rect><rect x="10" y="8" width="4" height="13"></rect><rect x="2" y="13" width="4" height="8"></rect></svg>
-                                                            "Analytics"
+                                                            "Analytics (" {move || chart_type.get()} ")"
                                                         </div>
-                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                                                        <div class="chart-actions" style="position: relative;">
+                                                            <button class="action-btn" on:click=move |_| set_show_chart_menu.update(|b| *b = !*b) style="background: none; border: none; color: #90a4ae; cursor: pointer; padding: 0.2rem; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+                                                            </button>
+                                                            <div style=move || if show_chart_menu.get() { "position: absolute; right: 0; top: 100%; background: rgba(30, 30, 36, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.5rem; min-width: 150px; z-index: 10; box-shadow: 0 4px 12px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 0.25rem; backdrop-filter: blur(10px);" } else { "display: none;" }>
+                                                                <button on:click=move |_| { set_chart_type.set("Line Chart".to_string()); set_show_chart_menu.set(false); } class="dropdown-item" style="background: none; border: none; color: #e0e0e0; text-align: left; padding: 0.5rem; border-radius: 4px; cursor: pointer; transition: background 0.2s;">"📈 Line Chart"</button>
+                                                                <button on:click=move |_| { set_chart_type.set("Bar Chart".to_string()); set_show_chart_menu.set(false); } class="dropdown-item" style="background: none; border: none; color: #e0e0e0; text-align: left; padding: 0.5rem; border-radius: 4px; cursor: pointer; transition: background 0.2s;">"📊 Bar Chart"</button>
+                                                                <button on:click=move |_| { set_chart_type.set("Pie Chart".to_string()); set_show_chart_menu.set(false); } class="dropdown-item" style="background: none; border: none; color: #e0e0e0; text-align: left; padding: 0.5rem; border-radius: 4px; cursor: pointer; transition: background 0.2s;">"🥧 Pie Chart"</button>
+                                                            </div>
+                                                        </div>
                                                     </div>
 
                                                     <div class="card-body">
