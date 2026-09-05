@@ -154,10 +154,5 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
     }
     
     http.end();
-    
-    if (written != (size_t)contentLength) {
-        Serial.printf("[OLED_OTA] Tải/ghi thất bại. Đã ghi: %u/%d\n", written, contentLength);
-        delete client;
-        return;
-    }
+    delete client;
 }

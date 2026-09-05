@@ -148,92 +148,10 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
         } else {
             Serial.printf("[OLED_OTA] Ghi thiếu dữ liệu: %d/%d bytes\n", written, contentLength);
         }
-    Serial.println("[OLED_OTA] Đang tiến hành cài đặt firmware mới...");
-    
-    bool isHttps = url.startsWith("https");
-    WiFiClient* client = nullptr;
-    
-    if (isHttps) {
-        WiFiClientSecure* secureClient = new WiFiClientSecure();
-        secureClient->setInsecure();
-        client = secureClient;
-    } else {
-        client = new WiFiClient();
-    }
-    
-    client->setTimeout(30);
-
-    HTTPClient http;
-    http.begin(*client, url);
-    http.addHeader("x-ESP32-version", _currentVersion);
-    http.setTimeout(30000);
-    
-    int httpCode = http.GET();
-    
-    if (httpCode == HTTP_CODE_NOT_MODIFIED) {
-        Serial.println("[OLED_OTA] Không có bản cập nhật mới (HTTP 304).");
-        http.end();
-        delete client;
-        return;
-    }
-    
-    if (httpCode != HTTP_CODE_OK) {
-        Serial.printf("[OLED_OTA] Lỗi kết nối HTTP: %d\n", httpCode);
-        http.end();
-        delete client;
-        return;
-    }
-
-    int contentLength = http.getSize();
-    Serial.printf("[OLED_OTA] Kích thước firmware: %d bytes\n", contentLength);
-    
-    if (contentLength <= 0) {
-        Serial.println("[OLED_OTA] Lỗi: Server không gửi Content-Length.");
-        http.end();
-        delete client;
-        return;
-    }
-
-    Serial.println("[OLED_OTA] Bắt đầu quá trình Update OTA...");
-    if (Update.begin(contentLength)) {
-        WiFiClient *tcp = http.getStreamPtr();
-        size_t written = Update.writeStream(*tcp);
-        
-        if (written == (size_t)contentLength) {
-            Serial.println("[OLED_OTA] Ghi firmware thành công, đang kiểm tra...");
-            if (Update.end()) {
-                Serial.println("[OLED_OTA] OTA Hoàn tất! Đang khởi động lại...");
-                delay(1000);
-                ESP.restart();
-            } else {
-                Serial.printf("[OLED_OTA] Lỗi Update.end(): %s\n", Update.errorString());
-                
-                // WORKAROUND CHO LỖI ESP32-S3 CORE 2.0.11: 
-                // Khi Update.end() trả về "Flash Read Failed" do bộ đệm cache chưa đồng bộ, 
-                // nhưng thực tế dữ liệu đã được ghi thành công, ta sẽ chủ động ép đổi boot partition.
-                if (String(Update.errorString()) == "Flash Read Failed") {
-                    Serial.println("[OLED_OTA] Kích hoạt Workaround cho lỗi Flash Read...");
-                    const esp_partition_t* update_partition = esp_ota_get_next_update_partition(NULL);
-                    if (update_partition) {
-                        esp_err_t err = esp_ota_set_boot_partition(update_partition);
-                        if (err == ESP_OK) {
-                            Serial.println("[OLED_OTA] Ép đổi Boot Partition thành công! Đang khởi động lại...");
-                            delay(1000);
-                            ESP.restart();
-                        } else {
-                            Serial.printf("[OLED_OTA] Ép đổi Boot thất bại: %s\n", esp_err_to_name(err));
-                        }
-                    }
-                }
-            }
-        } else {
-            Serial.printf("[OLED_OTA] Ghi thiếu dữ liệu: %d/%d bytes\n", written, contentLength);
-        }
     } else {
         Serial.printf("[OLED_OTA] Không đủ bộ nhớ cho OTA: %s\n", Update.errorString());
     }
     
     http.end();
-    
     delete client;
 }
