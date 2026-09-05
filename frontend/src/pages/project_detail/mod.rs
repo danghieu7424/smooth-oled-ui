@@ -211,10 +211,12 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                                     </button>
                                                 </div>
 
-                                                {move || if show_upload_modal.get() {
+                                                {{
+                                                    let p_id_for_modal = p_id_for_upload.clone();
+                                                    move || if show_upload_modal.get() {
                                                     let calc_for_view = calculated_version.clone();
                                                     let calc_for_upload = calculated_version.clone();
-                                                    let id_for_upload = p_id_for_upload.clone();
+                                                    let id_for_upload = p_id_for_modal.clone();
                                                     
                                                     view! {
                                                         <div class="modal-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px);">
@@ -334,6 +336,7 @@ pub fn ProjectDetailPage() -> impl IntoView {
                                                     }.into_view()
                                                 } else {
                                                     view!{}.into_view()
+                                                }
                                                 }}
 
                                                 <div style="background: #2a2a2c; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 1.5rem; color: #fff;">
