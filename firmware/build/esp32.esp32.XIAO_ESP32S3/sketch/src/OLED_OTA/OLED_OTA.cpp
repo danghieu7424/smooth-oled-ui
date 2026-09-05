@@ -30,11 +30,16 @@ void OLED_OTA::begin() {
     // FIX: Nếu otadata bị xóa (empty), ESP-IDF OTA API sẽ nhầm tưởng 
     // phân vùng kế tiếp là app0 và ghi đè lên chính nó gây lỗi Flash Read Failed.
     // Do đó ta cần khởi tạo otadata trỏ về phân vùng đang chạy.
-    const esp_partition_t* running = esp_partition_get_running();
+    const esp_partition_t* running = esp_ota_get_running_partition();
     const esp_partition_t* configured = esp_ota_get_boot_partition();
     if (configured == NULL || configured->address != running->address) {
-        Serial.println("[OLED_OTA] Khởi tạo otadata...");
-        esp_ota_set_boot_partition(running);
+        Serial.printf("[OLED_OTA] Khởi tạo otadata. Đang chạy: 0x%x\n", running->address);
+        esp_err_t err = esp_ota_set_boot_partition(running);
+        if (err != ESP_OK) {
+            Serial.printf("[OLED_OTA] LỖI: Không thể set boot partition (%s)\n", esp_err_to_name(err));
+        } else {
+            Serial.println("[OLED_OTA] Đã set boot partition thành công!");
+        }
     }
 }
 

@@ -347,9 +347,22 @@ async fn delete_firmware(
         }
     }
     
-    // Delete file
-    let file_path = format!("storages/projects/{}/{}/firmware_{}.bin", user_suid, project_id, version);
-    let _ = std::fs::remove_file(&file_path);
+    let p_id_clone = project_id.clone();
+    let v_clone = version.clone();
+    
+    // Fetch file_path from DB to safely delete it
+    let file_path: Option<String> = state.storage.execute_query(move |conn| {
+        use rusqlite::OptionalExtension;
+        conn.query_row(
+            "SELECT file_path FROM firmwares WHERE project_id = ?1 AND version = ?2",
+            rusqlite::params![p_id_clone, v_clone],
+            |row| row.get(0)
+        ).optional()
+    }).await.unwrap_or(None);
+
+    if let Some(path) = file_path {
+        let _ = std::fs::remove_file(&path);
+    }
 
     let res = state.storage.execute_query(move |conn| {
         conn.execute(
@@ -414,15 +427,19 @@ pub async fn download_latest_firmware(
                 .body(axum::body::Body::empty())
                 .unwrap());
         }
-        if let Ok(bytes) = std::fs::read(&path) {
-            let filename = std::path::Path::new(&path).file_name().and_then(|n| n.to_str()).unwrap_or("firmware.bin");
-            let resp = axum::response::Response::builder()
-                .header(axum::http::header::CONTENT_TYPE, "application/octet-stream")
-                .header(axum::http::header::CONTENT_DISPOSITION, format!("attachment; filename=\"{}\"", filename))
-                .header(axum::http::header::CONTENT_LENGTH, bytes.len().to_string())
-                .body(axum::body::Body::from(bytes))
-                .unwrap();
-            return Ok(resp);
+        if let Ok(metadata) = std::fs::metadata(&path) {
+            if let Ok(file) = tokio::fs::File::open(&path).await {
+                let filename = std::path::Path::new(&path).file_name().and_then(|n| n.to_str()).unwrap_or("firmware.bin");
+                let stream = tokio_util::io::ReaderStream::new(file);
+                let resp = axum::response::Response::builder()
+                    .header(axum::http::header::CONTENT_TYPE, "application/octet-stream")
+                    .header(axum::http::header::CONTENT_DISPOSITION, format!("attachment; filename=\"{}\"", filename))
+                    .header(axum::http::header::CONTENT_LENGTH, metadata.len().to_string())
+                    .header("x-ESP32-version", normalized_latest)
+                    .body(axum::body::Body::from_stream(stream))
+                    .unwrap();
+                return Ok(resp);
+            }
         }
     }
     
@@ -463,7 +480,7 @@ async fn delete_project(
     match res {
         Ok(exists) => {
             if exists == 1 && !user_suid.is_empty() {
-                let dir_path = format!("storages/projects/{}-{}", user_suid, p_id_clone);
+                let dir_path = format!("storages/projects/{}/{}", user_suid, p_id_clone);
                 let _ = std::fs::remove_dir_all(&dir_path);
             }
             Ok(Json(serde_json::json!({"status": "success"})))
