@@ -264,8 +264,8 @@ async fn upload_firmware(
         return Err(axum::http::StatusCode::BAD_REQUEST);
     }
 
-    // Save firmware file matching the draft_plan.md structure: storages/user_id_01/project_id_01/version_firmware_v1.0.0.bin
-    let file_path = format!("storages/{}/{}/firmware_{}.bin", user_suid, project_id, version);
+    // Save firmware file matching the draft_plan.md structure: storages/projects/user_suid/project_id/firmware_version.bin
+    let file_path = format!("storages/projects/{}/{}/firmware_{}.bin", user_suid, project_id, version);
     if let Some(parent) = std::path::Path::new(&file_path).parent() {
         std::fs::create_dir_all(parent).ok();
     }
@@ -335,7 +335,7 @@ async fn delete_firmware(
     }
     
     // Delete file
-    let file_path = format!("storages/{}/{}/firmware_{}.bin", user_suid, project_id, version);
+    let file_path = format!("storages/projects/{}/{}/firmware_{}.bin", user_suid, project_id, version);
     let _ = std::fs::remove_file(&file_path);
 
     let res = state.storage.execute_query(move |conn| {
@@ -349,6 +349,41 @@ async fn delete_firmware(
         Ok(_) => Ok(Json(serde_json::json!({"status": "success"}))),
         Err(_) => Err(axum::http::StatusCode::INTERNAL_SERVER_ERROR),
     }
+}
+
+pub async fn download_latest_firmware(
+    Path(suid_pid): Path<String>,
+    State(state): State<Arc<AppState>>,
+) -> Result<impl axum::response::IntoResponse, axum::http::StatusCode> {
+    // suid_pid format: "007Rlq30Q2vU-esp32-tool"
+    let parts: Vec<&str> = suid_pid.splitn(2, '-').collect();
+    if parts.len() != 2 {
+        return Err(axum::http::StatusCode::BAD_REQUEST);
+    }
+    let project_id = parts[1].to_string();
+
+    let file_path: Option<String> = state.storage.execute_query({
+        move |conn| {
+            conn.query_row(
+                "SELECT file_path FROM firmwares WHERE project_id = ?1 ORDER BY id DESC LIMIT 1",
+                rusqlite::params![project_id],
+                |row| row.get(0)
+            ).ok()
+        }
+    }).await;
+
+    if let Some(path) = file_path {
+        if let Ok(bytes) = std::fs::read(&path) {
+            let filename = std::path::Path::new(&path).file_name().and_then(|n| n.to_str()).unwrap_or("firmware.bin");
+            let headers = [
+                (axum::http::header::CONTENT_TYPE, "application/octet-stream".to_string()),
+                (axum::http::header::CONTENT_DISPOSITION, format!("attachment; filename=\"{}\"", filename)),
+            ];
+            return Ok((headers, bytes));
+        }
+    }
+    
+    Err(axum::http::StatusCode::NOT_FOUND)
 }
 
 async fn delete_project(

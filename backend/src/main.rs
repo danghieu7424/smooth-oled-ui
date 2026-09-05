@@ -76,50 +76,6 @@ async fn favicon_handler() -> impl IntoResponse {
     )
 }
 
-async fn download_firmware(
-    axum::extract::Path(id): axum::extract::Path<String>,
-    axum::extract::State(state): axum::extract::State<std::sync::Arc<crate::core::state::AppState>>,
-) -> Result<impl IntoResponse, axum::http::StatusCode> {
-    let parts: Vec<&str> = id.splitn(2, '-').collect();
-    if parts.len() != 2 {
-        return Err(axum::http::StatusCode::BAD_REQUEST);
-    }
-    let user_suid = parts[0];
-    let project_id = parts[1];
-
-    let res = state.storage.execute_query({
-        let p_id = project_id.to_string();
-        move |conn| {
-            conn.query_row(
-                "SELECT version FROM firmwares WHERE project_id = ?1 ORDER BY id DESC LIMIT 1",
-                rusqlite::params![p_id],
-                |row| row.get::<_, String>(0)
-            )
-        }
-    }).await;
-
-    let version = match res {
-        Ok(v) => v,
-        Err(_) => return Err(axum::http::StatusCode::NOT_FOUND),
-    };
-
-    let file_path = format!("storages/{}/{}/firmware_{}.bin", user_suid, project_id, version);
-    let path = std::path::Path::new(&file_path);
-    if !path.exists() {
-        return Err(axum::http::StatusCode::NOT_FOUND);
-    }
-
-    let file = tokio::fs::File::open(path).await.map_err(|_| axum::http::StatusCode::INTERNAL_SERVER_ERROR)?;
-    let stream = tokio_util::io::ReaderStream::new(file);
-    let body = axum::body::Body::from_stream(stream);
-    
-    let mut headers = axum::http::HeaderMap::new();
-    headers.insert(axum::http::header::CONTENT_TYPE, "application/octet-stream".parse().unwrap());
-    headers.insert(axum::http::header::CONTENT_DISPOSITION, format!("attachment; filename=\"firmware_{}.bin\"", version).parse().unwrap());
-
-    Ok((headers, body))
-}
-
 #[tokio::main]
 async fn main() {
     // Không tự động đổi thư mục làm việc trong lúc phát triển để tránh tạo file DB sai chỗ (như trong target/debug)
@@ -269,7 +225,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/favicon.ico", axum::routing::get(favicon_handler))
-        .route("/api/firmware/:id", axum::routing::get(download_firmware))
+        .route("/api/firmware/:suid_pid", axum::routing::get(crate::routes::projects::download_latest_firmware))
         .nest("/api/projects", crate::routes::projects::router())
         .nest("/api/auth", crate::routes::auth::router())
         .nest_service("/storages", spa_storages)
