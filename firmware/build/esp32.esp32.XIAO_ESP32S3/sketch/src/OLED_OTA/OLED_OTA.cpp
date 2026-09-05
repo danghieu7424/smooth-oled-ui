@@ -90,31 +90,78 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
     // Tăng timeout để tránh lỗi Stream Read Failed (lỗi 3)
     client->setTimeout(10000);
 
+    HTTPClient http;
+    http.begin(*client, url);
+    http.addHeader("x-ESP32-version", _currentVersion);
     
-    httpUpdate.onStart([]() { Serial.println("[OLED_OTA] OTA Bắt đầu..."); });
-    httpUpdate.onEnd([]() { Serial.println("\n[OLED_OTA] OTA Hoàn tất. Đang khởi động lại..."); });
-    httpUpdate.onProgress([](int cur, int total) {
-        Serial.printf("[OLED_OTA] Tiến trình: %d%%\r", (cur * 100) / total);
-    });
-    httpUpdate.onError([](int err) {
-        Serial.printf("[OLED_OTA] Lỗi cập nhật[%d]: %s\n", err, httpUpdate.getLastErrorString().c_str());
-    });
-    
-    httpUpdate.rebootOnUpdate(true); // Automatically reboot after successful update
-    
-    t_httpUpdate_return ret = httpUpdate.update(*client, url, _currentVersion);
-    
-    switch (ret) {
-        case HTTP_UPDATE_FAILED:
-            Serial.printf("[OLED_OTA] Lỗi OTA (%d): %s\n", httpUpdate.getLastError(), httpUpdate.getLastErrorString().c_str());
-            break;
-        case HTTP_UPDATE_NO_UPDATES:
-            Serial.println("[OLED_OTA] Không có bản cập nhật mới (HTTP 304).");
-            break;
-        case HTTP_UPDATE_OK:
-            Serial.println("[OLED_OTA] Cập nhật thành công!");
-            break;
+    int httpCode = http.GET();
+    if (httpCode == HTTP_CODE_NOT_MODIFIED) {
+        Serial.println("[OLED_OTA] Không có bản cập nhật mới (HTTP 304).");
+    } else if (httpCode == HTTP_CODE_OK) {
+        int contentLength = http.getSize();
+        bool canBegin = contentLength > 0 ? Update.begin(contentLength) : Update.begin(UPDATE_SIZE_UNKNOWN);
+        
+        if (canBegin) {
+            Serial.println("[OLED_OTA] OTA Bắt đầu...");
+            WiFiClient *tcp = http.getStreamPtr();
+            
+            size_t written = 0;
+            size_t total = contentLength > 0 ? contentLength : 0;
+            uint8_t buff[4096] = { 0 };
+            
+            // Wait for data
+            unsigned long timeout = millis();
+            while (http.connected() && tcp->available() == 0) {
+                if (millis() - timeout > 10000) {
+                    Serial.println("[OLED_OTA] Lỗi: Timeout chờ dữ liệu ban đầu");
+                    break;
+                }
+                delay(10);
+            }
+            
+            while (http.connected() || tcp->available()) {
+                size_t size = tcp->available();
+                if (size) {
+                    int c = tcp->readBytes(buff, ((size > sizeof(buff)) ? sizeof(buff) : size));
+                    if (c > 0) {
+                        Update.write(buff, c);
+                        written += c;
+                        if (total > 0) {
+                            Serial.printf("[OLED_OTA] Tiến trình: %d%%\r", (written * 100) / total);
+                        } else {
+                            Serial.printf("[OLED_OTA] Đã tải: %u bytes\r", written);
+                        }
+                        timeout = millis();
+                    }
+                }
+                
+                if (total > 0 && written >= total) {
+                    Serial.println("\n[OLED_OTA] Đã tải đủ toàn bộ file.");
+                    break;
+                }
+                
+                if (millis() - timeout > 10000) {
+                    Serial.println("\n[OLED_OTA] Lỗi: Timeout đang tải dữ liệu");
+                    break;
+                }
+                delay(1);
+            }
+            
+            if (Update.end()) {
+                Serial.println("\n[OLED_OTA] OTA Hoàn tất. Đang khởi động lại...");
+                if (Update.isFinished()) {
+                    ESP.restart();
+                }
+            } else {
+                Serial.printf("\n[OLED_OTA] Lỗi OTA (%d): %s\n", Update.getError(), Update.errorString());
+            }
+        } else {
+            Serial.printf("[OLED_OTA] Không thể bắt đầu OTA (%d): %s\n", Update.getError(), Update.errorString());
+        }
+    } else {
+        Serial.printf("[OLED_OTA] Lỗi kết nối HTTP: %d\n", httpCode);
     }
     
+    http.end();
     delete client;
 }

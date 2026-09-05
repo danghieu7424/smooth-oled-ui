@@ -240,8 +240,6 @@ D:\all_projects\rust\rust\display_oled\firmware\build\esp32.esp32.XIAO_ESP32S3\s
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/hal/include/hal/aes_types.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/mbedtls/mbedtls/include/mbedtls/error.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\HTTPClient\src/HTTPClient.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\HTTPUpdate\src/HTTPUpdate.h \
- C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\WiFi\src/WiFiUdp.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\libraries\Update\src/Update.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11\cores\esp32/MD5Builder.h \
  C:\Users\dangh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\2.0.11/tools/sdk/esp32s3/include/esp_rom/include/esp_rom_md5.h \

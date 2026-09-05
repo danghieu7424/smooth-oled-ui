@@ -421,6 +421,8 @@ pub async fn download_latest_firmware(
         // latest_version bây giờ chính là core_version được lấy trực tiếp từ DB
         let normalized_latest = latest_core_version.trim().trim_start_matches(|c| c == 'v' || c == 'V');
             
+        println!("[OTA] device_version = '{}', normalized_latest = '{}'", device_version, normalized_latest);
+
         if device_version.eq_ignore_ascii_case(normalized_latest) {
             return Ok(axum::response::Response::builder()
                 .status(axum::http::StatusCode::NOT_MODIFIED)
@@ -428,13 +430,17 @@ pub async fn download_latest_firmware(
                 .unwrap());
         }
         if let Ok(metadata) = std::fs::metadata(&path) {
-            if let Ok(file) = tokio::fs::File::open(&path).await {
+            if let Ok(mut file) = tokio::fs::File::open(&path).await {
                 let filename = std::path::Path::new(&path).file_name().and_then(|n| n.to_str()).unwrap_or("firmware.bin");
+                
+                // Dùng stream chuẩn không cần sleep, để TCP/HTTPClient tự handle buffer
                 let stream = tokio_util::io::ReaderStream::new(file);
+
                 let resp = axum::response::Response::builder()
                     .header(axum::http::header::CONTENT_TYPE, "application/octet-stream")
                     .header(axum::http::header::CONTENT_DISPOSITION, format!("attachment; filename=\"{}\"", filename))
                     .header(axum::http::header::CONTENT_LENGTH, metadata.len().to_string())
+                    .header("Connection", "close")
                     .header("x-ESP32-version", normalized_latest)
                     .body(axum::body::Body::from_stream(stream))
                     .unwrap();
