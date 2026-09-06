@@ -39,22 +39,22 @@ bool testFlashAddress(uint32_t addr, const char* label) {
     uint8_t read_data[16] __attribute__((aligned(4))) = {0};
     
     // Bước 1: Xóa sector (4KB)
-    esp_err_t err = spi_flash_erase_range(addr, 4096);
-    Serial.printf("  Erase: %s\n", esp_err_to_name(err));
+    esp_err_t err = esp_rom_spiflash_erase_sector(addr / 4096);
+    Serial.printf("  Erase: %s\n", err == ESP_OK ? "ESP_OK" : "FAIL");
     if (err != ESP_OK) return false;
     
     // Bước 2: Đọc sau khi xóa (phải là FF)
-    spi_flash_read(addr, read_data, 16);
+    esp_flash_read(esp_flash_default_chip, read_data, addr, 16);
     Serial.printf("  After erase: ");
     printHex(read_data, 16);
     
     // Bước 3: Ghi dữ liệu test
-    err = spi_flash_write(addr, write_data, 16);
-    Serial.printf("  Write: %s\n", esp_err_to_name(err));
+    err = esp_rom_spiflash_write(addr, (const uint32_t*)write_data, 16);
+    Serial.printf("  Write: %s\n", err == ESP_OK ? "ESP_OK" : "FAIL");
     
     // Bước 4: Đọc lại
     memset(read_data, 0, 16);
-    spi_flash_read(addr, read_data, 16);
+    esp_flash_read(esp_flash_default_chip, read_data, addr, 16);
     Serial.printf("  Wrote:    ");
     printHex(write_data, 16);
     Serial.printf("  Readback: ");
@@ -65,13 +65,14 @@ bool testFlashAddress(uint32_t addr, const char* label) {
     Serial.printf("  Result: %s\n", match ? ">>> GHI ĐƯỢC <<<" : ">>> KHÔNG GHI ĐƯỢC <<<");
     
     // Xóa lại để không ảnh hưởng
-    spi_flash_erase_range(addr, 4096);
+    esp_rom_spiflash_erase_sector(addr / 4096);
     
     return match;
 }
 
 void setup() {
     Serial.begin(115200);
+    while(!Serial) { delay(10); } // Wait for USB connection
     delay(2000);
     
     Serial.println("\n\n========================================");
@@ -169,17 +170,17 @@ void setup() {
     // Test 1: BỎ QUA
     bool t1 = false;
     
-    // Test 2: Đầu vùng app1 của 4MB scheme (0x150000)
-    bool t2 = testFlashAddress(0x00150000, "Dau app1 (0x150000)");
+    // Test 2: Đầu vùng app1 của 8MB scheme (0x340000)
+    bool t2 = testFlashAddress(0x00340000, "Dau app1 (0x340000)");
     
-    // Test 3: Giữa vùng app1 của 4MB scheme (0x200000)
-    bool t3 = testFlashAddress(0x00200000, "Giua app1 (0x200000)");
+    // Test 3: Giữa vùng app1 của 8MB scheme (0x400000)
+    bool t3 = testFlashAddress(0x00400000, "Giua app1 (0x400000)");
     
-    // Test 4: Vùng spiffs của 4MB scheme (0x290000)
-    bool t4 = testFlashAddress(0x00290000, "Dau spiffs (0x290000)");
+    // Test 4: Vùng spiffs của 8MB scheme (0x670000)
+    bool t4 = testFlashAddress(0x00670000, "Dau spiffs (0x670000)");
     
-    // Test 5: Cuối 4MB Flash (0x3F0000)
-    bool t5 = testFlashAddress(0x003F0000, "Cuoi flash 4MB (0x3F0000)");
+    // Test 5: Cuối flash (0x7F0000)
+    bool t5 = testFlashAddress(0x007F0000, "Cuoi flash 8MB (0x7F0000)");
 
     /****
      * PHẦN 6: Tổng kết

@@ -25,7 +25,7 @@ void printHex(const uint8_t* data, int len);
 bool testFlashAddress(uint32_t addr, const char* label);
 #line 73 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\flash_diag\\flash_diag.ino"
 void setup();
-#line 208 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\flash_diag\\flash_diag.ino"
+#line 209 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\flash_diag\\flash_diag.ino"
 void loop();
 #line 21 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\flash_diag\\flash_diag.ino"
 void printHex(const uint8_t* data, int len) {
@@ -49,22 +49,22 @@ bool testFlashAddress(uint32_t addr, const char* label) {
     uint8_t read_data[16] __attribute__((aligned(4))) = {0};
     
     // Bước 1: Xóa sector (4KB)
-    esp_err_t err = spi_flash_erase_range(addr, 4096);
+    esp_err_t err = esp_flash_erase_region(esp_flash_default_chip, addr, 4096);
     Serial.printf("  Erase: %s\n", esp_err_to_name(err));
     if (err != ESP_OK) return false;
     
     // Bước 2: Đọc sau khi xóa (phải là FF)
-    spi_flash_read(addr, read_data, 16);
+    esp_flash_read(esp_flash_default_chip, read_data, addr, 16);
     Serial.printf("  After erase: ");
     printHex(read_data, 16);
     
     // Bước 3: Ghi dữ liệu test
-    err = spi_flash_write(addr, write_data, 16);
+    err = esp_flash_write(esp_flash_default_chip, write_data, addr, 16);
     Serial.printf("  Write: %s\n", esp_err_to_name(err));
     
     // Bước 4: Đọc lại
     memset(read_data, 0, 16);
-    spi_flash_read(addr, read_data, 16);
+    esp_flash_read(esp_flash_default_chip, read_data, addr, 16);
     Serial.printf("  Wrote:    ");
     printHex(write_data, 16);
     Serial.printf("  Readback: ");
@@ -75,13 +75,14 @@ bool testFlashAddress(uint32_t addr, const char* label) {
     Serial.printf("  Result: %s\n", match ? ">>> GHI ĐƯỢC <<<" : ">>> KHÔNG GHI ĐƯỢC <<<");
     
     // Xóa lại để không ảnh hưởng
-    spi_flash_erase_range(addr, 4096);
+    esp_flash_erase_region(esp_flash_default_chip, addr, 4096);
     
     return match;
 }
 
 void setup() {
     Serial.begin(115200);
+    while(!Serial) { delay(10); } // Wait for USB connection
     delay(2000);
     
     Serial.println("\n\n========================================");

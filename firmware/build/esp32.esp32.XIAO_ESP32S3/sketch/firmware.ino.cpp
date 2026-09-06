@@ -1,6 +1,5 @@
-#include <Arduino.h>
 #line 1 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-﻿#include <Arduino.h>
+#include <Arduino.h>
 #include <U8g2lib.h>
 #include <Wire.h>
 #include <WiFi.h>
