@@ -13,14 +13,8 @@
 #include "src/ExternalEEPROM/ExternalEEPROM.h"
 
 // ==========================================
-// CẤU H�RNH DỰ � N TỪ OTA HUB DASHBOARD
+// CẤU HÌNH DỰ ÁN
 // ==========================================
-const char* PROJECT_ID = "007Rlq30Q2vU-esp32-tool";
-const char* PROJECT_TOKEN = "fc11b225f325609bb7309ad70f090a78";
-const char* CURRENT_VERSION = "1.0.0";
-const char* API_HOST = "192.168.7.7";
-const uint16_t API_PORT = 7424;
-
 int saved_brightness = 20;
 
 #define LED_PIN 2
@@ -48,10 +42,10 @@ bool load_wifi_credentials(String &ssid, String &pwd) {
     return false;
 }
 
-// Kh�xi tạo màn hình
+// Khởi tạo màn hình
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
-// Truy� n tham chiếu màn hình và UART (�Ồ Stream) vào lõi thư vi�!n
+// Truyền tham chiếu màn hình và UART (để Stream) vào lõi thư viện
 SmoothOLED ui(&u8g2, &Serial);
 
 // =======================================================================
@@ -447,23 +441,23 @@ void task_ui_core0(void *pvParameters) {
         // 1. Xử lý Input từ Serial (Nút bấm mô phỏng)
         if (Serial.available() > 0) {
             char c = Serial.read();
-            if (c == '\x1B') {
+            if (c ==để\x1B') {
                 uint32_t t = millis();
                 while (!Serial.available() && millis() - t < 50) { vTaskDelay(1); }
                 if (Serial.available()) {
                     char cmd = Serial.read();
-                    if (cmd == 'U') ui.up();
-                    else if (cmd == 'D') ui.down();
-                    else if (cmd == 'L') ui.left();
-                    else if (cmd == 'R') ui.right();
-                    else if (cmd == 'P') {
+                    if (cmd ==đểU') ui.up();
+                    else if (cmd ==đểD') ui.down();
+                    else if (cmd ==đểL') ui.left();
+                    else if (cmd ==đểR') ui.right();
+                    else if (cmd ==đểP') {
                         ui.setPopupListItems(popup_items, TOTAL_POPUP_ITEMS);
                         ui.openPopup();
                     }
-                    else if (cmd == 'S') ui.openSideList();
-                    else if (cmd == 'V') ui.enablePCViewer(true);
-                    else if (cmd == 'v') ui.enablePCViewer(false);
-                    else if (cmd == 'C') {
+                    else if (cmd ==đểS') ui.openSideList();
+                    else if (cmd ==đểV') ui.enablePCViewer(true);
+                    else if (cmd ==đểv') ui.enablePCViewer(false);
+                    else if (cmd ==đểC') {
                         if (ui.isOverlayOpen()) {
                             ui.closeOverlay();
                         } else if (ui.getAppState() == STATE_TEXT_INPUT) {
@@ -498,7 +492,7 @@ void task_ui_core0(void *pvParameters) {
                     }
                 }
             }
-            else if (c == 'B') {
+            else if (c ==đểB') {
                 if (ui.getAppState() == STATE_TEXT_INPUT) {
                     ui.backspace();
                 } else if (current_level == LEVEL_WIFI) {
@@ -507,10 +501,10 @@ void task_ui_core0(void *pvParameters) {
                         extEEPROM.writeByte(0x000F, 0x00);
                         if (xSemaphoreTake(wifi_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
                             for (int i = 0; i < wifi_count; i++) {
-                                if (wifi_ssid[i][0] == '*') {
+                                if (wifi_ssid[i][0] ==để*') {
                                     String temp = String(wifi_ssid[i]).substring(2);
                                     strncpy(wifi_ssid[i], temp.c_str(), 31);
-                                    wifi_ssid[i][31] = '\0';
+                                    wifi_ssid[i][31] =để\0';
                                 }
                             }
                             xSemaphoreGive(wifi_mutex);
@@ -519,7 +513,7 @@ void task_ui_core0(void *pvParameters) {
                     }
                 }
             }
-            else if (c == 'E') {
+            else if (c ==đểE') {
                 ui.select();
                 if (ui.getAppState() == STATE_SLIDER) {
                     if (active_slider == SLIDER_BRIGHTNESS) {
@@ -570,20 +564,20 @@ void task_network_core1(void *pvParameters) {
                     String connected_ssid = WiFi.SSID();
                     for (int i = 0; i < wifi_count; i++) {
                         if (String(wifi_raw_ssid[i]) == connected_ssid) {
-                            if (wifi_ssid[i][0] != '*') {
+                            if (wifi_ssid[i][0] !=để*') {
                                 char temp[32];
                                 snprintf(temp, 32, "* %s", wifi_ssid[i]);
                                 strncpy(wifi_ssid[i], temp, 31);
-                                wifi_ssid[i][31] = '\0';
+                                wifi_ssid[i][31] =để\0';
                             }
                         }
                     }
                 } else {
                     for (int i = 0; i < wifi_count; i++) {
-                        if (wifi_ssid[i][0] == '*') {
+                        if (wifi_ssid[i][0] ==để*') {
                             String temp = String(wifi_ssid[i]).substring(2);
                             strncpy(wifi_ssid[i], temp.c_str(), 31);
-                            wifi_ssid[i][31] = '\0';
+                            wifi_ssid[i][31] =để\0';
                         }
                     }
                 }
@@ -607,7 +601,7 @@ void task_network_core1(void *pvParameters) {
                         for (int i = 0; i < wifi_count; i++) {
                             String ssid = WiFi.SSID(i);
                             strncpy(wifi_raw_ssid[i], ssid.c_str(), 31);
-                            wifi_raw_ssid[i][31] = '\0';
+                            wifi_raw_ssid[i][31] =để\0';
                             
                             long rssi = WiFi.RSSI(i);
                             int quality = 0;
