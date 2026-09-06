@@ -1,4 +1,4 @@
-#include <Arduino.h>
+﻿#include <Arduino.h>
 #include <U8g2lib.h>
 #include <Wire.h>
 #include <WiFi.h>
@@ -14,7 +14,7 @@
 #include "src/OLED_OTA/OLED_OTA.h"
 
 // ==========================================
-// CẤU HÌNH DỰ ÁN TỪ OTA HUB DASHBOARD
+// Cáº¤U HÃŒNH Dá»° ÃN Tá»ª OTA HUB DASHBOARD
 // ==========================================
 const char* PROJECT_ID = "007Rlq30Q2vU-esp32-tool";
 const char* PROJECT_TOKEN = "fc11b225f325609bb7309ad70f090a78";
@@ -51,14 +51,14 @@ bool load_wifi_credentials(String &ssid, String &pwd) {
     return false;
 }
 
-// Khởi tạo màn hình
+// Khá»Ÿi táº¡o mÃ n hÃ¬nh
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
-// Truyền tham chiếu màn hình và UART (để Stream) vào lõi thư viện
+// Truyá»n tham chiáº¿u mÃ n hÃ¬nh vÃ  UART (Ä‘á»ƒ Stream) vÃ o lÃµi thÆ° viá»‡n
 SmoothOLED ui(&u8g2, &Serial);
 
 // =======================================================================
-// [DATA] Danh sách Icon (XBM 24x24)
+// [DATA] Danh sÃ¡ch Icon (XBM 24x24)
 // =======================================================================
 static const unsigned char icon_home[] U8X8_PROGMEM = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x00, 0x00, 0x3c, 0x00, 
@@ -96,7 +96,7 @@ static const unsigned char icon_about[] U8X8_PROGMEM = {
   0x80, 0xe7, 0x01, 0x00, 0x3c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-// [MỚI] Icon WiFi - Vẽ trên khung 24x24 px
+// [Má»šI] Icon WiFi - Váº½ trÃªn khung 24x24 px
 static const unsigned char icon_wifi[] U8X8_PROGMEM = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  
   0x80, 0xff, 0x01, 0xe0, 0xff, 0x07, 0xf0, 0x00, 0x0f, 0x38, 0x00, 0x1c,  
@@ -106,7 +106,7 @@ static const unsigned char icon_wifi[] U8X8_PROGMEM = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-// [MỚI] Icon esp now - Vẽ trên khung 24x24 px
+// [Má»šI] Icon esp now - Váº½ trÃªn khung 24x24 px
 static const unsigned char icon_esp_now[] U8X8_PROGMEM = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x02, 0x60, 0x00, 0x06,  
   0x30, 0x00, 0x0c, 0x10, 0x42, 0x08, 0x18, 0x81, 0x18, 0x18, 0x99, 0x18,  
@@ -116,7 +116,7 @@ static const unsigned char icon_esp_now[] U8X8_PROGMEM = {
   0x00, 0x7e, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-// [MỚI] Icon LED - Vẽ trên khung 24x24 px
+// [Má»šI] Icon LED - Váº½ trÃªn khung 24x24 px
 static const unsigned char icon_led_switch[] U8X8_PROGMEM = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
   0xf8, 0xff, 0x1f, 0xfc, 0xff, 0x3f, 0x0c, 0x00, 0x30, 0x0c, 0x00, 0x30, 
@@ -126,7 +126,7 @@ static const unsigned char icon_led_switch[] U8X8_PROGMEM = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-// --- KHAI BÁO CÁC HÀM XỬ LÝ SỰ KIỆN (CALLBACKS) ---
+// --- KHAI BÃO CÃC HÃ€M Xá»¬ LÃ Sá»° KIá»†N (CALLBACKS) ---
 void open_settings_menu();
 void open_brightness_slider();
 void open_led_switch();
@@ -162,7 +162,7 @@ const char* popup_items[] = {
 const int TOTAL_POPUP_ITEMS = 4;
 
 void on_restart() {
-    ESP.restart(); // Sửa lại lệnh chuẩn của ESP32
+    ESP.restart(); // Sá»­a láº¡i lá»‡nh chuáº©n cá»§a ESP32
 }
 
 void on_power_off() {
@@ -200,13 +200,13 @@ void open_about_menu() {
 // [SETUP & LOOP]
 // =======================================================================
 
-// Quản lý trạng thái Menu
+// Quáº£n lÃ½ tráº¡ng thÃ¡i Menu
 enum MenuLevel { LEVEL_MAIN, LEVEL_SETTINGS, LEVEL_WIFI };
 MenuLevel current_level = LEVEL_MAIN;
-int current_brightness = 20; // Độ sáng hiện tại
+int current_brightness = 20; // Äá»™ sÃ¡ng hiá»‡n táº¡i
 
 
-// Quản lý WiFi
+// Quáº£n lÃ½ WiFi
 #define MAX_WIFI_NETWORKS 15
 char wifi_ssid[MAX_WIFI_NETWORKS][32];
 char wifi_raw_ssid[MAX_WIFI_NETWORKS][32];
@@ -214,13 +214,13 @@ const char* wifi_ssid_ptrs[MAX_WIFI_NETWORKS];
 int wifi_count = 0;
 bool is_scanning_wifi = false;
 
-// Trạng thái kết nối WiFi
+// Tráº¡ng thÃ¡i káº¿t ná»‘i WiFi
 bool is_connecting_wifi = false;
 uint32_t wifi_connect_start = 0;
 String connecting_ssid = "";
 String connecting_pwd = "";
 
-// --- CÀI ĐẶT CÁC HÀM XỬ LÝ SỰ KIỆN ---
+// --- CÃ€I Äáº¶T CÃC HÃ€M Xá»¬ LÃ Sá»° KIá»†N ---
 
 void on_wifi_selected(int idx);
 
@@ -246,7 +246,7 @@ void open_brightness_slider() {
 
 void on_brightness_change(int val) {
   current_brightness = val;
-  u8g2.setContrast(current_brightness); // Lệnh phần cứng đổi độ sáng OLED trực tiếp
+  u8g2.setContrast(current_brightness); // Lá»‡nh pháº§n cá»©ng Ä‘á»•i Ä‘á»™ sÃ¡ng OLED trá»±c tiáº¿p
 }
 
 void open_led_switch() {
@@ -262,25 +262,25 @@ void on_led_change(int val) {
 char text_input_title_buf[64];
 
 void on_wifi_selected(int idx) {
-  // Chặn mở mật khẩu nếu đang Scanning, không có mạng, hoặc lỗi
+  // Cháº·n má»Ÿ máº­t kháº©u náº¿u Ä‘ang Scanning, khÃ´ng cÃ³ máº¡ng, hoáº·c lá»—i
   if (idx >= 0 && idx < wifi_count && strncmp(wifi_ssid[0], "Scanning", 8) != 0 && strncmp(wifi_ssid[0], "No networks", 10) != 0 && strncmp(wifi_ssid[0], "Scan Failed", 11) != 0) {
-      // Nếu mạng này đang được kết nối rồi, báo luôn không cần nhập pass
+      // Náº¿u máº¡ng nÃ y Ä‘ang Ä‘Æ°á»£c káº¿t ná»‘i rá»“i, bÃ¡o luÃ´n khÃ´ng cáº§n nháº­p pass
       if (WiFi.status() == WL_CONNECTED && WiFi.SSID() == String(wifi_raw_ssid[idx])) {
           ui.openModal("Connected!", "Already connected to this network");
           return;
       }
 
-      // KIỂM TRA: Nếu mạng này TRÙNG với mạng đã lưu trong AT24C256
+      // KIá»‚M TRA: Náº¿u máº¡ng nÃ y TRÃ™NG vá»›i máº¡ng Ä‘Ã£ lÆ°u trong AT24C256
       String saved_pwd = "";
       String saved_ssid = "";
       if (load_wifi_credentials(saved_ssid, saved_pwd)) {
           if (String(wifi_raw_ssid[idx]) != saved_ssid) {
-              saved_pwd = ""; // Nếu không khớp SSID thì không dùng pwd này
+              saved_pwd = ""; // Náº¿u khÃ´ng khá»›p SSID thÃ¬ khÃ´ng dÃ¹ng pwd nÃ y
           }
       }
       
-      // Mở ô nhập Pass và ĐIỀN SẴN mật khẩu cũ (như thẻ input type="text" có value)
-      // Người dùng chỉ cần ấn Enter để kết nối, hoặc ấn xóa để sửa
+      // Má»Ÿ Ã´ nháº­p Pass vÃ  ÄIá»€N Sáº´N máº­t kháº©u cÅ© (nhÆ° tháº» input type="text" cÃ³ value)
+      // NgÆ°á»i dÃ¹ng chá»‰ cáº§n áº¥n Enter Ä‘á»ƒ káº¿t ná»‘i, hoáº·c áº¥n xÃ³a Ä‘á»ƒ sá»­a
       snprintf(text_input_title_buf, sizeof(text_input_title_buf), "PWD: %s", wifi_raw_ssid[idx]);
       ui.openTextInput(text_input_title_buf, on_wifi_password_submit, saved_pwd.c_str());
   }
@@ -289,18 +289,18 @@ void on_wifi_selected(int idx) {
 void on_enter_wifi() {
   current_level = LEVEL_WIFI;
   
-  // Khởi tạo UI hiển thị tạm thời "Scanning..."
+  // Khá»Ÿi táº¡o UI hiá»ƒn thá»‹ táº¡m thá»i "Scanning..."
   wifi_count = 1;
   strncpy(wifi_ssid[0], "Scanning...", 31);
   wifi_ssid_ptrs[0] = wifi_ssid[0];
   ui.openFullList("WIFI NETWORKS", wifi_ssid_ptrs, wifi_count, on_wifi_selected);
 
-  if (is_scanning_wifi) return; // Đang quét thì không kích hoạt lại
+  if (is_scanning_wifi) return; // Äang quÃ©t thÃ¬ khÃ´ng kÃ­ch hoáº¡t láº¡i
   
   WiFi.mode(WIFI_STA);
-  // XÓA WiFi.disconnect() ở đây để không làm rớt mạng đang kết nối khi load lại menu
+  // XÃ“A WiFi.disconnect() á»Ÿ Ä‘Ã¢y Ä‘á»ƒ khÃ´ng lÃ m rá»›t máº¡ng Ä‘ang káº¿t ná»‘i khi load láº¡i menu
   
-  WiFi.scanNetworks(true); // Quét bất đồng bộ (Async)
+  WiFi.scanNetworks(true); // QuÃ©t báº¥t Ä‘á»“ng bá»™ (Async)
   is_scanning_wifi = true;
 }
 
@@ -310,12 +310,12 @@ void on_wifi_password_submit(const char* pwd) {
       connecting_ssid = wifi_raw_ssid[idx];
       connecting_pwd = pwd;
       
-      // [MỚI] Lưu Credentials vào AT24C256
+      // [Má»šI] LÆ°u Credentials vÃ o AT24C256
       save_wifi_credentials(connecting_ssid, connecting_pwd);
       
       Serial.printf("\n[WiFi] Connecting to %s with password: %s\n", connecting_ssid.c_str(), pwd);
       
-      // Ngắt kết nối cũ (nếu có)
+      // Ngáº¯t káº¿t ná»‘i cÅ© (náº¿u cÃ³)
       WiFi.disconnect();
       delay(100);
       WiFi.begin(connecting_ssid.c_str(), pwd);
@@ -323,73 +323,30 @@ void on_wifi_password_submit(const char* pwd) {
       is_connecting_wifi = true;
       wifi_connect_start = millis();
       
-      // Hiển thị trạng thái Connecting... lên màn hình
+      // Hiá»ƒn thá»‹ tráº¡ng thÃ¡i Connecting... lÃªn mÃ n hÃ¬nh
       ui.openModal("Connecting...", connecting_ssid.c_str());
   }
 }
 
+SemaphoreHandle_t wifi_mutex = NULL;
+
+void task_ui_core0(void *pvParameters);
+void task_network_core1(void *pvParameters);
+
 void setup() {
   Serial.begin(921600);
   
-  /****
-   * CHẨN ĐOÁN SPI FLASH: Ghi test pattern vào SPIFFS partition
-   * trước VÀ sau Wire.begin(47, 48) để xác thực
-   * xem GPIO47/48 có phá SPI Flash bus hay không
-   ****/
-  {
-    const esp_partition_t* test_part = esp_partition_find_first(
-        ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, NULL);
-    if (test_part) {
-      uint8_t test_data[16] = {0xDE, 0xAD, 0xBE, 0xEF, 0x01, 0x02, 0x03, 0x04,
-                                0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C};
-      uint8_t readback[16] = {0};
-      esp_err_t e;
-
-      // TEST 1: TRƯỚC Wire.begin()
-      e = esp_partition_erase_range(test_part, 0, 4096);
-      Serial.printf("[DIAG] TRƯỚC Wire.begin — erase: %s\n", esp_err_to_name(e));
-      e = esp_partition_write(test_part, 0, test_data, 16);
-      Serial.printf("[DIAG] TRƯỚC Wire.begin — write: %s\n", esp_err_to_name(e));
-      e = esp_partition_read(test_part, 0, readback, 16);
-      Serial.printf("[DIAG] TRƯỚC Wire.begin — read:  %s\n", esp_err_to_name(e));
-      Serial.printf("[DIAG] TRƯỚC Wire — Flash: ");
-      for (int i = 0; i < 16; i++) Serial.printf("%02X ", readback[i]);
-      Serial.println();
-      bool beforeOK = (readback[0] == 0xDE && readback[1] == 0xAD);
-      Serial.printf("[DIAG] TRƯỚC Wire — KẾT QUẢ: %s\n", beforeOK ? "GHI OK!" : "*** THẤT BẠI ***");
-    }
-  }
-
-  Wire.begin(47, 48);
-  Wire.setClock(400000); 
-
-  // TEST 2: SAU Wire.begin()
-  {
-    const esp_partition_t* test_part = esp_partition_find_first(
-        ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, NULL);
-    if (test_part) {
-      uint8_t test_data[16] = {0xCA, 0xFE, 0xBA, 0xBE, 0x11, 0x22, 0x33, 0x44,
-                                0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC};
-      uint8_t readback[16] = {0};
-      esp_err_t e;
-
-      e = esp_partition_erase_range(test_part, 0, 4096);
-      Serial.printf("[DIAG] SAU Wire.begin — erase: %s\n", esp_err_to_name(e));
-      e = esp_partition_write(test_part, 0, test_data, 16);
-      Serial.printf("[DIAG] SAU Wire.begin — write: %s\n", esp_err_to_name(e));
-      e = esp_partition_read(test_part, 0, readback, 16);
-      Serial.printf("[DIAG] SAU Wire.begin — read:  %s\n", esp_err_to_name(e));
-      Serial.printf("[DIAG] SAU Wire — Flash: ");
-      for (int i = 0; i < 16; i++) Serial.printf("%02X ", readback[i]);
-      Serial.println();
-      bool afterOK = (readback[0] == 0xCA && readback[1] == 0xFE);
-      Serial.printf("[DIAG] SAU Wire — KẾT QUẢ: %s\n", afterOK ? "GHI OK!" : "*** THẤT BẠI ***");
-    }
-  }
-  
   pinMode(LED_PIN, OUTPUT);
 
-  // --- Khởi tạo và kiểm tra RTC & EEPROM ---
+  // --- Khá»Ÿi táº¡o I2C Bus 0 cho OLED (Core 0) ---
+  Wire.begin(4, 5);
+  Wire.setClock(400000); 
+
+  // --- Khá»Ÿi táº¡o vÃ  kiá»ƒm tra RTC & EEPROM (Core 1 sáº½ dÃ¹ng I2C1 / Wire1) ---
+  // Khá»Ÿi táº¡o Bus 1 (Sensor) á»Ÿ Ä‘Ã¢y Ä‘á»ƒ cÃ¡c module gá»i begin() thÃ nh cÃ´ng
+  Wire1.begin(6, 7);
+  Wire1.setClock(100000);
+
   if (rtc.begin()) {
       Serial.println("[HW] DS3231 RTC found!");
   } else {
@@ -410,11 +367,11 @@ void setup() {
   }
 
   u8g2.begin();
-  u8g2.setContrast(current_brightness); // Áp dụng độ sáng đã lưu
+  u8g2.setContrast(current_brightness);
 
-  // --- KẾT NỐI WIFI MẶC ĐỊNH ---
+  // --- Káº¾T Ná»I WIFI Máº¶C Äá»ŠNH ---
   WiFi.mode(WIFI_STA);
-  WiFi.disconnect(true); // Xóa state lơ lửng của phần cứng
+  WiFi.disconnect(true);
   delay(100);
   
   String saved_ssid = "";
@@ -428,21 +385,21 @@ void setup() {
   }
   
   WiFi.begin(connecting_ssid.c_str(), connecting_pwd.c_str());
-  WiFi.setAutoReconnect(true); // Tự động kết nối lại nếu rớt mạng
+  WiFi.setAutoReconnect(true);
 
-  // 1. Gán mảng dữ liệu vào thư viện UI
+  // 1. GÃ¡n máº£ng dá»¯ liá»‡u vÃ o thÆ° viá»‡n UI
   ui.setCarouselItems(menu_items, TOTAL_MAIN_ITEMS, "< MAIN MENU >");
   ui.setPopupListItems(popup_items, TOTAL_POPUP_ITEMS);
   ui.setSidePopupItems(side_items, TOTAL_SIDE_ITEMS);
 
-  // 2. Tắt chế độ xuất khung hình ra Serial cho PC Viewer (Mặc định OFF)
+  // 2. Cáº¥u hÃ¬nh UI
   ui.enableAutoDemo(false);
   ui.enablePCViewer(false);
 
-  // 3. Khởi động UI
+  // 3. Khá»Ÿi Ä‘á»™ng UI
   ui.begin();
 
-  // 4. Cấu hình TimeSync và mở Màn hình Đồng hồ
+  // 4. Cáº¥u hÃ¬nh TimeSync
   timeSync.begin(7);
   if (rtc.begin()) {
       timeSync.syncFromRTC();
@@ -453,237 +410,275 @@ void setup() {
   
   open_home_clock();
 
-  // 5. Khởi tạo OTA Service (Cơ chế HTTP Polling tự động check mỗi 60s)
+  // 5. Khá»Ÿi táº¡o OTA Service
   ota.setApiEndpoint(API_HOST, API_PORT);
   ota.begin();
+
+  // Táº¡o Mutex cho cÃ¡c biáº¿n dÃ¹ng chung
+  wifi_mutex = xSemaphoreCreateMutex();
+
+  // Táº¡o Task UI trÃªn Core 0
+  xTaskCreatePinnedToCore(
+      task_ui_core0,
+      "Task_UI",
+      8192,
+      NULL,
+      1,
+      NULL,
+      0
+  );
+
+  // Táº¡o Task Network trÃªn Core 1
+  xTaskCreatePinnedToCore(
+      task_network_core1,
+      "Task_Network",
+      8192,
+      NULL,
+      1,
+      NULL,
+      1
+  );
 }
 
 void loop() {
-  // Lắng nghe lệnh từ cổng Serial (gửi từ Python Script)
-  if (Serial.available() > 0) {
-    char c = Serial.read();
-    
-    if (c == '\x1B') {
-        // Lệnh điều hướng
-        uint32_t t = millis();
-        while (!Serial.available() && millis() - t < 50) { delay(1); }
-        if (Serial.available()) {
-            char cmd = Serial.read();
-            if (cmd == 'U') ui.up();        // Mũi tên Lên
-            else if (cmd == 'D') ui.down(); // Mũi tên Xuống
-            else if (cmd == 'L') ui.left(); // Mũi tên Trái
-            else if (cmd == 'R') ui.right();// Mũi tên Phải
-            else if (cmd == 'P') {
-              ui.setPopupListItems(popup_items, TOTAL_POPUP_ITEMS);
-              ui.openPopup(); // Phím End
-            }
-            else if (cmd == 'S') ui.openSideList(); // Phím Home
-            else if (cmd == 'V') ui.enablePCViewer(true);
-            else if (cmd == 'v') ui.enablePCViewer(false);
-            else if (cmd == 'C') { // Phím Esc
-              if (ui.isOverlayOpen()) {
-                ui.closeOverlay(); // Đóng Side List
-              } else if (ui.getAppState() == STATE_TEXT_INPUT) {
-                ui.closeOverlay(); // Esc -> Thoát thẳng nhập Pass
-              } else if (ui.getAppState() == STATE_POPUP || ui.getAppState() == STATE_MODAL) {
-                ui.closeOverlay(); // Đóng Popup/Modal
-              } else if (ui.getAppState() == STATE_CLOCK) {
-                ui.closeOverlay(); // Thoát khỏi đồng hồ về Menu chính
-              } else if (ui.getAppState() == STATE_FULL_LIST) {
-                if (current_level == LEVEL_WIFI) {
-                    current_level = LEVEL_SETTINGS; // Lùi về Settings
-                    ui.setCarouselItems(settings_items, TOTAL_SETTINGS_ITEMS, "< SETTINGS >");
-                    // Nếu thoát ra mà không có kết nối nào, tắt Wi-Fi để tiết kiệm pin
-                    if (WiFi.status() != WL_CONNECTED) {
-                        WiFi.mode(WIFI_OFF);
-                        extEEPROM.writeByte(0x000F, 0x00); // Tắt kết nối tự động
+    // XÃ³a task loop cá»§a Arduino Ä‘á»ƒ giáº£i phÃ³ng tÃ i nguyÃªn
+    vTaskDelete(NULL);
+}
+
+// ==========================================
+// TASK: UI & ANIMATION (CORE 0)
+// ==========================================
+void task_ui_core0(void *pvParameters) {
+    for (;;) {
+        // 1. Xá»­ lÃ½ Input tá»« Serial (NÃºt báº¥m mÃ´ phá»ng)
+        if (Serial.available() > 0) {
+            char c = Serial.read();
+            if (c == '\x1B') {
+                uint32_t t = millis();
+                while (!Serial.available() && millis() - t < 50) { vTaskDelay(1); }
+                if (Serial.available()) {
+                    char cmd = Serial.read();
+                    if (cmd == 'U') ui.up();
+                    else if (cmd == 'D') ui.down();
+                    else if (cmd == 'L') ui.left();
+                    else if (cmd == 'R') ui.right();
+                    else if (cmd == 'P') {
+                        ui.setPopupListItems(popup_items, TOTAL_POPUP_ITEMS);
+                        ui.openPopup();
+                    }
+                    else if (cmd == 'S') ui.openSideList();
+                    else if (cmd == 'V') ui.enablePCViewer(true);
+                    else if (cmd == 'v') ui.enablePCViewer(false);
+                    else if (cmd == 'C') {
+                        if (ui.isOverlayOpen()) {
+                            ui.closeOverlay();
+                        } else if (ui.getAppState() == STATE_TEXT_INPUT) {
+                            ui.closeOverlay();
+                        } else if (ui.getAppState() == STATE_POPUP || ui.getAppState() == STATE_MODAL) {
+                            ui.closeOverlay();
+                        } else if (ui.getAppState() == STATE_CLOCK) {
+                            ui.closeOverlay();
+                        } else if (ui.getAppState() == STATE_FULL_LIST) {
+                            if (current_level == LEVEL_WIFI) {
+                                current_level = LEVEL_SETTINGS;
+                                ui.setCarouselItems(settings_items, TOTAL_SETTINGS_ITEMS, "< SETTINGS >");
+                                if (WiFi.status() != WL_CONNECTED) {
+                                    WiFi.mode(WIFI_OFF);
+                                    extEEPROM.writeByte(0x000F, 0x00);
+                                }
+                            }
+                        }
+                        ui.closeOverlay();
+                    } else if (ui.getAppState() == STATE_SLIDER) {
+                        if (active_slider == SLIDER_BRIGHTNESS) {
+                            current_brightness = saved_brightness;
+                            u8g2.setContrast(current_brightness);
+                        } else if (active_slider == SLIDER_LED_SWITCH) {
+                            open_led_switch();
+                        }
+                        active_slider = SLIDER_NONE;
+                        ui.closeOverlay();
+                    } else if (ui.getAppState() == STATE_CAROUSEL && current_level == LEVEL_SETTINGS) {
+                        current_level = LEVEL_MAIN;
+                        ui.setCarouselItems(menu_items, TOTAL_MAIN_ITEMS, "< MAIN MENU >");
                     }
                 }
-                ui.closeOverlay();
-              } else if (ui.getAppState() == STATE_SLIDER) {
-                // [Cập nhật]: Hủy bỏ, khôi phục trạng thái cũ dựa theo Slider nào đang mở
-                if (active_slider == SLIDER_BRIGHTNESS) {
-                    current_brightness = saved_brightness;
-                    u8g2.setContrast(current_brightness);
-                } else if (active_slider == SLIDER_LED_SWITCH) {
-                  open_led_switch();
+            }
+            else if (c == 'B') {
+                if (ui.getAppState() == STATE_TEXT_INPUT) {
+                    ui.backspace();
+                } else if (current_level == LEVEL_WIFI) {
+                    if (WiFi.status() == WL_CONNECTED) {
+                        WiFi.disconnect();
+                        extEEPROM.writeByte(0x000F, 0x00);
+                        if (xSemaphoreTake(wifi_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+                            for (int i = 0; i < wifi_count; i++) {
+                                if (wifi_ssid[i][0] == '*') {
+                                    String temp = String(wifi_ssid[i]).substring(2);
+                                    strncpy(wifi_ssid[i], temp.c_str(), 31);
+                                    wifi_ssid[i][31] = '\0';
+                                }
+                            }
+                            xSemaphoreGive(wifi_mutex);
+                        }
+                        ui.openModal("Disconnected", "Wi-Fi is now disconnected");
+                    }
                 }
-                active_slider = SLIDER_NONE;
-                ui.closeOverlay(); // Đóng Slider, trả về Level trước đó
-              } else if (ui.getAppState() == STATE_CAROUSEL && current_level == LEVEL_SETTINGS) {
-                current_level = LEVEL_MAIN; // Lùi về Main Menu
-                ui.setCarouselItems(menu_items, TOTAL_MAIN_ITEMS, "< MAIN MENU >");
-              }
             }
-            else if (cmd == 'B') { // Phím Backspace
-              if (ui.getAppState() == STATE_TEXT_INPUT) {
-                ui.backspace();
-              } else if (current_level == LEVEL_WIFI) {
-                  // Đang ở danh sách Wi-Fi (hoặc Modal), ấn Backspace để ngắt kết nối hiện tại
-                  if (WiFi.status() == WL_CONNECTED) {
-                      WiFi.disconnect();
-                      extEEPROM.writeByte(0x000F, 0x00); // Tắt kết nối tự động
-                      
-                      // Xóa dấu * khỏi danh sách ngay lập tức
-                      for (int i = 0; i < wifi_count; i++) {
-                          if (wifi_ssid[i][0] == '*') {
-                              String temp = String(wifi_ssid[i]).substring(2); // Cắt bỏ "* "
-                              strncpy(wifi_ssid[i], temp.c_str(), 31);
-                              wifi_ssid[i][31] = '\0';
-                          }
-                      }
-                      ui.openModal("Disconnected", "Wi-Fi is now disconnected");
-                  }
-              }
-            }
-            else if (cmd == 'E') { // Phím Enter
-              ui.select();
-              
-              if (ui.getAppState() == STATE_SLIDER) {
-                  // [Cập nhật]: Chỉ lưu giá trị của công tắc/thanh gạt đang mở
-                  if (active_slider == SLIDER_BRIGHTNESS) {
-                      saved_brightness = current_brightness; // Lấy từ biến cục bộ đã được callback cập nhật
-                      extEEPROM.writeByte(0x0000, (uint8_t)saved_brightness);
-                  } else if (active_slider == SLIDER_LED_SWITCH) {
-                      on_led_change(saved_led_state);
-                  }
-                  active_slider = SLIDER_NONE;
-                  ui.closeOverlay(); // Đóng Slider, xác nhận lưu
-              } else if (!ui.isOverlayOpen() && ui.getAppState() == STATE_CAROUSEL) {
-                  const MenuItem* active_item = ui.getCurrentMenuItem();
-                  if (active_item && active_item->on_enter) {
-                      active_item->on_enter();
-                  }
-              }
+            else if (c == 'E') {
+                ui.select();
+                if (ui.getAppState() == STATE_SLIDER) {
+                    if (active_slider == SLIDER_BRIGHTNESS) {
+                        saved_brightness = current_brightness;
+                        extEEPROM.writeByte(0x0000, (uint8_t)saved_brightness);
+                    } else if (active_slider == SLIDER_LED_SWITCH) {
+                        on_led_change(saved_led_state);
+                    }
+                    active_slider = SLIDER_NONE;
+                    ui.closeOverlay();
+                } else if (!ui.isOverlayOpen() && ui.getAppState() == STATE_CAROUSEL) {
+                    const MenuItem* active_item = ui.getCurrentMenuItem();
+                    if (active_item && active_item->on_enter) {
+                        active_item->on_enter();
+                    }
+                }
+            } else {
+                ui.inputChar(c);
             }
         }
-    } else {
-        // Ký tự gõ trực tiếp từ bàn phím
-        ui.inputChar(c);
-    }
-  }
 
-  // --- THEO DÕI TRẠNG THÁI WIFI NGẦM ĐỂ CẬP NHẬT DẤU * ---
-  static wl_status_t last_wifi_status = WL_DISCONNECTED;
-  wl_status_t current_status = WiFi.status();
-  if (current_status != last_wifi_status) {
-      last_wifi_status = current_status;
-      if (current_status == WL_CONNECTED) {
-          String connected_ssid = WiFi.SSID();
-          for (int i = 0; i < wifi_count; i++) {
-              if (String(wifi_raw_ssid[i]) == connected_ssid) {
-                  if (wifi_ssid[i][0] != '*') {
-                      char temp[32];
-                      snprintf(temp, 32, "* %s", wifi_ssid[i]);
-                      strncpy(wifi_ssid[i], temp, 31);
-                      wifi_ssid[i][31] = '\0';
-                  }
-              }
-          }
-      } else {
-          for (int i = 0; i < wifi_count; i++) {
-              if (wifi_ssid[i][0] == '*') {
-                  String temp = String(wifi_ssid[i]).substring(2);
-                  strncpy(wifi_ssid[i], temp.c_str(), 31);
-                  wifi_ssid[i][31] = '\0';
-              }
-          }
-      }
-  }
-
-  // --- KIỂM TRA TRẠNG THÁI QUÉT WIFI ASYNC ---
-  if (is_scanning_wifi) {
-    int16_t scan_result = WiFi.scanComplete();
-    if (scan_result >= 0) {
-      is_scanning_wifi = false;
-      wifi_count = 0;
-      if (scan_result == 0) {
-        wifi_count = 1;
-        strncpy(wifi_ssid[0], "No networks", 31);
-        wifi_ssid_ptrs[0] = wifi_ssid[0];
-      } else {
-        wifi_count = (scan_result > MAX_WIFI_NETWORKS) ? MAX_WIFI_NETWORKS : scan_result;
-        for (int i = 0; i < wifi_count; i++) {
-          String ssid = WiFi.SSID(i);
-          strncpy(wifi_raw_ssid[i], ssid.c_str(), 31);
-          wifi_raw_ssid[i][31] = '\0';
-          
-          long rssi = WiFi.RSSI(i);
-          int quality = 0;
-          if (rssi <= -100) quality = 0;
-          else if (rssi >= -50) quality = 100;
-          else quality = 2 * (rssi + 100);
-          
-          if (WiFi.status() == WL_CONNECTED && ssid == WiFi.SSID()) {
-              snprintf(wifi_ssid[i], 32, "* %s [%d%%]", ssid.c_str(), quality);
-          } else {
-              snprintf(wifi_ssid[i], 32, "%s [%d%%]", ssid.c_str(), quality);
-          }
-          wifi_ssid_ptrs[i] = wifi_ssid[i];
+        // 2. Logic Äá»“ng há»“ (Tick)
+        if (timeSync.tick()) {
+            ui.updateClock(timeSync.current_hour, timeSync.current_minute, timeSync.current_second, timeSync.solar_date_str.c_str(), timeSync.lunar_date_str.c_str(), timeSync.current_temp_str.c_str());
         }
-      }
-      ui.setFullListCount(wifi_count);
-      WiFi.scanDelete();
-    } else if (scan_result == WIFI_SCAN_FAILED) {
-      is_scanning_wifi = false;
-      wifi_count = 1;
-      strncpy(wifi_ssid[0], "Scan Failed", 31);
-      wifi_ssid_ptrs[0] = wifi_ssid[0];
-      ui.setFullListCount(wifi_count);
+
+        // 3. Váº½ lÃªn mÃ n hÃ¬nh OLED (Qua I2C0)
+        ui.update();
+
+        // 4. Delay Ä‘á»ƒ giá»¯ 60FPS
+        vTaskDelay(pdMS_TO_TICKS(16));
     }
-  }
+}
 
-  // --- XỬ LÝ KẾT NỐI WIFI (NON-BLOCKING) ---
-  if (is_connecting_wifi) {
-      if (WiFi.status() == WL_CONNECTED) {
-          is_connecting_wifi = false;
-          
-          // Mật khẩu đúng và kết nối thành công: Lưu SSID/PWD vào AT24C256
-          save_wifi_credentials(connecting_ssid, connecting_pwd);
-          
-          Serial.printf("\n[WiFi] Connected successfully to %s\n", connecting_ssid.c_str());
-          
-          // Hiển thị thông báo thành công
-          ui.openModal("Connected!", connecting_ssid.c_str());
-          
-          // Dấu * sẽ được logic theo dõi ngầm ở trên tự động thêm vào!
-          
-      } else if (millis() - wifi_connect_start > 10000) {
-          // Timeout sau 10 giây
-          is_connecting_wifi = false;
-          WiFi.disconnect();
-          Serial.println("\n[WiFi] Connection timeout or failed");
-          
-          // Hiển thị lại Text Input với Mật khẩu cũ để người dùng sửa thay vì hiển thị Modal Failed
-          snprintf(text_input_title_buf, sizeof(text_input_title_buf), "FAIL: %s", connecting_ssid.c_str());
-          ui.openTextInput(text_input_title_buf, on_wifi_password_submit, connecting_pwd.c_str());
-      }
-  }
+// ==========================================
+// TASK: NETWORK & BACKGROUND (CORE 1)
+// ==========================================
+void task_network_core1(void *pvParameters) {
+    static wl_status_t last_wifi_status = WL_DISCONNECTED;
 
-  // --- CLOCK TICK & SYNC LOGIC ---
-  if (timeSync.tick()) {
-      ui.updateClock(timeSync.current_hour, timeSync.current_minute, timeSync.current_second, timeSync.solar_date_str.c_str(), timeSync.lunar_date_str.c_str(), timeSync.current_temp_str.c_str());
-  }
-  
-  // --- DUY TRÌ KẾT NỐI OTA ---
-  ota.loop();
-  
-  if (timeSync.api_synced) {
-      // Đồng bộ lại với API mỗi 1 giờ để bù sai số và cập nhật ngày
-      if (millis() - timeSync.last_time_sync > 3600000) {
-          timeSync.update();
-      }
-  } else {
-      // Chưa đồng bộ được thời gian từ web -> Thử đồng bộ liên tục mỗi 2 giây nếu có mạng
-      static uint32_t last_sync_try = 0;
-      if (millis() - last_sync_try > 2000) {
-          last_sync_try = millis();
-          if (WiFi.status() == WL_CONNECTED) {
-              timeSync.update();
-          }
-      }
-  }
+    for (;;) {
+        // --- 1. THEO DÃ•I TRáº NG THÃI WIFI ---
+        wl_status_t current_status = WiFi.status();
+        if (current_status != last_wifi_status) {
+            last_wifi_status = current_status;
+            if (wifi_mutex && xSemaphoreTake(wifi_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+                if (current_status == WL_CONNECTED) {
+                    String connected_ssid = WiFi.SSID();
+                    for (int i = 0; i < wifi_count; i++) {
+                        if (String(wifi_raw_ssid[i]) == connected_ssid) {
+                            if (wifi_ssid[i][0] != '*') {
+                                char temp[32];
+                                snprintf(temp, 32, "* %s", wifi_ssid[i]);
+                                strncpy(wifi_ssid[i], temp, 31);
+                                wifi_ssid[i][31] = '\0';
+                            }
+                        }
+                    }
+                } else {
+                    for (int i = 0; i < wifi_count; i++) {
+                        if (wifi_ssid[i][0] == '*') {
+                            String temp = String(wifi_ssid[i]).substring(2);
+                            strncpy(wifi_ssid[i], temp.c_str(), 31);
+                            wifi_ssid[i][31] = '\0';
+                        }
+                    }
+                }
+                xSemaphoreGive(wifi_mutex);
+            }
+        }
 
-  // Cập nhật UI (60FPS)
-  ui.update();
+        // --- 2. Xá»¬ LÃ QUÃ‰T WIFI Báº¤T Äá»’NG Bá»˜ ---
+        if (is_scanning_wifi) {
+            int16_t scan_result = WiFi.scanComplete();
+            if (scan_result >= 0) {
+                is_scanning_wifi = false;
+                if (wifi_mutex && xSemaphoreTake(wifi_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+                    wifi_count = 0;
+                    if (scan_result == 0) {
+                        wifi_count = 1;
+                        strncpy(wifi_ssid[0], "No networks", 31);
+                        wifi_ssid_ptrs[0] = wifi_ssid[0];
+                    } else {
+                        wifi_count = (scan_result > MAX_WIFI_NETWORKS) ? MAX_WIFI_NETWORKS : scan_result;
+                        for (int i = 0; i < wifi_count; i++) {
+                            String ssid = WiFi.SSID(i);
+                            strncpy(wifi_raw_ssid[i], ssid.c_str(), 31);
+                            wifi_raw_ssid[i][31] = '\0';
+                            
+                            long rssi = WiFi.RSSI(i);
+                            int quality = 0;
+                            if (rssi <= -100) quality = 0;
+                            else if (rssi >= -50) quality = 100;
+                            else quality = 2 * (rssi + 100);
+                            
+                            if (WiFi.status() == WL_CONNECTED && ssid == WiFi.SSID()) {
+                                snprintf(wifi_ssid[i], 32, "* %s [%d%%]", ssid.c_str(), quality);
+                            } else {
+                                snprintf(wifi_ssid[i], 32, "%s [%d%%]", ssid.c_str(), quality);
+                            }
+                            wifi_ssid_ptrs[i] = wifi_ssid[i];
+                        }
+                    }
+                    ui.setFullListCount(wifi_count);
+                    xSemaphoreGive(wifi_mutex);
+                }
+                WiFi.scanDelete();
+            } else if (scan_result == WIFI_SCAN_FAILED) {
+                is_scanning_wifi = false;
+                if (wifi_mutex && xSemaphoreTake(wifi_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
+                    wifi_count = 1;
+                    strncpy(wifi_ssid[0], "Scan Failed", 31);
+                    wifi_ssid_ptrs[0] = wifi_ssid[0];
+                    ui.setFullListCount(wifi_count);
+                    xSemaphoreGive(wifi_mutex);
+                }
+            }
+        }
+
+        // --- 3. Xá»¬ LÃ Káº¾T Ná»I WIFI (NON-BLOCKING) ---
+        if (is_connecting_wifi) {
+            if (WiFi.status() == WL_CONNECTED) {
+                is_connecting_wifi = false;
+                save_wifi_credentials(connecting_ssid, connecting_pwd);
+                Serial.printf("\n[WiFi] Connected successfully to %s\n", connecting_ssid.c_str());
+                ui.openModal("Connected!", connecting_ssid.c_str());
+            } else if (millis() - wifi_connect_start > 10000) {
+                is_connecting_wifi = false;
+                WiFi.disconnect();
+                Serial.println("\n[WiFi] Connection timeout or failed");
+                snprintf(text_input_title_buf, sizeof(text_input_title_buf), "FAIL: %s", connecting_ssid.c_str());
+                ui.openTextInput(text_input_title_buf, on_wifi_password_submit, connecting_pwd.c_str());
+            }
+        }
+
+        // --- 4. DUY TRÃŒ Káº¾T Ná»I OTA ---
+        ota.loop();
+        
+        // --- 5. Äá»’NG Bá»˜ THá»œI GIAN QUA API ---
+        if (timeSync.api_synced) {
+            if (millis() - timeSync.last_time_sync > 3600000) {
+                timeSync.update();
+            }
+        } else {
+            static uint32_t last_sync_try = 0;
+            if (millis() - last_sync_try > 2000) {
+                last_sync_try = millis();
+                if (WiFi.status() == WL_CONNECTED) {
+                    timeSync.update();
+                }
+            }
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(50));
+    }
 }

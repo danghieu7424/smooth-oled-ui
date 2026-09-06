@@ -133,24 +133,13 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
     }
 
     /****
-     * BƯỚC 2: Giải phóng GPIO 47/48 khỏi I2C trước khi ghi Flash
-     * 
-     * ROOT CAUSE: GPIO47 = SPICLK_P trên ESP32-S3, dùng cho SPI Flash bus.
-     * Wire.begin(47, 48) chiếm cứ chân này cho I2C, phá hủy tín hiệu SPI,
-     * khiến mọi lệnh ghi Flash trả ESP_OK nhưng data = 0xFF.
-     * 
-     * Giải pháp: Wire.end() trả chân về cho SPI Flash, ghi OTA xong thì
-     * Wire.begin() lại để I2C tiếp tục hoạt động.
+     * BƯỚC 2: Mở OTA handle bằng ESP-IDF API
+     * esp_ota_begin() sẽ tự erase toàn bộ partition đích
+     * OTA_SIZE_UNKNOWN cho phép ghi không cần biết trước kích thước chính xác
      ****/
-    Serial.println("[OLED_OTA] Tạm ngắt I2C (Wire) để giải phóng SPI Flash bus...");
-    Wire.end();
-    delay(50); // Chờ bus SPI ổn định
-
     const esp_partition_t* update_partition = esp_ota_get_next_update_partition(NULL);
     if (!update_partition) {
         Serial.println("[OLED_OTA] Lỗi: Không tìm thấy OTA partition.");
-        Wire.begin(47, 48);
-        Wire.setClock(400000);
         http.end();
         return;
     }
@@ -164,8 +153,6 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
     esp_err_t err = esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &ota_handle);
     if (err != ESP_OK) {
         Serial.printf("[OLED_OTA] esp_ota_begin() thất bại: %s (0x%x)\n", esp_err_to_name(err), err);
-        Wire.begin(47, 48);
-        Wire.setClock(400000);
         http.end();
         return;
     }
@@ -255,8 +242,6 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
     if (writeError || totalWritten != (size_t)contentLength) {
         Serial.printf("[OLED_OTA] Ghi thất bại: %u/%d bytes\n", totalWritten, contentLength);
         esp_ota_abort(ota_handle);
-        Wire.begin(47, 48);
-        Wire.setClock(400000);
         return;
     }
 
@@ -301,8 +286,6 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
     err = esp_ota_end(ota_handle);
     if (err != ESP_OK) {
         Serial.printf("[OLED_OTA] esp_ota_end() thất bại: %s (0x%x)\n", esp_err_to_name(err), err);
-        Wire.begin(47, 48);
-        Wire.setClock(400000);
         return;
     }
 
@@ -313,8 +296,6 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
     err = esp_ota_set_boot_partition(update_partition);
     if (err != ESP_OK) {
         Serial.printf("[OLED_OTA] esp_ota_set_boot_partition() thất bại: %s\n", esp_err_to_name(err));
-        Wire.begin(47, 48);
-        Wire.setClock(400000);
         return;
     }
 
