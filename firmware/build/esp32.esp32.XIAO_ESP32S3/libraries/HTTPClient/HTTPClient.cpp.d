@@ -99,7 +99,7 @@ D:\all_projects\rust\rust\display_oled\firmware\build\esp32.esp32.XIAO_ESP32S3\l
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/hal/include/hal/uart_types.h \
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/soc/esp32s3/include/soc/clk_tree_defs.h \
  D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\cores\esp32/esp32-hal-gpio.h \
- D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\variants\XIAO_ESP32S3/pins_arduino.h \
+ D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\variants\esp32s3/pins_arduino.h \
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_driver_gpio/include/driver/gpio.h \
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_rom/include/esp_rom_gpio.h \
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/soc/esp32s3/include/soc/gpio_pins.h \

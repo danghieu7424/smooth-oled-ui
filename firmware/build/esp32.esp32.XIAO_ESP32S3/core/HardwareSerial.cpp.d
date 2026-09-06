@@ -1,7 +1,8 @@
 D:\all_projects\rust\rust\display_oled\firmware\build\esp32.esp32.XIAO_ESP32S3\core\HardwareSerial.cpp.o: \
  D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\cores\esp32\HardwareSerial.cpp \
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/newlib/platform_include/stdio.h \
- D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\variants\XIAO_ESP32S3/pins_arduino.h \
+ D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\variants\esp32s3/pins_arduino.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/soc/esp32s3/include/soc/soc_caps.h \
  D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\cores\esp32\io_pin_remap.h \
  D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\cores\esp32\Arduino.h \
  D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\cores\esp32\esp_arduino_version.h \
@@ -30,7 +31,6 @@ D:\all_projects\rust\rust\display_oled\firmware\build\esp32.esp32.XIAO_ESP32S3\c
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/xtensa/include/xtensa/xtruntime.h \
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_hw_support/include/spinlock.h \
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_hw_support/include/esp_cpu.h \
- D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/soc/esp32s3/include/soc/soc_caps.h \
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/xtensa/include/xtensa_api.h \
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/xtensa/include/xt_utils.h \
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/xtensa/esp32s3/include/xtensa/config/extreg.h \

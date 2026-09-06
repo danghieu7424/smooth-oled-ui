@@ -2,7 +2,7 @@ D:\all_projects\rust\rust\display_oled\firmware\build\esp32.esp32.XIAO_ESP32S3\l
  D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\libraries\SPI\src\SPI.cpp \
  D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\libraries\SPI\src\SPI.h \
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/soc/esp32s3/include/soc/soc_caps.h \
- D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\variants\XIAO_ESP32S3/pins_arduino.h \
+ D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\variants\esp32s3/pins_arduino.h \
  D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\cores\esp32/esp32-hal-spi.h \
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/freertos/FreeRTOS-Kernel/include/freertos/FreeRTOS.h \
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/freertos/config/include/freertos/FreeRTOSConfig.h \
