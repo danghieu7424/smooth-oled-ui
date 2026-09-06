@@ -11,18 +11,15 @@
 #include "src/TimeSyncAPI/TimeSyncAPI.h"
 #include "src/HardwareRTC/HardwareRTC.h"
 #include "src/ExternalEEPROM/ExternalEEPROM.h"
-#include "src/OLED_OTA/OLED_OTA.h"
 
 // ==========================================
-// Cáº¤U HÃŒNH Dá»° ÃN Tá»ª OTA HUB DASHBOARD
+// Cáº¤U HÃŒNH Dá»° Ã N Tá»ª OTA HUB DASHBOARD
 // ==========================================
 const char* PROJECT_ID = "007Rlq30Q2vU-esp32-tool";
 const char* PROJECT_TOKEN = "fc11b225f325609bb7309ad70f090a78";
 const char* CURRENT_VERSION = "1.0.0";
 const char* API_HOST = "192.168.7.7";
 const uint16_t API_PORT = 7424;
-
-OLED_OTA ota(PROJECT_ID, PROJECT_TOKEN, CURRENT_VERSION);
 
 int saved_brightness = 20;
 
@@ -54,7 +51,7 @@ bool load_wifi_credentials(String &ssid, String &pwd) {
 // Khá»Ÿi táº¡o mÃ n hÃ¬nh
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
-// Truyá»n tham chiáº¿u mÃ n hÃ¬nh vÃ  UART (Ä‘á»ƒ Stream) vÃ o lÃµi thÆ° viá»‡n
+// Truyá» n tham chiáº¿u mÃ n hÃ¬nh vÃ  UART (Ä‘á»ƒ Stream) vÃ o lÃµi thÆ° viá»‡n
 SmoothOLED ui(&u8g2, &Serial);
 
 // =======================================================================
@@ -126,7 +123,7 @@ static const unsigned char icon_led_switch[] U8X8_PROGMEM = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-// --- KHAI BÃO CÃC HÃ€M Xá»¬ LÃ Sá»° KIá»†N (CALLBACKS) ---
+// --- KHAI BÃ O CÃ C HÃ€M Xá»¬ LÃ  Sá»° KIá»†N (CALLBACKS) ---
 void open_settings_menu();
 void open_brightness_slider();
 void open_led_switch();
@@ -203,7 +200,7 @@ void open_about_menu() {
 // Quáº£n lÃ½ tráº¡ng thÃ¡i Menu
 enum MenuLevel { LEVEL_MAIN, LEVEL_SETTINGS, LEVEL_WIFI };
 MenuLevel current_level = LEVEL_MAIN;
-int current_brightness = 20; // Äá»™ sÃ¡ng hiá»‡n táº¡i
+int current_brightness = 20; // Ä á»™ sÃ¡ng hiá»‡n táº¡i
 
 
 // Quáº£n lÃ½ WiFi
@@ -220,7 +217,7 @@ uint32_t wifi_connect_start = 0;
 String connecting_ssid = "";
 String connecting_pwd = "";
 
-// --- CÃ€I Äáº¶T CÃC HÃ€M Xá»¬ LÃ Sá»° KIá»†N ---
+// --- CÃ€I Ä áº¶T CÃ C HÃ€M Xá»¬ LÃ  Sá»° KIá»†N ---
 
 void on_wifi_selected(int idx);
 
@@ -279,8 +276,8 @@ void on_wifi_selected(int idx) {
           }
       }
       
-      // Má»Ÿ Ã´ nháº­p Pass vÃ  ÄIá»€N Sáº´N máº­t kháº©u cÅ© (nhÆ° tháº» input type="text" cÃ³ value)
-      // NgÆ°á»i dÃ¹ng chá»‰ cáº§n áº¥n Enter Ä‘á»ƒ káº¿t ná»‘i, hoáº·c áº¥n xÃ³a Ä‘á»ƒ sá»­a
+      // Má»Ÿ Ã´ nháº­p Pass vÃ  Ä Iá»€N Sáº´N máº­t kháº©u cÅ© (nhÆ° tháº» input type="text" cÃ³ value)
+      // NgÆ°á» i dÃ¹ng chá»‰ cáº§n áº¥n Enter Ä‘á»ƒ káº¿t ná»‘i, hoáº·c áº¥n xÃ³a Ä‘á»ƒ sá»­a
       snprintf(text_input_title_buf, sizeof(text_input_title_buf), "PWD: %s", wifi_raw_ssid[idx]);
       ui.openTextInput(text_input_title_buf, on_wifi_password_submit, saved_pwd.c_str());
   }
@@ -289,13 +286,13 @@ void on_wifi_selected(int idx) {
 void on_enter_wifi() {
   current_level = LEVEL_WIFI;
   
-  // Khá»Ÿi táº¡o UI hiá»ƒn thá»‹ táº¡m thá»i "Scanning..."
+  // Khá»Ÿi táº¡o UI hiá»ƒn thá»‹ táº¡m thá» i "Scanning..."
   wifi_count = 1;
   strncpy(wifi_ssid[0], "Scanning...", 31);
   wifi_ssid_ptrs[0] = wifi_ssid[0];
   ui.openFullList("WIFI NETWORKS", wifi_ssid_ptrs, wifi_count, on_wifi_selected);
 
-  if (is_scanning_wifi) return; // Äang quÃ©t thÃ¬ khÃ´ng kÃ­ch hoáº¡t láº¡i
+  if (is_scanning_wifi) return; // Ä ang quÃ©t thÃ¬ khÃ´ng kÃ­ch hoáº¡t láº¡i
   
   WiFi.mode(WIFI_STA);
   // XÃ“A WiFi.disconnect() á»Ÿ Ä‘Ã¢y Ä‘á»ƒ khÃ´ng lÃ m rá»›t máº¡ng Ä‘ang káº¿t ná»‘i khi load láº¡i menu
@@ -343,7 +340,7 @@ void setup() {
   Wire.setClock(400000); 
 
   // --- Khá»Ÿi táº¡o vÃ  kiá»ƒm tra RTC & EEPROM (Core 1 sáº½ dÃ¹ng I2C1 / Wire1) ---
-  // Khá»Ÿi táº¡o Bus 1 (Sensor) á»Ÿ Ä‘Ã¢y Ä‘á»ƒ cÃ¡c module gá»i begin() thÃ nh cÃ´ng
+  // Khá»Ÿi táº¡o Bus 1 (Sensor) á»Ÿ Ä‘Ã¢y Ä‘á»ƒ cÃ¡c module gá» i begin() thÃ nh cÃ´ng
   Wire1.begin(6, 7);
   Wire1.setClock(100000);
 
@@ -369,7 +366,7 @@ void setup() {
   u8g2.begin();
   u8g2.setContrast(current_brightness);
 
-  // --- Káº¾T Ná»I WIFI Máº¶C Äá»ŠNH ---
+  // --- Káº¾T Ná» I WIFI Máº¶C Ä á»ŠNH ---
   WiFi.mode(WIFI_STA);
   WiFi.disconnect(true);
   delay(100);
@@ -411,9 +408,6 @@ void setup() {
   open_home_clock();
 
   // 5. Khá»Ÿi táº¡o OTA Service
-  ota.setApiEndpoint(API_HOST, API_PORT);
-  ota.begin();
-
   // Táº¡o Mutex cho cÃ¡c biáº¿n dÃ¹ng chung
   wifi_mutex = xSemaphoreCreateMutex();
 
@@ -662,7 +656,7 @@ void task_network_core1(void *pvParameters) {
         }
 
         // --- 4. DUY TRÃŒ Káº¾T Ná»I OTA ---
-        ota.loop();
+        // ota.loop();
         
         // --- 5. Äá»’NG Bá»˜ THá»œI GIAN QUA API ---
         if (timeSync.api_synced) {
