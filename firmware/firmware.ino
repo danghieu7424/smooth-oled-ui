@@ -1,4 +1,4 @@
-#include <Arduino.h>
+﻿#include <Arduino.h>
 #include <U8g2lib.h>
 #include <Wire.h>
 #include <WiFi.h>
@@ -178,7 +178,7 @@ void open_about_menu() {
     snprintf(about_buf[5], sizeof(about_buf[5]), "MAC: %s", WiFi.macAddress().c_str());
     snprintf(about_buf[6], sizeof(about_buf[6]), "IP: %s", WiFi.localIP().toString().c_str());
     snprintf(about_buf[7], sizeof(about_buf[7]), "SDK: %s", ESP.getSdkVersion());
-    snprintf(about_buf[8], sizeof(about_buf[8]), "Ver: %s", CURRENT_VERSION);
+    snprintf(about_buf[8], sizeof(about_buf[8]), "Ver: %s", "1.0.0");
 
     for (int i = 0; i < 9; i++) {
         about_items[i] = about_buf[i];
@@ -441,23 +441,23 @@ void task_ui_core0(void *pvParameters) {
         // 1. Xử lý Input từ Serial (Nút bấm mô phỏng)
         if (Serial.available() > 0) {
             char c = Serial.read();
-            if (c ==để\x1B') {
+            if (c == '\x1B') {
                 uint32_t t = millis();
                 while (!Serial.available() && millis() - t < 50) { vTaskDelay(1); }
                 if (Serial.available()) {
                     char cmd = Serial.read();
-                    if (cmd ==đểU') ui.up();
-                    else if (cmd ==đểD') ui.down();
-                    else if (cmd ==đểL') ui.left();
-                    else if (cmd ==đểR') ui.right();
-                    else if (cmd ==đểP') {
+                    if (cmd == 'U') ui.up();
+                    else if (cmd == 'D') ui.down();
+                    else if (cmd == 'L') ui.left();
+                    else if (cmd == 'R') ui.right();
+                    else if (cmd == 'P') {
                         ui.setPopupListItems(popup_items, TOTAL_POPUP_ITEMS);
                         ui.openPopup();
                     }
-                    else if (cmd ==đểS') ui.openSideList();
-                    else if (cmd ==đểV') ui.enablePCViewer(true);
-                    else if (cmd ==đểv') ui.enablePCViewer(false);
-                    else if (cmd ==đểC') {
+                    else if (cmd == 'S') ui.openSideList();
+                    else if (cmd == 'V') ui.enablePCViewer(true);
+                    else if (cmd == 'v') ui.enablePCViewer(false);
+                    else if (cmd == 'C') {
                         if (ui.isOverlayOpen()) {
                             ui.closeOverlay();
                         } else if (ui.getAppState() == STATE_TEXT_INPUT) {
@@ -492,7 +492,7 @@ void task_ui_core0(void *pvParameters) {
                     }
                 }
             }
-            else if (c ==đểB') {
+            else if (c == 'B') {
                 if (ui.getAppState() == STATE_TEXT_INPUT) {
                     ui.backspace();
                 } else if (current_level == LEVEL_WIFI) {
@@ -501,10 +501,10 @@ void task_ui_core0(void *pvParameters) {
                         extEEPROM.writeByte(0x000F, 0x00);
                         if (xSemaphoreTake(wifi_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
                             for (int i = 0; i < wifi_count; i++) {
-                                if (wifi_ssid[i][0] ==để*') {
+                                if (wifi_ssid[i][0] == '*') {
                                     String temp = String(wifi_ssid[i]).substring(2);
                                     strncpy(wifi_ssid[i], temp.c_str(), 31);
-                                    wifi_ssid[i][31] =để\0';
+                                    wifi_ssid[i][31] = '\0';
                                 }
                             }
                             xSemaphoreGive(wifi_mutex);
@@ -513,7 +513,7 @@ void task_ui_core0(void *pvParameters) {
                     }
                 }
             }
-            else if (c ==đểE') {
+            else if (c == 'E') {
                 ui.select();
                 if (ui.getAppState() == STATE_SLIDER) {
                     if (active_slider == SLIDER_BRIGHTNESS) {
@@ -564,20 +564,20 @@ void task_network_core1(void *pvParameters) {
                     String connected_ssid = WiFi.SSID();
                     for (int i = 0; i < wifi_count; i++) {
                         if (String(wifi_raw_ssid[i]) == connected_ssid) {
-                            if (wifi_ssid[i][0] !=để*') {
+                            if (wifi_ssid[i][0] != '*') {
                                 char temp[32];
                                 snprintf(temp, 32, "* %s", wifi_ssid[i]);
                                 strncpy(wifi_ssid[i], temp, 31);
-                                wifi_ssid[i][31] =để\0';
+                                wifi_ssid[i][31] = '\0';
                             }
                         }
                     }
                 } else {
                     for (int i = 0; i < wifi_count; i++) {
-                        if (wifi_ssid[i][0] ==để*') {
+                        if (wifi_ssid[i][0] == '*') {
                             String temp = String(wifi_ssid[i]).substring(2);
                             strncpy(wifi_ssid[i], temp.c_str(), 31);
-                            wifi_ssid[i][31] =để\0';
+                            wifi_ssid[i][31] = '\0';
                         }
                     }
                 }
@@ -601,7 +601,7 @@ void task_network_core1(void *pvParameters) {
                         for (int i = 0; i < wifi_count; i++) {
                             String ssid = WiFi.SSID(i);
                             strncpy(wifi_raw_ssid[i], ssid.c_str(), 31);
-                            wifi_raw_ssid[i][31] =để\0';
+                            wifi_raw_ssid[i][31] = '\0';
                             
                             long rssi = WiFi.RSSI(i);
                             int quality = 0;

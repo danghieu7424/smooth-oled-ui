@@ -13,7 +13,7 @@ REM [CHÚ THÍCH] ĐÃ LOẠI BỎ LỆNH RMDIR ĐỂ GIỮ LẠI CACHE (GIỐNG
 REM [CHÚ THÍCH] BƯỚC 1: BIÊN DỊCH TĂNG DẦN (INCREMENTAL COMPILE)
 REM arduino-cli sẽ tự kiểm tra và chỉ dịch lại những gì bạn vừa sửa đổi.
 echo [INFO] Bat dau bien dich nhanh (Incremental Compile)...
-"%CLI_PATH:"=%" compile --fqbn esp32:esp32:esp32s3:FlashMode=qio,FlashSize=16M,PartitionScheme=default_16MB,PSRAM=disabled,CDCOnBoot=cdc --build-path "%BUILD_DIR%" firmware.ino
+"%CLI_PATH:"=%" compile --fqbn esp32:esp32:esp32s3:FlashMode=qio,FlashSize=16M,PSRAM=disabled,CDCOnBoot=cdc --build-path "%BUILD_DIR%" firmware.ino
 
 REM [CHÚ THÍCH] BƯỚC 2: KIỂM TRA LỖI (FAIL-FAST)
 REM Nếu quá trình build có lỗi C++, biến %ERRORLEVEL% sẽ khác 0. Kịch bản sẽ dừng ngay lập tức.
@@ -24,6 +24,6 @@ if %ERRORLEVEL% NEQ 0 (
 
 REM [CHÚ THÍCH] BƯỚC 3: NẠP FLASH VÀ MỞ MONITOR
 echo [INFO] Bien dich thanh cong. Bat dau nap Flash qua espflash...
-espflash flash -M -B 115200 --chip esp32s3 --erase-parts otadata --partition-table "%BUILD_DIR%\firmware.ino.partitions.bin" "%ELF_FILE%"
+espflash flash -M -B 115200 --chip esp32s3 --partition-table "%BUILD_DIR%\firmware.ino.partitions.bin" "%ELF_FILE%"
 
 endlocal

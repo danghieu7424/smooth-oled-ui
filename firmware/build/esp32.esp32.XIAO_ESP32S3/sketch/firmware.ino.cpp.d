@@ -332,9 +332,4 @@ D:\all_projects\rust\rust\display_oled\firmware\build\esp32.esp32.XIAO_ESP32S3\s
  D:\all_projects\rust\rust\display_oled\firmware\build\esp32.esp32.XIAO_ESP32S3\sketch\src/SmoothOLED/SmoothOLED.h \
  D:\all_projects\rust\rust\display_oled\firmware\build\esp32.esp32.XIAO_ESP32S3\sketch\src/TimeSyncAPI/TimeSyncAPI.h \
  D:\all_projects\rust\rust\display_oled\firmware\build\esp32.esp32.XIAO_ESP32S3\sketch\src/HardwareRTC/HardwareRTC.h \
- D:\all_projects\rust\rust\display_oled\firmware\build\esp32.esp32.XIAO_ESP32S3\sketch\src/ExternalEEPROM/ExternalEEPROM.h \
- D:\all_projects\rust\rust\display_oled\firmware\build\esp32.esp32.XIAO_ESP32S3\sketch\src/OLED_OTA/OLED_OTA.h \
- D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/app_update/include/esp_ota_ops.h \
- D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_app_format/include/esp_app_desc.h \
- D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_bootloader_format/include/esp_bootloader_desc.h \
- D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/bootloader_support/include/esp_flash_partitions.h
+ D:\all_projects\rust\rust\display_oled\firmware\build\esp32.esp32.XIAO_ESP32S3\sketch\src/ExternalEEPROM/ExternalEEPROM.h
