@@ -1,190 +1,330 @@
-me:[OLED_OTA] Lỗi OTA (3): Flash Read Failed
-[OLED_OTA] Đang kiểm tra cập nhật tại: http://192.168.7.7:7424/api/firmware/007Rlq30Q2vU-esp32-tool
-[OLED_OTA] Đang tiến hành cài đặt firmware mới...
-[OLED_OTA] OTA Bắt đầu...
-[OLED_OTA] Tiến trình: 100%
-[OLED_OTA] Đã tải đủ toàn bộ file.
-
-[OLED_OTA] Lỗi OTA (3): Flash Read Failed lỗi này là sao
+me: 
+Dùng 2 i2c đi cho tách bạch nhưng cấu hình kiểu gì
 
 AI:
-Lỗi **`Lỗi OTA (3): Flash Read Failed`** xuất hiện tại bước `Update.end()`, sau khi ESP32 đã tải đủ 100% dung lượng file.
+[HW-ELEC]
 
-Mã lỗi số **`3`** trong thư viện `UpdateClass` của ESP32 Arduino chính là hằng số:
+**Khả thi** và là mô hình đa luồng tiêu chuẩn trên ESP32-S3 (FreeRTOS) với cơ chế phân chia công việc theo nhân (Core Affinity).
 
-```cpp
-#define UPDATE_ERROR_READ (3) // Trả về text: "Flash Read Failed"
+---
+
+### 1. Phản biện & Các điểm nghẽn vật lý
+
+* **Quy ước đánh số core:** ESP32-S3 đánh số từ **Core 0** (PRO CPU) và **Core 1** (APP CPU), không có Core 2.
+* **Xung đột ngoại vi I2C (Bus Contention):** Bạn nêu Core 0 chạy hoạt ảnh OLED qua I2C, Core 1 đọc dữ liệu qua I2C.
+* *Trường hợp dùng chung 1 bus I2C:* Cả 2 core truy cập đồng thời vào một controller I2C sẽ gây crash phần cứng hoặc corrupt frame truyền. Bắt buộc phải dùng **FreeRTOS Mutex** khóa bus khi đọc/ghi, hoặc tách hẳn thiết kế.
+* *Trường hợp dùng 2 bus I2C riêng:* ESP32-S3 có 2 bộ điều khiển phần cứng độc lập (`I2C0` và `I2C1`). Bạn có thể gán `I2C0` cho màn hình OLED (Core 0) và `I2C1` cho sensor/module khác (Core 1) để chạy song song hoàn toàn không cần lock bus.
+
+
+* **Băng thông màn hình OLED qua I2C:** Hoạt ảnh trên màn hình (như SSD1306) chạy qua I2C Fast Mode (400 kHz) thường giới hạn FPS tối đa ở mức 20–30 FPS do độ trễ truyền bit. Nếu cần animation mượt (60 FPS), giao tiếp SPI khả thi và tối ưu hơn nhiều.
+
+---
+
+### 2. Sơ đồ khối kiến trúc phần mềm & phần cứng
+
+```
+[CORE 0: UI Task]                          [CORE 1: Compute / Network / Sensors]
+  |                                          |
+  |-- Render FrameBuffer                     |-- Fetch WiFi / BLE
+  |-- Ghi I2C (I2C_NUM_0) -> Màn OLED        |-- Đọc Cảm biến (I2C_NUM_1)
+  |                                          |-- Tính toán logic
+  ^                                          |
+  |======== FreeRTOS Queue / Atomic =========v
+             (Truyền dữ liệu hiển thị)
 
 ```
 
 ---
 
-[HW-ELEC]
+### 3. Thiết kế điện & Linh kiện phụ trợ
 
-### Nguyên nhân cốt lõi
-
-Lỗi này **không phải do mạng hay do file truyền thiếu**. Tại thời điểm hoàn tất ghi Flash qua `Update.end()`, ESP32 gọi hàm nội bộ `esp_ota_end()` trong ESP-IDF. Hàm này sẽ đọc ngược lại dữ liệu vừa ghi trên phân vùng Flash OTA mục tiêu để kiểm tra tính toàn vẹn (MD5 hash / SHA256 / Magic byte header của file nhị phân).
-
-Lỗi `Flash Read Failed` kích hoạt khi:
-
-1. **Ghi đè lên chính phân vùng đang chạy (Partition Conflict):**
-Trong `OLED_OTA.cpp` có đoạn:
+* **Nguồn cấp:** ESP32-S3 khi bật RF (WiFi Fetch) ăn dòng đỉnh xung đột ngột lên tới **500mA**.
+* Cần tụ gốm **0.1µF (100nF)** đặt sát chân nguồn VDD của từng IC.
+* Đặt thêm tụ hóa/tantalum **10µF - 47µF** tại đường nguồn 3.3V chính để lọc sụt áp khi WiFi phát xung.
 
 
-```cpp
-esp_ota_set_boot_partition(running);
-
-```
+* **Điện trở Pull-up I2C:**
+* Nếu chạy 2 bus I2C riêng ở tốc độ 400kHz, mỗi đường SDA/SCL cần cặp trở pull-up ngoài từ **2.2kΩ đến 4.7kΩ** kéo lên 3.3V (không nên phụ thuộc hoàn toàn vào internal pull-up ~45kΩ của ESP32-S3 vì rise time quá chậm).
 
 
-Nếu phân vùng Partition Table của bạn không cấu hình Dual OTA (`ota_0` và `ota_1`), hoặc chỉ có một phân vùng duy nhất (như `factory`), hàm `esp_ota_get_next_update_partition(NULL)` sẽ trỏ vào chính phân vùng đang thực thi. Khi đó hệ thống từ chối hoặc việc đọc lại bị xung đột bộ nhớ Flash MMU (I-Cache).
-
-
-2. **Dung lượng file vượt quá kích thước Partition:**
-Nếu binary nạp lên lớn hơn kích thước partition OTA được chỉ định trong bảng phân vùng (`partitions.csv`), phần cuối ghi đè ra ngoài ranh giới vùng nhớ, dẫn đến việc đọc đối soát thất bại.
-3. **Xung đột bus SPI Flash hoặc sụt áp đột ngột (Brownout):**
-Sau khi nạp liên tục 100% dữ liệu, dòng tải ghi/đọc Flash kéo dài có thể gây sụt áp nếu tụ đệm nguồn 3.3V gần chân chip không đủ lớn ($<100\,\mu\text{F}$), khiến Flash SPI trả về dữ liệu rác khi ESP-IDF đọc lại.
-
-
+* **Khuyến cáo ESD:** Thêm diode TVS bảo vệ (như USBLC6-2SC6 hoặc PESD5V0) trên các chân I2C kéo dài ra ngoài bo mạch để tránh phóng tĩnh điện đánh thủng GPIO.
 
 ---
 
-[HW-ELEC]
+### 4. Code mẫu điều phối FreeRTOS (ESP-IDF / Arduino ESP32)
 
-### Cách xử lý triệt để
-
-#### 1. Kiểm tra lại Partition Scheme trong IDE / PlatformIO
-
-ESP32 bắt buộc phải có ít nhất 2 phân vùng OTA (`app0/ota_0` và `app1/ota_1`) để hoán đổi.
-
-* Nếu dùng **Arduino IDE**: Vào **Tools** $\rightarrow$ **Partition Scheme** $\rightarrow$ Chọn **"Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)"** hoặc **"Minimal SPIFFS (1.9MB APP with OTA)"**. Tuyệt đối không để *"No OTA"*.
-* Nếu dùng **PlatformIO**, kiểm tra file `partitions.csv` phải có dạng:
-```csv
-# Name,   Type, SubType, Offset,  Size, Flags
-nvs,      data, nvs,     0x9000,  0x5000,
-otadata,  data, ota,     0xe000,  0x2000,
-app0,     app,  ota_0,   0x10000, 0x140000,
-app1,     app,  ota_1,   0x150000,0x140000,
-spiffs,   data, spiffs,  0x290000,0x160000,
-
-```
-
-
-
-#### 2. Xóa bỏ can thiệp cưỡng bức boot partition trong `OLED_OTA.cpp`
-
-Đoạn code can thiệp `esp_ota_set_boot_partition(running)` trong `OLED_OTA.cpp` dòng 29–40 có thể gây sai lệch trạng thái con trỏ phân vùng OTA của bootloader:
-
-Thay thế toàn bộ hàm `begin()` trong `OLED_OTA.cpp`:
+Mô hình dùng **Queue** để gửi dữ liệu từ Core 1 sang Core 0, giúp Core 0 không phải chờ và không xung đột bộ nhớ:
 
 ```cpp
-void OLED_OTA::begin() {
-    uint8_t mac[6];
-    WiFi.macAddress(mac);
-    char macStr[18];
-    sprintf(macStr, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-    _deviceId = String(macStr);
+#include <Arduino.h>
 
-    Serial.println("\n[OLED_OTA] Khởi tạo OTA Service (HTTP Polling)");
-    Serial.println("[OLED_OTA] Device ID: " + _deviceId);
-    Serial.println("[OLED_OTA] Phiên bản hiện tại: " + _currentVersion);
-    
-    // Check update immediately on boot
-    _lastCheckAttempt = millis() - 60000; 
+// Struct chứa dữ liệu hiển thị
+typedef struct {
+    float sensor_value;
+    int status_code;
+} DisplayData_t;
 
-    // Kiểm tra trạng thái phân vùng OTA hiện tại để chẩn đoán
-    const esp_partition_t* running = esp_ota_get_running_partition();
-    const esp_partition_t* next = esp_ota_get_next_update_partition(NULL);
-    Serial.printf("[OLED_OTA] Đang chạy tại partition: %s (Offset: 0x%08X, Size: %u KB)\n", 
-                  running ? running->label : "NULL", 
-                  running ? running->address : 0,
-                  running ? running->size / 1024 : 0);
-                  
-    if (next) {
-        Serial.printf("[OLED_OTA] Phân vùng OTA tiếp theo: %s (Offset: 0x%08X, Size: %u KB)\n", 
-                      next->label, next->address, next->size / 1024);
-    } else {
-        Serial.println("[OLED_OTA] CẢNH BÁO: Không tìm thấy phân vùng OTA kế tiếp! Kiểm tra Partition Scheme.");
+static QueueHandle_t xDisplayQueue = NULL;
+
+// Core 0: Chuyên vẽ màn hình
+void task_ui_core0(void *pvParameters) {
+    DisplayData_t received_data = {0.0f, 0};
+    for (;;) {
+        // Nhận dữ liệu không block hoặc timeout ngắn để giữ FPS hoạt ảnh
+        if (xQueueReceive(xDisplayQueue, &received_data, 0) == pdTRUE) {
+            // Cập nhật giá trị hiển thị mới
+        }
+        
+        // 1. Vẽ animation frame vào frame buffer
+        // 2. Đẩy qua I2C0: u8g2.sendBuffer() / display.display()
+        
+        vTaskDelay(pdMS_TO_TICKS(16)); // ~60 FPS (tùy thuộc vào tốc độ bus I2C)
     }
+}
+
+// Core 1: Tính toán, Fetch, Đọc Sensor
+void task_compute_core1(void *pvParameters) {
+    DisplayData_t send_data;
+    for (;;) {
+        // 1. Đọc sensor từ I2C1
+        send_data.sensor_value = 25.4f; // Giá trị đọc thực tế
+        send_data.status_code = 1;
+
+        // 2. Gửi dữ liệu sang UI task (ghi đè nếu đầy để luôn hiển thị mới nhất)
+        xQueueOverwrite(xDisplayQueue, &send_data);
+
+        // 3. Thực hiện fetch hoặc tính toán nặng
+        vTaskDelay(pdMS_TO_TICKS(100)); // Chu kỳ 100ms
+    }
+}
+
+void setup() {
+    xDisplayQueue = xQueueCreate(1, sizeof(DisplayData_t));
+
+    // Khởi tạo Task ghim vào Core 0 (PRO_CPU)
+    xTaskCreatePinnedToCore(
+        task_ui_core0,
+        "Task_UI",
+        4096,
+        NULL,
+        1,
+        NULL,
+        0 // Core 0
+    );
+
+    // Khởi tạo Task ghim vào Core 1 (APP_CPU)
+    xTaskCreatePinnedToCore(
+        task_compute_core1,
+        "Task_Compute",
+        4096,
+        NULL,
+        1,
+        NULL,
+        1 // Core 1
+    );
+}
+
+void loop() {
+    // Tự động giải phóng hoặc idle, vì logic đã chuyển vào các task
+    vTaskDelete(NULL);
 }
 
 ```
 
-Kiểm tra log nạp: nếu `Phân vùng OTA tiếp theo` báo `NULL` hoặc trùng tên/địa chỉ với `Đang chạy tại partition`, nguyên nhân chính là do bảng phân vùng hiện tại chỉ có 1 vùng app duy nhất.
-
-me: tôi dùng cái này [text](firmware/build_flash.bat) [text](firmware/build_flash.ps1) [text](firmware/firmware.ino)
-
-AI:Nguyên nhân trực tiếp gây ra lỗi **`Flash Read Failed`** nằm ngay ở tham số build trong file build script của bạn:
-
-```cmd
-compile --fqbn esp32:esp32:XIAO_ESP32S3:PartitionScheme=default_8MB
-```[cite: 5, 6]
-
 ---
 
+### Điểm cần làm rõ để tối ưu sâu
+
+1. Bạn đang dùng chung một cặp chân SDA/SCL cho cả màn hình OLED lẫn sensor hay dự định tách 2 bus phần cứng riêng (`I2C0` và `I2C1`)?
+2. Môi trường phát triển của bạn là **ESP-IDF** (C/C++) hay **Arduino IDE**?
+
+me:
+Dùng 2 i2c đi cho tách bạch nhưng cấu hình kiểu gì
+
+AI:
 [HW-ELEC]
-### Bản chất lỗi từ cấu hình PartitionScheme
-Trong gói bo mạch ESP32 của Arduino (`esp32:esp32`), sơ đồ phân vùng mặc định **`default_8MB`** có bảng phân vùng như sau:
-* `nvs` (20KB)
-* `otadata` (8KB)
-* `app0` / `factory` (**3MB**)
-* `spiffs` (~4.8MB)
-* **KHÔNG hề có phân vùng `app1` (ota_1)**.
 
-Khi thư viện `UpdateClass` (`Update.begin()` và `Update.write()`) thực thi[cite: 2]:
-1. Nó gọi hàm ESP-IDF `esp_ota_get_next_update_partition(NULL)`.
-2. Do bảng phân vùng `default_8MB` chỉ có duy nhất **1 phân vùng app** (`app0`), hàm này buộc phải trỏ vào chính phân vùng đang chạy mã lệnh.
-3. ESP32 ghi đè dữ liệu OTA đè thẳng lên vùng nhớ Flash mà CPU đang đọc để chạy chương trình.
-4. Đến bước `Update.end()`[cite: 2], ESP-IDF kiểm tra lại tính toàn vẹn (read check / hash verify) thì bộ nhớ đệm cache (MMU) bị lỗi do phân vùng thực thi đã bị can thiệp, kích hoạt mã lỗi số **3: `UPDATE_ERROR_READ` (Flash Read Failed)**[cite: 1, 2].
+ESP32-S3 hỗ trợ ma trận chuyển mạch GPIO (GPIO Matrix), cho phép gán 2 bộ điều khiển phần cứng `I2C0` và `I2C1` vào **bất kỳ chân GPIO thông thường nào** (trừ các chân Flash/PSRAM như GPIO 26–32 và chân strapping/input-only).
+
+Dưới đây là sơ đồ chân khuyến nghị, tính toán phần cứng và code cấu hình cụ thể cho cả hai nền tảng (Arduino Core và ESP-IDF).
 
 ---
 
-### Giải pháp khắc phục
+### 1. Phân bổ chân & Tính toán tải bus
 
-Đổi sơ đồ phân vùng sang sơ đồ có **Dual OTA** (2 phân vùng app song song để hoán đổi an toàn). 
+* **Bus 0 (I2C_NUM_0 - Màn OLED - Chạy trên Core 0):**
+* `SDA0`: **GPIO 4**
+* `SCL0`: **GPIO 5**
+* Tốc độ: **400 kHz** (Fast Mode) hoặc đẩy lên **800 kHz - 1 MHz** (nếu SSD1306 hỗ trợ tốt) để tăng FPS.
 
-Với chip **XIAO ESP32-S3 (Flash 8MB)**, Arduino Core hỗ trợ sẵn scheme **`8MB with fat/ota`** hoặc **`ota_8MB`** (mỗi phân vùng app khoảng 3.3MB).
 
-Sửa lại lệnh biên dịch trong script `.bat` và `.ps1`[cite: 5, 6]:
-
-#### 1. Sửa file script build (`.bat`)[cite: 5]
-Thay thế dòng `compile`[cite: 5]:
-```cmd
-"%CLI_PATH:"=%" compile --fqbn esp32:esp32:XIAO_ESP32S3:PartitionScheme=ota_8MB --build-path "%BUILD_DIR%" firmware.ino
-
-```
-
-*(Nếu core bản cũ của bạn không nhận `ota_8MB`, dùng Scheme: `PartitionScheme=fat_8MB`)*.
-
-#### 2. Sửa file script PowerShell (`.ps1`)
+* **Bus 1 (I2C_NUM_1 - Sensors - Chạy trên Core 1):**
+* `SDA1`: **GPIO 6**
+* `SCL1`: **GPIO 7**
+* Tốc độ: **100 kHz** (Standard) hoặc **400 kHz** (tùy theo cảm biến).
 
 
 
-Thay thế dòng `compile`:
+**Tính toán điện trở kéo (Pull-up Resistors):**
 
-```powershell
-& $cli_path compile --fqbn esp32:esp32:XIAO_ESP32S3:PartitionScheme=ota_8MB --build-path $build_dir firmware.ino
+* Công thức tính dòng kéo tối đa $I_{OL} = 3\text{ mA}$ chuẩn I2C tại $V_{DD} = 3.3\text{ V}$:
+
+$$R_{min} = \frac{V_{DD} - V_{OL}}{I_{OL}} = \frac{3.3\text{ V} - 0.4\text{ V}}{3\text{ mA}} \approx 966\,\Omega$$
+
+
+* Ở tốc độ 400 kHz với dung kháng đường mạch $C_b \approx 50\text{–}100\text{ pF}$, thời gian tăng (rise time) $t_r \le 300\text{ ns}$:
+
+$$R_{max} = \frac{t_r}{0.8473 \times C_b} \approx \frac{300 \times 10^{-9}}{0.8473 \times 100 \times 10^{-12}} \approx 3.5\text{ k}\Omega$$
+
+
+* **Khuyến nghị giá trị thực tế:** Dùng cặp trở ngoài **2.2 kΩ hoặc 3.3 kΩ** kéo lên 3.3V cho mỗi cặp SDA/SCL. Tránh dùng nội trở 45 kΩ của chip vì sườn xung sẽ bị méo ở tần số cao.
+
+---
+
+### 2. Cách cấu hình
+
+#### Cách 1: Nền tảng Arduino Core (Dùng thư viện `Wire`)
+
+Arduino ESP32 cung cấp sẵn `Wire` (I2C0) và cho phép khởi tạo thêm `TwoWire Wire1(1)` (I2C1).
+
+```cpp
+#include <Arduino.h>
+#include <Wire.h>
+#include <U8g2lib.h> // Thư viện OLED ví dụ
+
+// Định nghĩa chân Bus 0 (OLED)
+#define I2C0_SDA 4
+#define I2C0_SCL 5
+
+// Định nghĩa chân Bus 1 (Sensor)
+#define I2C1_SDA 6
+#define I2C1_SCL 7
+
+// Khởi tạo interface phần cứng I2C1
+TwoWire I2C_Sensor = TwoWire(1);
+
+// Cấu hình U8g2 dùng Wire (I2C0)
+U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
+
+void task_oled_core0(void *pvParameters) {
+    // 1. Khởi tạo Bus 0 ngay trong context của Core 0
+    Wire.begin(I2C0_SDA, I2C0_SCL, 400000); // 400kHz
+    u8g2.begin();
+
+    for (;;) {
+        u8g2.clearBuffer();
+        u8g2.setFont(u8g2_font_ncenB08_tr);
+        u8g2.drawStr(0, 20, "OLED Core 0 Running");
+        u8g2.sendBuffer();
+
+        vTaskDelay(pdMS_TO_TICKS(16)); // ~60 FPS
+    }
+}
+
+void task_sensor_core1(void *pvParameters) {
+    // 2. Khởi tạo Bus 1 trong context của Core 1
+    I2C_Sensor.begin(I2C1_SDA, I2C1_SCL, 100000); // 100kHz
+
+    for (;;) {
+        // Đọc thử cảm biến ở địa chỉ 0x68
+        I2C_Sensor.beginTransmission(0x68);
+        I2C_Sensor.write(0x75); // Register WHO_AM_I
+        I2C_Sensor.endTransmission(false);
+        I2C_Sensor.requestFrom(0x68, 1);
+
+        if (I2C_Sensor.available()) {
+            uint8_t chip_id = I2C_Sensor.read();
+            (void)chip_id;
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+}
+
+void setup() {
+    xTaskCreatePinnedToCore(task_oled_core0, "Task_OLED", 4096, NULL, 2, NULL, 0);
+    xTaskCreatePinnedToCore(task_sensor_core1, "Task_Sensor", 4096, NULL, 1, NULL, 1);
+}
+
+void loop() {
+    vTaskDelete(NULL);
+}
 
 ```
 
 ---
 
-### Lưu ý quan trọng khi nạp lần đầu sau khi đổi Partition
+#### Cách 2: Nền tảng ESP-IDF chuẩn (Native C)
 
-Do bảng phân vùng thay đổi kích thước và địa chỉ:
+Sử dụng driver `driver/i2c.h` trực tiếp để kiểm soát thanh ghi và ngắt:
 
-1. Bạn cần cắm cáp Type-C và chạy lệnh nạp qua dây bằng `espflash` một lần để ghi lại Bảng phân vùng (`partitions.bin`) mới vào chip.
+```c
+#include "driver/i2c.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
+// Bus 0 - OLED
+#define I2C0_PORT       I2C_NUM_0
+#define I2C0_SDA_PIN    4
+#define I2C0_SCL_PIN    5
 
-2. Lệnh trong file script của bạn đã có sẵn cờ xóa `otadata`:
+// Bus 1 - Sensor
+#define I2C1_PORT       I2C_NUM_1
+#define I2C1_SDA_PIN    6
+#define I2C1_SCL_PIN    7
 
+static void init_i2c0_oled(void) {
+    i2c_config_t conf = {
+        .mode = I2C_MODE_MASTER,
+        .sda_io_num = I2C0_SDA_PIN,
+        .sda_pullup_en = GPIO_PULLUP_DISABLE, // Dùng trở ngoài
+        .scl_io_num = I2C0_SCL_PIN,
+        .scl_pullup_en = GPIO_PULLUP_DISABLE,
+        .master.clk_speed = 400000,
+    };
+    i2c_param_config(I2C0_PORT, &conf);
+    i2c_driver_install(I2C0_PORT, conf.mode, 0, 0, 0);
+}
 
-```cmd
-espflash flash --chip esp32s3 --erase-parts otadata --partition-table "%BUILD_DIR%\firmware.ino.partitions.bin" "%ELF_FILE%"
-```[cite: 5]
-Lệnh này sẽ đưa trạng thái OTA về ban đầu (`ota_0`).
+static void init_i2c1_sensor(void) {
+    i2c_config_t conf = {
+        .mode = I2C_MODE_MASTER,
+        .sda_io_num = I2C1_SDA_PIN,
+        .sda_pullup_en = GPIO_PULLUP_DISABLE,
+        .scl_io_num = I2C1_SCL_PIN,
+        .scl_pullup_en = GPIO_PULLUP_DISABLE,
+        .master.clk_speed = 100000,
+    };
+    i2c_param_config(I2C1_PORT, &conf);
+    i2c_driver_install(I2C1_PORT, conf.mode, 0, 0, 0);
+}
+
+void task_oled_core0(void *pvParameters) {
+    init_i2c0_oled();
+    for (;;) {
+        // Gửi frame buffer sang OLED qua i2c_master_write_to_device()
+        vTaskDelay(pdMS_TO_TICKS(16));
+    }
+}
+
+void task_sensor_core1(void *pvParameters) {
+    init_i2c1_sensor();
+    for (;;) {
+        // Đọc cảm biến qua i2c_master_write_read_device()
+        vTaskDelay(pdMS_TO_TICKS(100));
+    }
+}
+
+void app_main(void) {
+    xTaskCreatePinnedToCore(task_oled_core0, "OLED_Core0", 4096, NULL, 5, NULL, 0);
+    xTaskCreatePinnedToCore(task_sensor_core1, "Sensor_Core1", 4096, NULL, 5, NULL, 1);
+}
 
 ```
 
+---
 
-3. Sau khi nạp dây xong bản mới, các lần cập nhật OTA tiếp theo qua Wi-Fi sẽ tự động luân phiên giữa `ota_0` và `ota_1` mà không còn bị lỗi xung đột đọc Flash.
+### Lưu ý quan trọng khi chạy 2 bus độc lập
+
+1. **Không share biến toàn cục không an toàn:** Dữ liệu cảm biến từ Core 1 muốn hiển thị lên màn hình ở Core 0 bắt buộc phải qua `Queue` (`xQueueOverwrite`) hoặc biến được bọc bằng atomic/mutex.
+2. **Khởi tạo driver:** Khởi tạo bus nào ở đầu task của core đó để tránh việc context switch làm sai lệch trạng thái ngắt phần cứng ban đầu.

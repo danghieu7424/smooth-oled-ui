@@ -1,4 +1,5 @@
 #include "OLED_OTA.h"
+#include <Wire.h>
 
 OLED_OTA::OLED_OTA(const char* projectId, const char* projectToken, const char* currentVersion) {
     _projectId = String(projectId);
@@ -175,6 +176,10 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
     size_t totalWritten = 0;
     bool writeError = false;
     
+    // Lưu 16 byte đầu tiên từ HTTP stream để so sánh với flash sau khi ghi
+    uint8_t firstBytes[16] = {0};
+    bool savedFirstBytes = false;
+    
     while (totalWritten < (size_t)contentLength) {
         // Tính toán số byte cần đọc trong chunk này
         size_t bytesToRead = CHUNK_SIZE;
@@ -200,6 +205,15 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
             Serial.printf("[OLED_OTA] Stream timeout: đọc %u/%u bytes\n", bytesRead, bytesToRead);
             writeError = true;
             break;
+        }
+        
+        // Lưu 16 byte đầu tiên từ HTTP để so sánh
+        if (!savedFirstBytes && bytesRead >= 16) {
+            memcpy(firstBytes, buf, 16);
+            savedFirstBytes = true;
+            Serial.printf("[OLED_OTA] HTTP byte đầu: ");
+            for (int i = 0; i < 16; i++) Serial.printf("%02X ", firstBytes[i]);
+            Serial.println();
         }
         
         // Ghi chunk xuống Flash bằng ESP-IDF OTA API
@@ -228,6 +242,37 @@ void OLED_OTA::_performUpdate(String url, String newVersion) {
         Serial.printf("[OLED_OTA] Ghi thất bại: %u/%d bytes\n", totalWritten, contentLength);
         esp_ota_abort(ota_handle);
         return;
+    }
+
+    /****
+     * CHẨN ĐOÁN: Đọc lại 16 byte đầu từ Flash partition sau khi ghi xong
+     * So sánh với 16 byte đầu từ HTTP stream
+     * Nếu flash toàn 0xFF → esp_ota_write() "silent fail" ở tầng SPI driver
+     ****/
+    uint8_t flashVerify[16] = {0};
+    err = esp_partition_read(update_partition, 0, flashVerify, 16);
+    Serial.printf("[OLED_OTA] DIAG: esp_partition_read() = %s\n", esp_err_to_name(err));
+    Serial.printf("[OLED_OTA] DIAG Flash 16B: ");
+    for (int i = 0; i < 16; i++) Serial.printf("%02X ", flashVerify[i]);
+    Serial.println();
+    Serial.printf("[OLED_OTA] DIAG HTTP  16B: ");
+    for (int i = 0; i < 16; i++) Serial.printf("%02X ", firstBytes[i]);
+    Serial.println();
+    
+    if (flashVerify[0] == 0xFF) {
+        Serial.println("[OLED_OTA] DIAG: *** FLASH TRỐNG! esp_ota_write() đã thất bại âm thầm ***");
+        
+        // Thử ghi trực tiếp bằng esp_partition_write() để xem flash chip có bị lock không
+        Serial.println("[OLED_OTA] DIAG: Thử ghi trực tiếp bằng esp_partition_write()...");
+        err = esp_partition_erase_range(update_partition, 0, 4096);
+        Serial.printf("[OLED_OTA] DIAG: erase = %s\n", esp_err_to_name(err));
+        err = esp_partition_write(update_partition, 0, firstBytes, 16);
+        Serial.printf("[OLED_OTA] DIAG: write = %s\n", esp_err_to_name(err));
+        err = esp_partition_read(update_partition, 0, flashVerify, 16);
+        Serial.printf("[OLED_OTA] DIAG: read  = %s\n", esp_err_to_name(err));
+        Serial.printf("[OLED_OTA] DIAG Flash sau ghi trực tiếp: ");
+        for (int i = 0; i < 16; i++) Serial.printf("%02X ", flashVerify[i]);
+        Serial.println();
     }
 
     /****

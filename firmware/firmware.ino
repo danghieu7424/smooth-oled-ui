@@ -18,7 +18,7 @@
 // ==========================================
 const char* PROJECT_ID = "007Rlq30Q2vU-esp32-tool";
 const char* PROJECT_TOKEN = "fc11b225f325609bb7309ad70f090a78";
-const char* CURRENT_VERSION = "1.1.0";
+const char* CURRENT_VERSION = "1.0.0";
 const char* API_HOST = "192.168.7.7";
 const uint16_t API_PORT = 7424;
 
@@ -148,10 +148,10 @@ const int TOTAL_MAIN_ITEMS = 3;
 const MenuItem settings_items[] = {
     {"WiFi", icon_wifi, on_enter_wifi},
     {"ESP NOW", icon_esp_now, nullptr},
-    {"LED Switch", icon_led_switch, open_led_switch},
+    // {"LED Switch", icon_led_switch, open_led_switch},
     {"Brightness", icon_brightness, open_brightness_slider}
 };
-const int TOTAL_SETTINGS_ITEMS = 4;
+const int TOTAL_SETTINGS_ITEMS = 3;
 
 const char* popup_items[] = {
     "ScreenOff",
@@ -331,15 +331,61 @@ void on_wifi_password_submit(const char* pwd) {
 void setup() {
   Serial.begin(921600);
   
-  // Tự động khôi phục phân vùng NVS bị hỏng (Lý do cốt lý khiến Flash không lưu được)
-  esp_err_t err = nvs_flash_init();
-  if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-      nvs_flash_erase();
-      nvs_flash_init();
+  /****
+   * CHẨN ĐOÁN SPI FLASH: Ghi test pattern vào SPIFFS partition
+   * trước VÀ sau Wire.begin(47, 48) để xác thực
+   * xem GPIO47/48 có phá SPI Flash bus hay không
+   ****/
+  {
+    const esp_partition_t* test_part = esp_partition_find_first(
+        ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, NULL);
+    if (test_part) {
+      uint8_t test_data[16] = {0xDE, 0xAD, 0xBE, 0xEF, 0x01, 0x02, 0x03, 0x04,
+                                0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C};
+      uint8_t readback[16] = {0};
+      esp_err_t e;
+
+      // TEST 1: TRƯỚC Wire.begin()
+      e = esp_partition_erase_range(test_part, 0, 4096);
+      Serial.printf("[DIAG] TRƯỚC Wire.begin — erase: %s\n", esp_err_to_name(e));
+      e = esp_partition_write(test_part, 0, test_data, 16);
+      Serial.printf("[DIAG] TRƯỚC Wire.begin — write: %s\n", esp_err_to_name(e));
+      e = esp_partition_read(test_part, 0, readback, 16);
+      Serial.printf("[DIAG] TRƯỚC Wire.begin — read:  %s\n", esp_err_to_name(e));
+      Serial.printf("[DIAG] TRƯỚC Wire — Flash: ");
+      for (int i = 0; i < 16; i++) Serial.printf("%02X ", readback[i]);
+      Serial.println();
+      bool beforeOK = (readback[0] == 0xDE && readback[1] == 0xAD);
+      Serial.printf("[DIAG] TRƯỚC Wire — KẾT QUẢ: %s\n", beforeOK ? "GHI OK!" : "*** THẤT BẠI ***");
+    }
   }
-  
+
   Wire.begin(47, 48);
   Wire.setClock(400000); 
+
+  // TEST 2: SAU Wire.begin()
+  {
+    const esp_partition_t* test_part = esp_partition_find_first(
+        ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS, NULL);
+    if (test_part) {
+      uint8_t test_data[16] = {0xCA, 0xFE, 0xBA, 0xBE, 0x11, 0x22, 0x33, 0x44,
+                                0x55, 0x66, 0x77, 0x88, 0x99, 0xAA, 0xBB, 0xCC};
+      uint8_t readback[16] = {0};
+      esp_err_t e;
+
+      e = esp_partition_erase_range(test_part, 0, 4096);
+      Serial.printf("[DIAG] SAU Wire.begin — erase: %s\n", esp_err_to_name(e));
+      e = esp_partition_write(test_part, 0, test_data, 16);
+      Serial.printf("[DIAG] SAU Wire.begin — write: %s\n", esp_err_to_name(e));
+      e = esp_partition_read(test_part, 0, readback, 16);
+      Serial.printf("[DIAG] SAU Wire.begin — read:  %s\n", esp_err_to_name(e));
+      Serial.printf("[DIAG] SAU Wire — Flash: ");
+      for (int i = 0; i < 16; i++) Serial.printf("%02X ", readback[i]);
+      Serial.println();
+      bool afterOK = (readback[0] == 0xCA && readback[1] == 0xFE);
+      Serial.printf("[DIAG] SAU Wire — KẾT QUẢ: %s\n", afterOK ? "GHI OK!" : "*** THẤT BẠI ***");
+    }
+  }
   
   pinMode(LED_PIN, OUTPUT);
 

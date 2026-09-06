@@ -319,10 +319,7 @@ D:\all_projects\rust\rust\display_oled\firmware\build\esp32.esp32.XIAO_ESP32S3\s
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_app_format/include/esp_app_desc.h \
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_bootloader_format/include/esp_bootloader_desc.h \
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/bootloader_support/include/esp_flash_partitions.h \
- C:\Users\dangh\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson.h \
- C:\Users\dangh\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson.hpp \
- C:\Users\dangh\Documents\Arduino\libraries\ArduinoJson\src/ArduinoJson/Configuration.hpp \
- D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\libraries\Update\src/Update.h \
- D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\cores\esp32/MD5Builder.h \
- D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\cores\esp32/HashBuilder.h \
- D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\cores\esp32/HEXBuilder.h
+ D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\libraries\Wire\src/Wire.h \
+ D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\cores\esp32/esp32-hal.h \
+ D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\cores\esp32/esp32-hal-log.h \
+ D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\cores\esp32/HardwareI2C.h

@@ -337,8 +337,4 @@ D:\all_projects\rust\rust\display_oled\firmware\build\esp32.esp32.XIAO_ESP32S3\s
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/app_update/include/esp_ota_ops.h \
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_app_format/include/esp_app_desc.h \
  D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_bootloader_format/include/esp_bootloader_desc.h \
- D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/bootloader_support/include/esp_flash_partitions.h \
- D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\libraries\Update\src/Update.h \
- D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\cores\esp32/MD5Builder.h \
- D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\cores\esp32/HashBuilder.h \
- D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\cores\esp32/HEXBuilder.h
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/bootloader_support/include/esp_flash_partitions.h

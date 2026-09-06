@@ -6,32 +6,32 @@ ExternalEEPROM::ExternalEEPROM() {
 }
 
 bool ExternalEEPROM::begin() {
-    Wire.beginTransmission(EEPROM_ADDR);
-    if (Wire.endTransmission() == 0) {
+    Wire1.beginTransmission(EEPROM_ADDR);
+    if (Wire1.endTransmission() == 0) {
         return true;
     }
     return false;
 }
 
 void ExternalEEPROM::writeByte(uint16_t memoryAddress, uint8_t data) {
-    Wire.beginTransmission(EEPROM_ADDR);
-    Wire.write((int)(memoryAddress >> 8));   // MSB
-    Wire.write((int)(memoryAddress & 0xFF)); // LSB
-    Wire.write(data);
-    Wire.endTransmission();
+    Wire1.beginTransmission(EEPROM_ADDR);
+    Wire1.write((int)(memoryAddress >> 8));   // MSB
+    Wire1.write((int)(memoryAddress & 0xFF)); // LSB
+    Wire1.write(data);
+    Wire1.endTransmission();
     delay(5); // AT24C256 cần khoảng 5ms để ghi
 }
 
 uint8_t ExternalEEPROM::readByte(uint16_t memoryAddress) {
     uint8_t rData = 0xFF;
-    Wire.beginTransmission(EEPROM_ADDR);
-    Wire.write((int)(memoryAddress >> 8));   // MSB
-    Wire.write((int)(memoryAddress & 0xFF)); // LSB
-    Wire.endTransmission();
+    Wire1.beginTransmission(EEPROM_ADDR);
+    Wire1.write((int)(memoryAddress >> 8));   // MSB
+    Wire1.write((int)(memoryAddress & 0xFF)); // LSB
+    Wire1.endTransmission();
     
-    Wire.requestFrom(EEPROM_ADDR, (uint8_t)1);
-    if (Wire.available()) {
-        rData = Wire.read();
+    Wire1.requestFrom(EEPROM_ADDR, (uint8_t)1);
+    if (Wire1.available()) {
+        rData = Wire1.read();
     }
     return rData;
 }
@@ -52,15 +52,15 @@ void ExternalEEPROM::readBytes(uint16_t memoryAddress, uint8_t* data, size_t len
         size_t toRead = length - bytesRead;
         if (toRead > 32) toRead = 32;
         
-        Wire.beginTransmission(EEPROM_ADDR);
-        Wire.write((int)((memoryAddress + bytesRead) >> 8));
-        Wire.write((int)((memoryAddress + bytesRead) & 0xFF));
-        Wire.endTransmission();
+        Wire1.beginTransmission(EEPROM_ADDR);
+        Wire1.write((int)((memoryAddress + bytesRead) >> 8));
+        Wire1.write((int)((memoryAddress + bytesRead) & 0xFF));
+        Wire1.endTransmission();
         
-        Wire.requestFrom(EEPROM_ADDR, (uint8_t)toRead);
+        Wire1.requestFrom(EEPROM_ADDR, (uint8_t)toRead);
         for (size_t i = 0; i < toRead; i++) {
-            if (Wire.available()) {
-                data[bytesRead + i] = Wire.read();
+            if (Wire1.available()) {
+                data[bytesRead + i] = Wire1.read();
             }
         }
         bytesRead += toRead;

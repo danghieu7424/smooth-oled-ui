@@ -51,11 +51,6 @@
   },
   {
     "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\firmware.ino.cpp",
-    "Include": "Update.h",
-    "Includepath": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\Update\\src"
-  },
-  {
-    "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\firmware.ino.cpp",
     "Include": "",
     "Includepath": null
   },
@@ -851,21 +846,6 @@
   },
   {
     "Sourcefile": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\NetworkClientSecure\\src\\ssl_client.cpp",
-    "Include": "",
-    "Includepath": null
-  },
-  {
-    "Sourcefile": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\Update\\src\\HttpsOTAUpdate.cpp",
-    "Include": "",
-    "Includepath": null
-  },
-  {
-    "Sourcefile": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\Update\\src\\Updater.cpp",
-    "Include": "",
-    "Includepath": null
-  },
-  {
-    "Sourcefile": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\Update\\src\\Updater_Signing.cpp",
     "Include": "",
     "Includepath": null
   },
