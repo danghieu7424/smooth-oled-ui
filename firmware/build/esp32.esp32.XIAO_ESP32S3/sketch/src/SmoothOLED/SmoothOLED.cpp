@@ -18,6 +18,11 @@ SmoothOLED::SmoothOLED(U8G2* u8g2, Stream* serial) {
     _last_tick = 0;
     _auto_demo = false;
     _pc_viewer_enabled = true;
+    _screensaver_enabled = false;
+    _screensaver_x = 0;
+    _screensaver_y = 30;
+    _screensaver_dx = 1.0f;
+    _screensaver_dy = 1.0f;
 
     // --- Biến Carousel ---
     _carousel_items = nullptr;
@@ -102,6 +107,14 @@ void SmoothOLED::enableAutoDemo(bool enable) {
 
 void SmoothOLED::enablePCViewer(bool enable) {
     _pc_viewer_enabled = enable;
+}
+
+void SmoothOLED::enableScreensaver(bool enable) {
+    _screensaver_enabled = enable;
+    if (enable) {
+        _screensaver_x = 0;
+        _screensaver_y = 30;
+    }
 }
 
 // =================================================================================
@@ -937,6 +950,18 @@ void SmoothOLED::update() {
         _last_tick = now;
         _u8g2->clearBuffer();
 
+        if (_screensaver_enabled) {
+            _screensaver_x += _screensaver_dx;
+            _screensaver_y += _screensaver_dy;
+            if (_screensaver_x <= 0 || _screensaver_x >= 128 - 30) _screensaver_dx = -_screensaver_dx;
+            if (_screensaver_y <= 10 || _screensaver_y >= 64) _screensaver_dy = -_screensaver_dy;
+            
+            _u8g2->setFont(u8g2_font_6x10_tf);
+            _u8g2->drawStr((int)_screensaver_x, (int)_screensaver_y, "ESP32");
+            flush_display();
+            return;
+        }
+
         int background_offset_x = 0;
 
         // 1. Overlay Physics
@@ -1035,10 +1060,11 @@ void SmoothOLED::openClock() {
         _clock_solar.init("-- -- Th-- ----");
         _clock_lunar.init("AL: -- Th--");
         _clock_temp.init("--.-C");
+        _clock_weather.init("");
     }
 }
 
-void SmoothOLED::updateClock(int h, int m, int s, const char* solar_date, const char* lunar_date, const char* temp_str) {
+void SmoothOLED::updateClock(int h, int m, int s, const char* solar_date, const char* lunar_date, const char* temp_str, const char* weather_icon) {
     auto updateDigit = [](ClockDigit& d, int new_val) {
         if (d.next_val != new_val) {
             d.current_val = d.next_val; 
@@ -1069,6 +1095,7 @@ void SmoothOLED::updateClock(int h, int m, int s, const char* solar_date, const 
     updateString(_clock_solar, solar_date ? solar_date : "");
     updateString(_clock_lunar, lunar_date ? lunar_date : "");
     updateString(_clock_temp, temp_str ? temp_str : "");
+    updateString(_clock_weather, weather_icon ? weather_icon : "");
 }
 
 void SmoothOLED::update_clock_physics() {
@@ -1106,6 +1133,7 @@ void SmoothOLED::update_clock_physics() {
     physString(_clock_solar);
     physString(_clock_lunar);
     physString(_clock_temp);
+    physString(_clock_weather);
 }
 
 void SmoothOLED::draw_clock_menu(int offset_x) {
@@ -1159,6 +1187,9 @@ void SmoothOLED::draw_clock_menu(int offset_x) {
 
     // 3. Draw Temperature (Căn phải)
     drawStringAnim(_clock_temp, 126, 62, 50, 64, ALIGN_RIGHT);
+    
+    // 4. Draw Weather Icon string (gần Temperature)
+    drawStringAnim(_clock_weather, 90, 62, 50, 64, ALIGN_RIGHT);
 
     _u8g2->setDrawColor(1);
     

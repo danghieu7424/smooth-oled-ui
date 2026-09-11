@@ -12,6 +12,12 @@
 #include "src/TimeSyncAPI/TimeSyncAPI.h"
 #include "src/HardwareRTC/HardwareRTC.h"
 #include "src/ExternalEEPROM/ExternalEEPROM.h"
+#include "src/OLED_OTA/OLED_OTA.h"
+#include "src/WebConfig/WebConfig.h"
+#include "src/WeatherAPI/WeatherAPI.h"
+#include "src/ESPNowHub/ESPNowHub.h"
+
+OLED_OTA ota("oled_project", "token123", "1.1.0");
 
 // ==========================================
 // CẤU HÌNH DỰ ÁN
@@ -28,19 +34,19 @@ ActiveSlider active_slider = SLIDER_NONE;
 
 // Clock State variables moved down
 
-#line 30 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-void save_wifi_credentials(String ssid, String pwd);
 #line 36 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+void save_wifi_credentials(String ssid, String pwd);
+#line 42 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 bool load_wifi_credentials(String &ssid, String &pwd);
-#line 155 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+#line 161 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void on_restart();
-#line 159 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+#line 165 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void on_power_off();
-#line 325 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+#line 331 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void setup();
-#line 429 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+#line 440 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void loop();
-#line 30 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+#line 36 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void save_wifi_credentials(String ssid, String pwd) {
     extEEPROM.writeString(0x0010, ssid);
     extEEPROM.writeString(0x0040, pwd);
@@ -152,7 +158,7 @@ const int TOTAL_MAIN_ITEMS = 3;
 
 const MenuItem settings_items[] = {
     {"WiFi", icon_wifi, on_enter_wifi},
-    {"ESP NOW", icon_esp_now, nullptr},
+    {"ESP NOW", icon_esp_now, []() { espNowHub.broadcastToggle(); }},
     {"LED Switch", icon_led_switch, open_led_switch},
     {"Brightness", icon_brightness, open_brightness_slider}
 };
@@ -233,7 +239,7 @@ void on_wifi_selected(int idx);
 
 void open_home_clock() {
   ui.openClock();
-  ui.updateClock(timeSync.current_hour, timeSync.current_minute, timeSync.current_second, timeSync.solar_date_str.c_str(), timeSync.lunar_date_str.c_str(), timeSync.current_temp_str.c_str());
+  ui.updateClock(timeSync.current_hour, timeSync.current_minute, timeSync.current_second, timeSync.solar_date_str.c_str(), timeSync.lunar_date_str.c_str(), timeSync.current_temp_str.c_str(), weatherApi.icon_code.c_str());
   // Bỏ gọi timeSync.update() ở đây vì Core 1 đã có một vòng lặp tự động xử lý ngầm (polling mỗi 2 giây nếu chưa sync)
 }
 
@@ -413,7 +419,12 @@ void setup() {
   
   open_home_clock();
 
-  // 5. Khởi tạo OTA Service
+  // 5. Khởi tạo OTA Service & Mở rộng
+  ota.setApiEndpoint("api.github.com", 443);
+  ota.begin();
+  weatherApi.setApiKey("DEMO_KEY", "Hanoi");
+  espNowHub.begin();
+
   // Tạo Mutex cho các biến dùng chung
   wifi_mutex = xSemaphoreCreateMutex();
 
@@ -449,9 +460,12 @@ void loop() {
 // TASK: UI & ANIMATION (CORE 0)
 // ==========================================
 void task_ui_core0(void *pvParameters) {
+    uint32_t last_interaction_time = millis();
     for (;;) {
         // 1. Xử lý Input từ Serial (Nút bấm mô phỏng)
         if (Serial.available() > 0) {
+            last_interaction_time = millis();
+            ui.enableScreensaver(false);
             char c = Serial.read();
             if (c == '\x1B') {
                 uint32_t t = millis();
@@ -546,9 +560,16 @@ void task_ui_core0(void *pvParameters) {
             }
         }
 
+        if (millis() - last_interaction_time > 30 * 60 * 1000) {
+            esp_deep_sleep_start();
+        } else if (millis() - last_interaction_time > 5 * 60 * 1000) {
+            ui.enableScreensaver(true);
+        }
+
         // 2. Logic Đồng hồ (Tick)
-        if (timeSync.tick()) {
-            ui.updateClock(timeSync.current_hour, timeSync.current_minute, timeSync.current_second, timeSync.solar_date_str.c_str(), timeSync.lunar_date_str.c_str(), timeSync.current_temp_str.c_str());
+        if (timeSync.tick() || weatherApi.is_synced) {
+            weatherApi.is_synced = false;
+            ui.updateClock(timeSync.current_hour, timeSync.current_minute, timeSync.current_second, timeSync.solar_date_str.c_str(), timeSync.lunar_date_str.c_str(), timeSync.current_temp_str.c_str(), weatherApi.icon_code.c_str());
         }
 
         // 3. Vẽ lên màn hình OLED (Render)
@@ -655,18 +676,23 @@ void task_network_core1(void *pvParameters) {
                 is_connecting_wifi = false;
                 WiFi.disconnect();
                 Serial.println("\n[WiFi] Connection timeout or failed");
+                if (!webConfig.isConfiguring()) {
+                    webConfig.begin();
+                }
                 snprintf(text_input_title_buf, sizeof(text_input_title_buf), "FAIL: %s", connecting_ssid.c_str());
                 ui.openTextInput(text_input_title_buf, on_wifi_password_submit, connecting_pwd.c_str());
             }
         }
 
         // --- 4. DUY TRÌ KẾT NỐI OTA ---
-        // ota.loop();
+        ota.loop();
+        webConfig.loop();
         
-        // --- 5. ĐỒNG BỘ THỜI GIAN QUA API ---
+        // --- 5. ĐỒNG BỘ THỜI GIAN VÀ THỜI TIẾT QUA API ---
         if (timeSync.api_synced) {
             if (millis() - timeSync.last_time_sync > 3600000) {
                 timeSync.update();
+                weatherApi.update();
             }
         } else {
             static uint32_t last_sync_try = 0;
@@ -674,6 +700,7 @@ void task_network_core1(void *pvParameters) {
                 last_sync_try = millis();
                 if (WiFi.status() == WL_CONNECTED) {
                     timeSync.update();
+                    weatherApi.update();
                 }
             }
         }

@@ -51,6 +51,21 @@
   },
   {
     "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\firmware.ino.cpp",
+    "Include": "WebServer.h",
+    "Includepath": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\WebServer\\src"
+  },
+  {
+    "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\firmware.ino.cpp",
+    "Include": "FS.h",
+    "Includepath": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\FS\\src"
+  },
+  {
+    "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\firmware.ino.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\src\\ESPNowHub\\ESPNowHub.cpp",
     "Include": "",
     "Includepath": null
   },
@@ -76,6 +91,16 @@
   },
   {
     "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\src\\TimeSyncAPI\\TimeSyncAPI.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\src\\WeatherAPI\\WeatherAPI.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\build\\esp32.esp32.XIAO_ESP32S3\\sketch\\src\\WebConfig\\WebConfig.cpp",
     "Include": "",
     "Includepath": null
   },
@@ -850,7 +875,77 @@
     "Includepath": null
   },
   {
+    "Sourcefile": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\WebServer\\src\\Parsing.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\WebServer\\src\\WebServer.cpp",
+    "Include": "SHA1Builder.h",
+    "Includepath": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\Hash\\src"
+  },
+  {
+    "Sourcefile": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\WebServer\\src\\WebServer.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\WebServer\\src\\detail\\mimetable.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\WebServer\\src\\middleware\\AuthenticationMiddleware.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\WebServer\\src\\middleware\\CorsMiddleware.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\WebServer\\src\\middleware\\LoggingMiddleware.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\WebServer\\src\\middleware\\MiddlewareChain.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\FS\\src\\FS.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\FS\\src\\vfs_api.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
     "Sourcefile": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\SPI\\src\\SPI.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\Hash\\src\\PBKDF2_HMACBuilder.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\Hash\\src\\SHA1Builder.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\Hash\\src\\SHA2Builder.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "D:\\.AppData\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.3.11\\libraries\\Hash\\src\\SHA3Builder.cpp",
     "Include": "",
     "Includepath": null
   }

@@ -82,6 +82,7 @@ public:
     // Tính năng Demo và Simulator
     void enableAutoDemo(bool enable);
     void enablePCViewer(bool enable);
+    void enableScreensaver(bool enable);
 
     // --- Input API ---
     void up();
@@ -95,7 +96,7 @@ public:
     void openTextInput(const char* title, TextCallback on_submit, const char* initial_text = nullptr);
     void openFullList(const char* title, const char** items, int count, ListCallback on_select = nullptr);
     void openClock();
-    void updateClock(int h, int m, int s, const char* solar_date, const char* lunar_date, const char* temp_str);
+    void updateClock(int h, int m, int s, const char* solar_date, const char* lunar_date, const char* temp_str, const char* weather_icon = nullptr);
     void closeOverlay();
     bool backspace();
     void select();
@@ -124,6 +125,8 @@ private:
     uint32_t _last_tick;
     bool _auto_demo;
     bool _pc_viewer_enabled;
+    bool _screensaver_enabled;
+    float _screensaver_x, _screensaver_y, _screensaver_dx, _screensaver_dy;
 
     // --- Biến Carousel ---
     const MenuItem* _carousel_items;
@@ -204,6 +207,7 @@ private:
     StringAnim _clock_solar;
     StringAnim _clock_lunar;
     StringAnim _clock_temp;
+    StringAnim _clock_weather;
 
     void flush_display();
 
