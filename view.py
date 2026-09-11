@@ -49,7 +49,7 @@ def on_key(event):
         elif name == 'end': send_char('\x1BP')
         elif name == 'esc': send_char('\x1BC')
         elif name == 'backspace': send_char('\x1BB')
-        elif name == 'enter': send_char('\x1BE')
+        elif name in ['enter', 'return']: send_char('\x1BE')
         elif name == 'space': send_char(' ')
         elif len(name) == 1 and name.isprintable():
             send_char(name)

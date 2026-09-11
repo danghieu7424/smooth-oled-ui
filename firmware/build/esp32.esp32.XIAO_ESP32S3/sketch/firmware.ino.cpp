@@ -421,7 +421,7 @@ void setup() {
 
   // Task UI trên Core 0
   xTaskCreatePinnedToCore(
-      task_ui_core0,
+      task_network_core1,
       "Task_UI",
       8192,
       NULL,
@@ -432,7 +432,7 @@ void setup() {
 
   // Task Network trên Core 1
   xTaskCreatePinnedToCore(
-      task_network_core1,
+      task_ui_core0,
       "Task_Network",
       8192,
       NULL,
@@ -506,7 +506,7 @@ void task_ui_core0(void *pvParameters) {
                     }
                 }
             }
-            else if (c == 'B') {
+            else if (c == 'B' || c == '\b' || c == 127) {
                 if (ui.getAppState() == STATE_TEXT_INPUT) {
                     ui.backspace();
                 } else if (current_level == LEVEL_WIFI) {
@@ -527,7 +527,7 @@ void task_ui_core0(void *pvParameters) {
                     }
                 }
             }
-            else if (c == 'E') {
+            else if (c == 'E' || c == '\n' || c == '\r') {
                 ui.select();
                 if (ui.getAppState() == STATE_SLIDER) {
                     if (active_slider == SLIDER_BRIGHTNESS) {
