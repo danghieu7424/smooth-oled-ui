@@ -198,6 +198,14 @@ const MenuItem settings_items[] = {
 };
 const int TOTAL_SETTINGS_ITEMS = 4;
 
+const char* wifi_more_items[] = {
+    "Disconnect",
+    "Remove Password",
+    "Cancel"
+};
+
+bool wifi_manual_disconnected = false;
+
 const char* popup_items[] = {
     "ScreenOff",
     "PowerOff",
@@ -309,9 +317,7 @@ void on_wifi_selected(int idx) {
   if (idx >= 0 && idx < wifi_count && strncmp(wifi_ssid[0], "Scanning", 8) != 0 && strncmp(wifi_ssid[0], "No networks", 10) != 0 && strncmp(wifi_ssid[0], "Scan Failed", 11) != 0) {
       // Nếu mạng này đang được kết nối rồi, báo luôn không cần nhập pass
       if (WiFi.status() == WL_CONNECTED && WiFi.SSID() == String(wifi_raw_ssid[idx])) {
-          WiFi.disconnect();
-          remove_wifi_credentials(String(wifi_raw_ssid[idx]));
-          ui.openModal("Disconnected!", "Đã ngắt kết nối và quên mạng");
+          ui.openModal("Connected!", "Already connected to this network", true);
           return;
       }
 
@@ -352,6 +358,7 @@ void on_wifi_password_submit(const char* pwd) {
       save_wifi_credentials(connecting_ssid, connecting_pwd);
       wifiMulti.addAP(connecting_ssid.c_str(), connecting_pwd.c_str());
       
+      wifi_manual_disconnected = false;
       Serial.printf("\n[WiFi] Connecting to %s with password: %s\n", connecting_ssid.c_str(), pwd);
       
       // Ngắt kết nối cũ (nếu có)
@@ -506,7 +513,15 @@ void task_ui_core0(void *pvParameters) {
                     char cmd = Serial.read();
                     if (cmd == 'U') ui.up();
                     else if (cmd == 'D') ui.down();
-                    else if (cmd == 'L') ui.left();
+                    else if (cmd == 'L') {
+                        if (ui.getAppState() == STATE_MODAL && current_level == LEVEL_WIFI) {
+                            ui.closeOverlay();
+                            ui.setPopupListItems(wifi_more_items, 3);
+                            ui.openPopup();
+                        } else {
+                            ui.left();
+                        }
+                    }
                     else if (cmd == 'R') ui.right();
                     else if (cmd == 'P') {
                         ui.setPopupListItems(popup_items, TOTAL_POPUP_ITEMS);
@@ -554,9 +569,8 @@ void task_ui_core0(void *pvParameters) {
                     ui.backspace();
                 } else if (current_level == LEVEL_WIFI) {
                     if (WiFi.status() == WL_CONNECTED) {
-                        String current_ssid = WiFi.SSID();
                         WiFi.disconnect();
-                        remove_wifi_credentials(current_ssid);
+                        wifi_manual_disconnected = true;
                         if (xSemaphoreTake(wifi_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
                             for (int i = 0; i < wifi_count; i++) {
                                 if (wifi_ssid[i][0] == '*') {
@@ -567,13 +581,29 @@ void task_ui_core0(void *pvParameters) {
                             }
                             xSemaphoreGive(wifi_mutex);
                         }
-                        ui.openModal("Disconnected", "Wi-Fi is now disconnected");
+                        ui.openModal("Disconnected!", "Đã ngắt kết nối tạm thời");
                     }
                 }
             }
             else if (c == '\n' || c == '\r') {
+                AppState before_select = ui.getAppState();
                 ui.select();
-                if (ui.getAppState() == STATE_SLIDER) {
+                
+                if (before_select == STATE_POPUP && current_level == LEVEL_WIFI) {
+                    int sel = ui.getPopupSelectedIndex();
+                    String current_ssid = WiFi.SSID();
+                    if (sel == 0) { // Disconnect
+                        WiFi.disconnect();
+                        wifi_manual_disconnected = true;
+                        ui.openModal("Disconnected!", "Đã ngắt kết nối tạm thời");
+                    } else if (sel == 1) { // Remove
+                        WiFi.disconnect();
+                        remove_wifi_credentials(current_ssid);
+                        wifi_manual_disconnected = true;
+                        ui.openModal("Removed!", "Đã xóa khỏi bộ nhớ EEPROM");
+                    }
+                }
+                else if (ui.getAppState() == STATE_SLIDER) {
                     if (active_slider == SLIDER_BRIGHTNESS) {
                         saved_brightness = current_brightness;
                         extEEPROM.writeByte(0x0000, (uint8_t)saved_brightness);
@@ -699,7 +729,7 @@ void task_network_core1(void *pvParameters) {
         }
 
         // --- 3. XỬ LÝ KẾT NỐI WIFI TỰ ĐỘNG ---
-        if (current_status != WL_CONNECTED && !is_connecting_wifi && !webConfig.isConfiguring() && !is_scanning_wifi) {
+        if (current_status != WL_CONNECTED && !is_connecting_wifi && !webConfig.isConfiguring() && !is_scanning_wifi && !wifi_manual_disconnected) {
             static uint32_t last_multi_run = 0;
             if (millis() - last_multi_run > 5000) {
                 last_multi_run = millis();

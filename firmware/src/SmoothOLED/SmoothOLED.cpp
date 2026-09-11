@@ -229,7 +229,7 @@ void SmoothOLED::openPopup() {
     }
 }
 
-void SmoothOLED::openModal(const char* title, const char* text) {
+void SmoothOLED::openModal(const char* title, const char* text, bool has_more) {
     if (_overlay_state == OVERLAY_NONE) {
         if (_app_state != STATE_MODAL) {
             _prev_app_state = _app_state;
@@ -237,6 +237,7 @@ void SmoothOLED::openModal(const char* title, const char* text) {
         _app_state = STATE_MODAL;
         _modal_title = title;
         _modal_text = text;
+        _modal_has_more = has_more;
         _marquee_offset = 0;
         _marquee_delay = 30;
     }
@@ -359,6 +360,8 @@ void SmoothOLED::select() {
         if (_list_on_select) _list_on_select(_list_selected_index);
     } else if (_app_state == STATE_MODAL) {
         // Đóng Modal (Tương tự phím OK)
+        _app_state = _prev_app_state;
+    } else if (_app_state == STATE_POPUP) {
         _app_state = _prev_app_state;
     }
 }
@@ -875,8 +878,13 @@ void SmoothOLED::draw_modal_dialog() {
     _u8g2->setFont(u8g2_font_5x7_tf);
     
     // Left button
-    _u8g2->drawStr(MENU_BOX_X + 11, button_bar_y + 8, "cancel");
-    _u8g2->drawStr(MENU_BOX_X + 14, button_bar_y + 16, "[ESC]");
+    if (_modal_has_more) {
+        _u8g2->drawStr(MENU_BOX_X + 15, button_bar_y + 8, "more");
+        _u8g2->drawStr(MENU_BOX_X + 17, button_bar_y + 16, "[<]");
+    } else {
+        _u8g2->drawStr(MENU_BOX_X + 11, button_bar_y + 8, "cancel");
+        _u8g2->drawStr(MENU_BOX_X + 14, button_bar_y + 16, "[ESC]");
+    }
 
     // Right button
     _u8g2->drawStr(MENU_BOX_X + MENU_BOX_W / 2 + 20, button_bar_y + 8, "ok");

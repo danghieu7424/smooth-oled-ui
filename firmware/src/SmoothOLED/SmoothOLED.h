@@ -89,7 +89,7 @@ public:
     void left();
     void right();
     void openPopup();
-    void openModal(const char* title, const char* text);
+    void openModal(const char* title, const char* text, bool has_more = false);
     void openSideList();
     void openSlider(const char* title, int current_val, int max_val, SliderCallback on_change = nullptr);
     void openTextInput(const char* title, TextCallback on_submit, const char* initial_text = nullptr);
@@ -200,6 +200,7 @@ private:
     // --- Biến Modal ---
     const char* _modal_title;
     const char* _modal_text;
+    bool _modal_has_more;
 
     // --- Biến Clock ---
     ClockDigit _clock_h1, _clock_h2, _clock_m1, _clock_m2, _clock_s1, _clock_s2;
