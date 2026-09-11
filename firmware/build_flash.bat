@@ -24,6 +24,6 @@ if %ERRORLEVEL% NEQ 0 (
 
 REM [CHÚ THÍCH] BƯỚC 3: NẠP FLASH VÀ MỞ MONITOR
 echo [INFO] Bien dich thanh cong. Bat dau nap Flash qua espflash...
-espflash flash -M -B 115200 --chip esp32s3 --partition-table "%BUILD_DIR%\firmware.ino.partitions.bin" "%ELF_FILE%"
+espflash flash --chip esp32s3 --partition-table "%BUILD_DIR%\firmware.ino.partitions.bin" "%ELF_FILE%"
 
 endlocal

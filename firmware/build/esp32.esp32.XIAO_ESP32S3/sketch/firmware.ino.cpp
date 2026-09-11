@@ -8,6 +8,7 @@
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
+#include <WiFiMulti.h>
 #include "src/SmoothOLED/SmoothOLED.h"
 #include "src/TimeSyncAPI/TimeSyncAPI.h"
 #include "src/HardwareRTC/HardwareRTC.h"
@@ -18,6 +19,7 @@
 #include "src/ESPNowHub/ESPNowHub.h"
 
 OLED_OTA ota("oled_project", "token123", "1.1.0");
+WiFiMulti wifiMulti;
 
 // ==========================================
 // CẤU HÌNH DỰ ÁN
@@ -34,32 +36,80 @@ ActiveSlider active_slider = SLIDER_NONE;
 
 // Clock State variables moved down
 
-#line 36 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+#line 38 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void save_wifi_credentials(String ssid, String pwd);
-#line 42 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
-bool load_wifi_credentials(String &ssid, String &pwd);
-#line 161 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+#line 66 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+bool get_saved_password(String target_ssid, String &pwd);
+#line 79 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+void remove_wifi_credentials(String ssid);
+#line 209 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void on_restart();
-#line 165 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+#line 213 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void on_power_off();
-#line 331 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+#line 375 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void setup();
-#line 440 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+#line 486 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void loop();
-#line 36 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+#line 38 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void save_wifi_credentials(String ssid, String pwd) {
-    extEEPROM.writeString(0x0010, ssid);
-    extEEPROM.writeString(0x0040, pwd);
-    extEEPROM.writeByte(0x000F, 0xAA); // Signature
+    uint8_t count = extEEPROM.readByte(0x000F);
+    if (count == 0xFF || count > 5) count = 0;
+    
+    int existing_idx = -1;
+    for (int i = 0; i < count; i++) {
+        String saved_ssid = extEEPROM.readString(0x0010 + i * 96, 32);
+        if (saved_ssid == ssid) {
+            existing_idx = i;
+            break;
+        }
+    }
+    
+    if (existing_idx != -1) {
+        extEEPROM.writeString(0x0010 + existing_idx * 96 + 32, pwd);
+    } else {
+        int new_idx = count;
+        if (new_idx >= 5) {
+            new_idx = 0;
+        } else {
+            count++;
+            extEEPROM.writeByte(0x000F, count);
+        }
+        extEEPROM.writeString(0x0010 + new_idx * 96, ssid);
+        extEEPROM.writeString(0x0010 + new_idx * 96 + 32, pwd);
+    }
 }
 
-bool load_wifi_credentials(String &ssid, String &pwd) {
-    if (extEEPROM.readByte(0x000F) == 0xAA) {
-        ssid = extEEPROM.readString(0x0010, 32);
-        pwd = extEEPROM.readString(0x0040, 64);
-        return true;
+bool get_saved_password(String target_ssid, String &pwd) {
+    uint8_t count = extEEPROM.readByte(0x000F);
+    if (count == 0xFF || count > 5) return false;
+    for (int i = 0; i < count; i++) {
+        String saved_ssid = extEEPROM.readString(0x0010 + i * 96, 32);
+        if (saved_ssid == target_ssid) {
+            pwd = extEEPROM.readString(0x0010 + i * 96 + 32, 64);
+            return true;
+        }
     }
     return false;
+}
+
+void remove_wifi_credentials(String ssid) {
+    uint8_t count = extEEPROM.readByte(0x000F);
+    if (count == 0xFF || count > 5) count = 0;
+    
+    for (int i = 0; i < count; i++) {
+        String saved_ssid = extEEPROM.readString(0x0010 + i * 96, 32);
+        if (saved_ssid == ssid) {
+            for (int j = i; j < count - 1; j++) {
+                String move_ssid = extEEPROM.readString(0x0010 + (j + 1) * 96, 32);
+                String move_pwd = extEEPROM.readString(0x0010 + (j + 1) * 96 + 32, 64);
+                extEEPROM.writeString(0x0010 + j * 96, move_ssid);
+                extEEPROM.writeString(0x0010 + j * 96 + 32, move_pwd);
+            }
+            count--;
+            extEEPROM.writeByte(0x000F, count);
+            break;
+        }
+    }
 }
 
 // Khởi tạo màn hình
@@ -275,18 +325,14 @@ void on_wifi_selected(int idx) {
   if (idx >= 0 && idx < wifi_count && strncmp(wifi_ssid[0], "Scanning", 8) != 0 && strncmp(wifi_ssid[0], "No networks", 10) != 0 && strncmp(wifi_ssid[0], "Scan Failed", 11) != 0) {
       // Nếu mạng này đang được kết nối rồi, báo luôn không cần nhập pass
       if (WiFi.status() == WL_CONNECTED && WiFi.SSID() == String(wifi_raw_ssid[idx])) {
-          ui.openModal("Connected!", "Already connected to this network");
+          WiFi.disconnect();
+          remove_wifi_credentials(String(wifi_raw_ssid[idx]));
+          ui.openModal("Disconnected!", "Đã ngắt kết nối và quên mạng");
           return;
       }
 
-      // KIỂM TRA: Nếu mạng này TRÙNG với mạng đã lưu trong AT24C256
       String saved_pwd = "";
-      String saved_ssid = "";
-      if (load_wifi_credentials(saved_ssid, saved_pwd)) {
-          if (String(wifi_raw_ssid[idx]) != saved_ssid) {
-              // Nếu không khớp SSID thì không dùng pwd này
-          }
-      }
+      get_saved_password(String(wifi_raw_ssid[idx]), saved_pwd);
       
       // Mở ô nhập Pass và ĐIỀN SẴN mật khẩu cũ (như thẻ input type="text" có value)
       // Người dùng chỉ cần ấn Enter để kết nối, hoặc ấn xóa để sửa
@@ -319,8 +365,8 @@ void on_wifi_password_submit(const char* pwd) {
       connecting_ssid = wifi_raw_ssid[idx];
       connecting_pwd = pwd;
       
-      // [MỚI] Lưu Credentials vào AT24C256
       save_wifi_credentials(connecting_ssid, connecting_pwd);
+      wifiMulti.addAP(connecting_ssid.c_str(), connecting_pwd.c_str());
       
       Serial.printf("\n[WiFi] Connecting to %s with password: %s\n", connecting_ssid.c_str(), pwd);
       
@@ -383,17 +429,19 @@ void setup() {
   WiFi.disconnect(true);
   delay(100);
   
-  String saved_ssid = "";
-  String saved_pwd = "";
-  if (eeprom_ready && load_wifi_credentials(saved_ssid, saved_pwd)) {
-      connecting_ssid = saved_ssid;
-      connecting_pwd = saved_pwd;
-      Serial.printf("[BOOT] Using AT24C256 WiFi: SSID='%s'\n", connecting_ssid.c_str());
+  uint8_t wifi_cnt = extEEPROM.readByte(0x000F);
+  if (wifi_cnt != 0xFF && wifi_cnt <= 5) {
+      for (int i = 0; i < wifi_cnt; i++) {
+          String s_ssid = extEEPROM.readString(0x0010 + i * 96, 32);
+          String s_pwd = extEEPROM.readString(0x0010 + i * 96 + 32, 64);
+          wifiMulti.addAP(s_ssid.c_str(), s_pwd.c_str());
+          Serial.printf("[BOOT] Loaded WiFi: SSID='%s'\n", s_ssid.c_str());
+      }
   } else {
-      Serial.printf("[BOOT] Using HARDCODED WiFi: SSID='%s'\n", connecting_ssid.c_str());
+      wifiMulti.addAP(connecting_ssid.c_str(), connecting_pwd.c_str());
+      Serial.printf("[BOOT] Default WiFi: SSID='%s'\n", connecting_ssid.c_str());
   }
-  
-  WiFi.begin(connecting_ssid.c_str(), connecting_pwd.c_str());
+
   WiFi.setAutoReconnect(true);
 
   // 1. Gán mảng dữ liệu vào thư viện UI
@@ -422,7 +470,7 @@ void setup() {
   // 5. Khởi tạo OTA Service & Mở rộng
   ota.setApiEndpoint("api.github.com", 443);
   ota.begin();
-  weatherApi.setApiKey("DEMO_KEY", "Hanoi");
+  weatherApi.setApiKey("b05cb47c6258d12e9b43a7419e8cbdf9", "Hanoi");
   espNowHub.begin();
 
   // Tạo Mutex cho các biến dùng chung
@@ -522,8 +570,9 @@ void task_ui_core0(void *pvParameters) {
                     ui.backspace();
                 } else if (current_level == LEVEL_WIFI) {
                     if (WiFi.status() == WL_CONNECTED) {
+                        String current_ssid = WiFi.SSID();
                         WiFi.disconnect();
-                        extEEPROM.writeByte(0x000F, 0x00);
+                        remove_wifi_credentials(current_ssid);
                         if (xSemaphoreTake(wifi_mutex, pdMS_TO_TICKS(100)) == pdTRUE) {
                             for (int i = 0; i < wifi_count; i++) {
                                 if (wifi_ssid[i][0] == '*') {
@@ -665,11 +714,19 @@ void task_network_core1(void *pvParameters) {
             }
         }
 
-        // --- 3. XỬ LÝ KẾT NỐI WIFI ---
+        // --- 3. XỬ LÝ KẾT NỐI WIFI TỰ ĐỘNG ---
+        if (current_status != WL_CONNECTED && !is_connecting_wifi && !webConfig.isConfiguring() && !is_scanning_wifi) {
+            static uint32_t last_multi_run = 0;
+            if (millis() - last_multi_run > 5000) {
+                last_multi_run = millis();
+                wifiMulti.run();
+            }
+        }
+
+        // --- 3.1. XỬ LÝ KẾT NỐI WIFI THỦ CÔNG ---
         if (is_connecting_wifi) {
             if (WiFi.status() == WL_CONNECTED) {
                 is_connecting_wifi = false;
-                save_wifi_credentials(connecting_ssid, connecting_pwd);
                 Serial.printf("\n[WiFi] Connected successfully to %s\n", connecting_ssid.c_str());
                 ui.openModal("Connected!", connecting_ssid.c_str());
             } else if (millis() - wifi_connect_start > 10000) {

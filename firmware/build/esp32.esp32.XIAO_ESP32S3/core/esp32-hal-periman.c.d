@@ -1,0 +1,33 @@
+D:\all_projects\rust\rust\display_oled\firmware\build\esp32.esp32.XIAO_ESP32S3\core\esp32-hal-periman.c.o: \
+ D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\cores\esp32\esp32-hal-periman.c \
+ D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\cores\esp32\esp32-hal-log.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/qio_qspi/include/sdkconfig.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_timer/include/esp_timer.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/newlib/platform_include/stdio.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_common/include/esp_err.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_common/include/esp_compiler.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_hw_support/include/esp_etm.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_rom/esp32s3/include/esp32s3/rom/ets_sys.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/soc/esp32s3/include/soc/soc.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_common/include/esp_assert.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_common/include/esp_bit_defs.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/soc/esp32s3/register/soc/reg_base.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/log/include/esp_log.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_rom/include/esp_rom_sys.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/soc/esp32s3/include/soc/reset_reasons.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/soc/esp32s3/include/soc/soc_caps.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/log/include/esp_log_config.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/log/include/esp_log_level.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/log/include/esp_log_color.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/log/include/esp_log_buffer.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/log/include/esp_log_timestamp.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/log/include/esp_log_write.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/log/include/esp_log_format.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/log/include/esp_log_args.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_common/include/esp_macros.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_common/include/esp_assert.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/log/include/esp_log_attr.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/esp_common/include/esp_attr.h \
+ D:\.AppData\Arduino15\packages\esp32\tools\esp32s3-libs\3.3.11/include/log/include/esp_private/log_attr.h \
+ D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\cores\esp32\esp32-hal-periman.h \
+ D:\.AppData\Arduino15\packages\esp32\hardware\esp32\3.3.11\cores\esp32\esp32-hal-ldo.h
