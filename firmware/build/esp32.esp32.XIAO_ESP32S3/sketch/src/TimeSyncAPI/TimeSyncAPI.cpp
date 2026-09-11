@@ -154,13 +154,9 @@ bool TimeSyncAPI::tick() {
                     current_hour = 0;
                     
                     // Sang ngày mới: Buộc cập nhật ngày tháng
-                    if (WiFi.status() == WL_CONNECTED) {
-                        if (!update()) {
-                            syncFromRTC();
-                        }
-                    } else {
-                        syncFromRTC();
-                    }
+                    // Sang ngày mới: Đánh dấu mất sync để nhường Task Network (Core 1) thực hiện gọi API nền
+                    api_synced = false;
+                    syncFromRTC();
                 }
             }
         }

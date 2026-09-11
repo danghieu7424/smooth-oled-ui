@@ -36,9 +36,9 @@ bool load_wifi_credentials(String &ssid, String &pwd);
 void on_restart();
 #line 159 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void on_power_off();
-#line 327 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+#line 325 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void setup();
-#line 431 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
+#line 429 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void loop();
 #line 30 "D:\\all_projects\\rust\\rust\\display_oled\\firmware\\firmware.ino"
 void save_wifi_credentials(String ssid, String pwd) {
@@ -234,9 +234,7 @@ void on_wifi_selected(int idx);
 void open_home_clock() {
   ui.openClock();
   ui.updateClock(timeSync.current_hour, timeSync.current_minute, timeSync.current_second, timeSync.solar_date_str.c_str(), timeSync.lunar_date_str.c_str(), timeSync.current_temp_str.c_str());
-  if (!timeSync.api_synced && WiFi.status() == WL_CONNECTED) {
-      timeSync.update();
-  }
+  // Bỏ gọi timeSync.update() ở đây vì Core 1 đã có một vòng lặp tự động xử lý ngầm (polling mỗi 2 giây nếu chưa sync)
 }
 
 void open_settings_menu() {

@@ -220,9 +220,7 @@ void on_wifi_selected(int idx);
 void open_home_clock() {
   ui.openClock();
   ui.updateClock(timeSync.current_hour, timeSync.current_minute, timeSync.current_second, timeSync.solar_date_str.c_str(), timeSync.lunar_date_str.c_str(), timeSync.current_temp_str.c_str());
-  if (!timeSync.api_synced && WiFi.status() == WL_CONNECTED) {
-      timeSync.update();
-  }
+  // Bỏ gọi timeSync.update() ở đây vì Core 1 đã có một vòng lặp tự động xử lý ngầm (polling mỗi 2 giây nếu chưa sync)
 }
 
 void open_settings_menu() {
