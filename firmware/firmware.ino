@@ -475,20 +475,19 @@ void task_ui_core0(void *pvParameters) {
                                     extEEPROM.writeByte(0x000F, 0x00);
                                 }
                             }
+                        } else if (ui.getAppState() == STATE_SLIDER) {
+                            if (active_slider == SLIDER_BRIGHTNESS) {
+                                current_brightness = saved_brightness;
+                                u8g2.setContrast(current_brightness);
+                            } else if (active_slider == SLIDER_LED_SWITCH) {
+                                open_led_switch();
+                            }
+                            active_slider = SLIDER_NONE;
+                        } else if (ui.getAppState() == STATE_CAROUSEL && current_level == LEVEL_SETTINGS) {
+                            current_level = LEVEL_MAIN;
+                            ui.setCarouselItems(menu_items, TOTAL_MAIN_ITEMS, "< MAIN MENU >");
                         }
                         ui.closeOverlay();
-                    } else if (ui.getAppState() == STATE_SLIDER) {
-                        if (active_slider == SLIDER_BRIGHTNESS) {
-                            current_brightness = saved_brightness;
-                            u8g2.setContrast(current_brightness);
-                        } else if (active_slider == SLIDER_LED_SWITCH) {
-                            open_led_switch();
-                        }
-                        active_slider = SLIDER_NONE;
-                        ui.closeOverlay();
-                    } else if (ui.getAppState() == STATE_CAROUSEL && current_level == LEVEL_SETTINGS) {
-                        current_level = LEVEL_MAIN;
-                        ui.setCarouselItems(menu_items, TOTAL_MAIN_ITEMS, "< MAIN MENU >");
                     }
                 }
             }
